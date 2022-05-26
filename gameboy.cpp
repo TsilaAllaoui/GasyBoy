@@ -2,11 +2,11 @@
 
 GameBoy::GameBoy(string filename)
 {
-	if (filename.empty())
+	if (filename == "")
 	{
 		filename = new char[100];
-		filename = "C:/Users/Allaoui/Desktop/GasyBoy/Roms/NoBanks/TETRIS.gb";
-		//filename = "C:/Users/Allaoui/Desktop/GasyBoy/Roms/MBC1/SuperMarioLand.gb";
+		// filename = "./Roms/MBC1/SuperMarioLand.gb";
+		filename = "./Roms/NoBanks/TETRIS.gb";
 	}
         
     mmu = new Mmu(filename);
@@ -20,7 +20,7 @@ GameBoy::GameBoy(string filename)
     tile_map = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_DOUBLEBUF, VRAM_WIDTH * PX, VRAM_HEIGHT * PX, 32, 0,0,0,0);
     bg_map = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_DOUBLEBUF, BG_MAP_WIDTH * PX, BG_MAP_HEIGTH * PX, 32, 0,0,0,0);
     window = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_DOUBLEBUF, WIDTH * PX, HEIGHT * PX, 32, 0,0,0,0);
-    screen = SDL_SetVideoMode((WIDTH + BG_MAP_WIDTH * 0) * PX,(HEIGHT + VRAM_HEIGHT * 0) * PX, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    screen = SDL_SetVideoMode((WIDTH + BG_MAP_WIDTH) * PX,(HEIGHT + VRAM_HEIGHT ) * PX, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
 
     tile_map_pos.x = 0;
     tile_map_pos.y = HEIGHT * PX;
@@ -47,8 +47,9 @@ void GameBoy::step()
     cycle_counter += cycle;
     timer->update_timer(cycle);
     gpu->gpuStep(cycle, window);
+    // gpu->show_tile_map(tile_map);
     gamepad->handleEvent();
-    interruptHanlder->handleInterrupts();   
+    interruptHanlder->handleInterrupts(); 
 }
 
 void GameBoy::boot()

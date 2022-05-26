@@ -43,7 +43,7 @@ uint8_t Gpu::currScanline()
 void Gpu::show_tile_map(SDL_Surface * screen)
 {
     for (int i = 0; i < 512; i++)
-        show_tile(i, Tile[i]);
+    show_tile(i, Tile[i]);
     int k = 0, l = 0;
     for (int j = 0; j < 512; j++)
     {

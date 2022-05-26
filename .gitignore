@@ -1,0 +1,7 @@
+*.exe
+*.txt
+*.bin
+/Roms
+/.vs
+/Debug
+/x64

@@ -4,14 +4,11 @@ Mmu::Mmu(string file)
 {
 	
 	//allocating memory region
-	ROM = new uint8_t[0x8000];
 	VRAM = new uint8_t[0x2000];
 	ExtRAM = new uint8_t[0x2000];
 	WorkingRAM = new uint8_t[0x4000];
 
 	//erasing memory at boot
-	for (int i = 0; i < 0x8000; i++)
-		ROM[i] = 0x0;
 	for (int i = 0; i < 0x2000; i++)
 		VRAM[i] = 0;
 	for (int i = 0; i < 0x2000; i++)
@@ -24,7 +21,7 @@ Mmu::Mmu(string file)
 	
 		//loading rom file via file
 	cartridge->loadRom(file);
-	ROM = cartridge->getROM();
+	// ROM = cartridge->getROM();
 
 	//gamepad
 	gamepad = new Gamepad();
@@ -32,7 +29,7 @@ Mmu::Mmu(string file)
 
 Mmu::~Mmu()
 {
-	delete ROM, VRAM, ExtRAM, WorkingRAM;
+	delete VRAM, ExtRAM, WorkingRAM;
 	in_bios = true;
 }
 
@@ -50,29 +47,28 @@ uint8_t Mmu::read_ram(uint16_t adrr)
 {
 	if (adrr < 0x100)
 	{
+		//if the gameboy is in internal BIOS, in should return BIOS content
 		if (in_bios)
 			return Bios[adrr];
-		else
-			return ROM[adrr];
+		//return ROM content otherwise
+		else return cartridge->RomBankRead(adrr);
 	}
-	else if (adrr >= 0x100 && adrr < 0x4000)
-		return ROM[adrr];
-
-	else if (adrr >= 0x4000 && adrr < 0x8000)
-		//return ROM[adrr];
-		return cartridge->RomBankRead(adrr);
-
-	else if (adrr >= 0x8000 && adrr < 0xA000)
-        return VRAM[adrr - 0x8000];
-
-	else if (adrr >= 0xA000 && adrr < 0xC000)
-		return cartridge->RamBankRead(adrr);
-
-	else if (adrr >= 0xC000 && adrr <= 0xFFFF)
+	else if (adrr >= 0x100)
 	{
-		if (adrr == 0xFF00)
-			return gamepad->getState();
-		else return WorkingRAM[adrr - 0xC000];
+		if (adrr < 0x8000)
+		    return cartridge->RomBankRead(adrr);
+		else if (adrr >= 0x8000 && adrr < 0xA000)
+            return VRAM[adrr - 0x8000];
+		else if (adrr >= 0xA000 && adrr < 0xC000)
+		{
+			return cartridge->RamBankRead(adrr);
+		}
+		else if (adrr >= 0xC000 && adrr <= 0xFFFF)
+		{
+			if (adrr == 0xFF00)
+				return gamepad->getState();
+			else return WorkingRAM[adrr - 0xC000];
+		}
 	}
 }
 
@@ -81,7 +77,10 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
 	if (adrr < 0x8000)
 		cartridge->handleRomMemory(adrr, value);
 	else if (adrr >= 0x8000 && adrr < 0xA000)
+	{
 		VRAM[adrr - 0x8000] = value;
+		vramWritten = true;
+	}
 	else if (adrr >= 0xA000 && adrr < 0xC000)
 	     cartridge->handleRamMemory(adrr, value);
 	else if (adrr >= 0xC000 && adrr <= 0xFFFF)
@@ -219,4 +218,14 @@ uint8_t *Mmu::getVRAM()
 Gamepad *Mmu::getGamepad()
 {
 	return gamepad;
+}
+
+bool Mmu::isVramWritten()
+{
+	return vramWritten;
+}
+
+void Mmu::setVramWriteStatus(bool value)
+{
+	vramWritten = value;
 }

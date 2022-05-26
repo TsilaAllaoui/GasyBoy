@@ -1,7 +1,6 @@
 #pragma once
 
-#include "defs.h"
-#include <iostream>
+#include <SDL/SDL.h>
 
 class Gamepad
 {

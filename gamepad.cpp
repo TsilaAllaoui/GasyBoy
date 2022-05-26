@@ -1,5 +1,4 @@
 #include "gamepad.h"
-#include <SDL/SDL.h>
 
 Gamepad::Gamepad()
 {

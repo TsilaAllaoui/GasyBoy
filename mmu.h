@@ -35,7 +35,6 @@ class Mmu
 		};
 
 		//memory region of the gaameboy
-		uint8_t *ROM;
 		uint8_t *VRAM;
 		uint8_t *ExtRAM;
 		uint8_t *WorkingRAM;
@@ -49,6 +48,9 @@ class Mmu
 		
 		//the actual cartridge
 		Cartridge *cartridge;
+
+		//to check if vram is written
+		bool vramWritten;
 
 	public:
 
@@ -88,4 +90,11 @@ class Mmu
 
 		//getting immediate 16bits in low endianess
 		uint16_t getNext2Bytes(uint16_t adress);
+
+		//get if vram is writen
+		bool isVramWritten();
+
+		//set vramWritten status
+		void setVramWriteStatus(bool value);
+
 };

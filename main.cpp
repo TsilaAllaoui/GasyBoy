@@ -1,9 +1,8 @@
 #include "gameboy.h"
 #include <SDL/SDL.h>
-#include <string>
 
 int main(int argc , char* argv[])
 {
-    GameBoy("").boot();
+    GameBoy(string(argv[1])).boot();
 	return 0;
 }

@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <cstring>
+#include <cmath>
 
 using namespace std;
 
@@ -13,7 +15,7 @@ class Cartridge
 	bool MBC1, MBC2;
 	
 	//ROM memory
-	uint8_t *ROM;
+	uint8_t **ROM;
 	
 	//the current ROM bank
 	uint8_t currRomBank;

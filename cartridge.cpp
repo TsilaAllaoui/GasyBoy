@@ -4,7 +4,7 @@
 Cartridge::Cartridge()
 {
 	RAMBanks = new uint8_t[0x8000];
-	memset(RAMBanks, 0, 0x8000);
+	std::memset(RAMBanks, 0, 0x8000);
 
 	MBC1 = MBC2 = false;
 
@@ -21,64 +21,80 @@ Cartridge::~Cartridge()
 
 void Cartridge::loadRom(string file)
 {
-	std::ifstream Rom(file, std::ios::in | std::ios::binary | std::ios::ate);
+		cout << "IN";
+	std::ifstream Rom(file.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
 	if (Rom.is_open())
 	{
-		//allocating ROM
+		// //allocating ROM
 		Rom.seekg(0x147, std::ios::beg);
 		char buffer[2];
 		Rom.read(buffer, 2);
 		setBankNumber(buffer[1]);
 		setMBCType(buffer[0]);
-		ROM = new uint8_t[0x4000 * banksNumber];
-		memset(ROM, 0, 0x4000 * (int)banksNumber);
+		ROM = new uint8_t*[(int)banksNumber];
+		for (int i=0; i<(int)banksNumber; i++)
+			ROM[i] = new uint8_t[0x4000];
+		for (int i=0; i<(int)banksNumber; i++)
+			for (int j=0; j<0x4000; j++)
+				ROM[i][j] = 0;
 	
 		//reading file and put into ROM
 		Rom.seekg(0, std::ios::end);
-		int romSize = Rom.tellg();
- 		char *buff = new char[romSize];
+		long romSize = Rom.tellg();
+ 		uint8_t *buff = new uint8_t[romSize];
 		Rom.seekg(0, std::ios::beg);
-		Rom.read(buff, romSize);
+		// Rom.read((char*)buff, romSize);
+		int bank  = 0, j = 0;
 		for (int i = 0; i < romSize; i++)
-			ROM[i] = (uint8_t) buff[i];
-
+		{
+			if (i % 0x4000 == 0 && j > 0)
+			{
+				bank++;
+				j = 0;
+			}
+			Rom.seekg(i, std::ios::beg);
+			char c;
+			Rom.read(&c, 1);
+			ROM[bank][j] = (uint8_t)c;
+			j++;
+		}
 		Rom.close();
 		std::ofstream out("./CartHeader.txt", std::ios::out);
 		if (out.is_open())
 		{
 			out << "Cartridge ROM Name:  ";
 			for (int i = 0x134; i < 0x143; i++)
-				out << ROM[i];
+				out << ROM[0][i];
 			out << endl << "Manufacturer:  ";
 			for (int i = 0x13F; i < 0x142; i++)
-				out << ROM[i];
+				out << ROM[0][i];
 			out << endl << "CGB Support:  ";
-			if (ROM[0x143] == 0x80)
+			if (ROM[0][0x143] == 0x80)
 				out << "Yes (DMG support)" << endl;
-			else if (ROM[0x143] == 0xC0)
+			else if (ROM[0][0x143] == 0xC0)
 				out << "Yes (No DMG support)" << endl;
 			else
 				out << "No" << endl;
-			out << "License Code:  " << ROM[0x144] << ROM[0x145] << endl;
+			out << "License Code:  " << ROM[0][0x144] << ROM[0][0x145] << endl;
 			out << "SGB Support:  ";
-			if (ROM[0x143] == 0x03)
+			if (ROM[0][0x143] == 0x03)
 				out << "Yes" << endl;
-			else if (ROM[0x143] == 0)
+			else if (ROM[0][0x143] == 0)
 				out << "No" << endl;
-			out << "Cartridge Type:  " << hex << (int)ROM[0x147] << endl;
-			out << "ROM Size:  " << hex << (int)ROM[0x148] << endl;
-			out << "RAM Size:  " << hex << (int)ROM[0x149] << endl;
-			out << "Japanese:  " << ((ROM[0x14A] & 0x1) ? "No" : "Yes") << endl;
-			out << "Old License Code:  " << hex << (int)ROM[0x14B] << endl;
-			out << "Mask ROM Version:  " << hex << (int)ROM[0x14C] << endl;
+			out << "Cartridge Type:  " << hex << (int)ROM[0][0x147] << endl;
+			out << "ROM Size:  " << hex << (int)ROM[0][0x148] << endl;
+			out << "RAM Size:  " << hex << (int)ROM[0][0x149] << endl;
+			out << "Japanese:  " << ((ROM[0][0x14A] & 0x1) ? "No" : "Yes") << endl;
+			out << "Old License Code:  " << hex << (int)ROM[0][0x14B] << endl;
+			out << "Mask ROM Version:  " << hex << (int)ROM[0][0x14C] << endl;
 			out.close();
-			ofstream dump("C:/Users/Allaoui/Desktop/GasyBoy/dump.bin", std::ios::out);
-			for (int k = 0; k < 0xFFFF; k++)
-				dump << ROM[k];
-			dump.close();
 		}
 		else
 			exit(80);
+		ofstream dump("./dump.bin", std::ios::out | std::ios::binary);
+		for (int i=0; i<banksNumber; i++)
+			for (int j=0; j<0x4000; j++)
+				dump << ROM[i][j];
 	}
 	else
 	{
@@ -89,10 +105,10 @@ void Cartridge::loadRom(string file)
 
 uint8_t *Cartridge::getROM()
 {
-	uint8_t out[0x8000];
-	for (int i = 0; i < 0x8000; i++)
-		out[i] = ROM[i];
-	return out;
+	// uint8_t out[0x8000];
+	// for (int i=0; i<0x8000; i++)
+	// 	out[i] = ROM[i];
+	return NULL;
 }
 
 void Cartridge::setMBCType(uint8_t value)
@@ -144,7 +160,11 @@ uint8_t Cartridge::getCurrRamBanks()
 
 uint8_t Cartridge::RomBankRead(uint16_t adrr)
 {
-	return ROM[adrr - 0x4000 + currRomBank * 0x4000];
+	if (adrr >= 0 && adrr <= 0x3FFF)
+		return ROM[0][adrr];
+	else if (adrr >= 0x4000 && adrr < 0x8000)
+		return ROM[(int)currRomBank][adrr - 0x4000];
+	else exit(45);
 }
 
 uint8_t Cartridge::RamBankRead(uint16_t adrr)
