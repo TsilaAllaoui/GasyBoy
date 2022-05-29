@@ -15,7 +15,7 @@ class Timer
         int timer_on();
         void setFreq();
         void divider(int m_cycle);
-        void update_timer(int m_cycle);
+        void updateTimer(int m_cycle);
         void change_interrupt(bool value);
         bool get_interrupt_status();
         void requestInterrupt(int id);

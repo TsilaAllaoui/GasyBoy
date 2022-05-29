@@ -1,8 +1,9 @@
 #pragma once
 
 #include <iostream>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include "mmu.h"
+#include "defs.h"
 
 enum {WHITE,LIGHT,DARK,BLACK};
 
@@ -16,21 +17,22 @@ class Gpu
         Mmu *mmu;
         int graphicMode, line;
         float modeClock;
-        SDL_Surface *W, *B, *L, *D, *Tile[512];
+        SDL_Surface *W, *B, *L, *D, *Tile[384];
         int pixels[160][144][3];
         int retraceLY;
         int scanline_counter;
         SDL_Rect pixels_pos;
         bool draw;
+		bool drawTileMap;
     public:
         Gpu();
         Gpu(Mmu *p_mmu);
         ~Gpu();
         void increaseScanline();
         uint8_t currScanline();
-        void gpuStep(int value, SDL_Surface *window);
+        void step(int value, SDL_Surface *window, SDL_Surface *tileMap);
         void requestInterrupt(int id);
-        void show_tile_map(SDL_Surface *screen);
+        void showTileMaps(SDL_Surface *screen);
         void show_tile_line(uint8_t a, uint8_t b, SDL_Surface * screen, int line);
         void show_tile(int i, SDL_Surface *tile);
         void render_tiles();
@@ -44,6 +46,8 @@ class Gpu
 
         bool get_draw();
         void unset_draw();
+		bool get_drawTileMap();
+		void unset_drawTileMap();
         int BitGetVal(uint8_t data, int position);
         int GetColour(uint8_t colourNum, uint16_t address);
         void render_sprites(SDL_Surface *window);

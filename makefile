@@ -5,9 +5,9 @@ CFLAGS = -std=c++11 -w
 
 ifeq ($(OS), Windows_NT)
 	OBJ = *.o
-	LIB = "C:\Program Files (x86)\CodeBlocks\SDL-1.2.15\lib"
-	HEADER = "C:\Program Files (x86)\CodeBlocks\SDL-1.2.15\include"
-	SDL = -lmingw32 -lSDLmain -lSDL
+	LIB = "C:\Program Files (x86)\CodeBlocks\SDL2-2.0.22\lib"
+	HEADER = "C:\Program Files (x86)\CodeBlocks\SDL2-2.0.22\include"
+	SDL = -lmingw32 -lSDL2main -lSDL2
 	CLEAN_SCREEN = cls
 	DEL_OBJ = del *.o
 	DEL_BIN = del *.exe
@@ -23,7 +23,7 @@ else
 endif
 
 
-SRC = *.cpp
+SRC = main.cpp
 
 all:
 	@$(CLEAN_SCREEN)

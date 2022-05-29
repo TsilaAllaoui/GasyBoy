@@ -1,6 +1,7 @@
 #pragma once
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
+#include <vector>
 #include "mmu.h"
 #include "cpu.h"
 #include "gpu.h"
@@ -18,13 +19,17 @@ class GameBoy
     private:
         Mmu *mmu;
         Cpu *cpu;
-        Gpu *gpu;
-        int cycle_counter;
-        SDL_Surface *screen, *window, *tile_map, *bg_map;
-        SDL_Rect tile_map_pos, bg_map_pos, window_pos;
+        //Gpu *gpu;
         Timer *timer;
         Gamepad *gamepad;
         Interrupter *interruptHanlder;
+
+        int cycleCounter;
+
+		SDL_Window *screen, *window, *tileMap;
+		SDL_GLContext glcontext;
+        SDL_Rect tile_map_pos, bg_map_pos;
+		SDL_Renderer *screenRenderer, *tileMapRenderer;
 
     public:
         GameBoy(string filename);

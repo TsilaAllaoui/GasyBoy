@@ -11,7 +11,7 @@ Gpu::Gpu(Mmu *p_mmu)
     modeClock = 0;
     graphicMode = 0;
     line = 0;
-    for (int j = 0; j < 512; j++)
+    /*for (int j = 0; j < 384; j++)
         Tile[j] = SDL_CreateRGBSurface(SDL_HWSURFACE, 8 * PX, 8 * PX, 32, 0, 0, 0, 0);
     W = SDL_CreateRGBSurface(SDL_HWSURFACE, 8 * PX, 8 * PX, 32, 0, 0, 0, 0);
     B = SDL_CreateRGBSurface(SDL_HWSURFACE, 8 * PX, 8 * PX, 32, 0, 0, 0, 0);
@@ -22,8 +22,9 @@ Gpu::Gpu(Mmu *p_mmu)
     SDL_FillRect(B, NULL, SDL_MapRGB(W->format, 0,0,0));
     SDL_FillRect(L, NULL, SDL_MapRGB(W->format, 0xCC,0xCC,0xCC));
     SDL_FillRect(D, NULL, SDL_MapRGB(W->format, 0x77,0x77,0x77));
-
-    draw = false;
+*/
+	draw = false;
+	drawTileMap = false;
 
     scanline_counter = 456;
     retraceLY = 456;
@@ -40,23 +41,20 @@ uint8_t Gpu::currScanline()
 }
 
 
-void Gpu::show_tile_map(SDL_Surface * screen)
+void Gpu::showTileMaps(SDL_Surface * screen)
 {
-    for (int i = 0; i < 512; i++)
-    show_tile(i, Tile[i]);
-    int k = 0, l = 0;
-    for (int j = 0; j < 512; j++)
+    if (mmu->currModifiedTile >= 0)
     {
-        if (j % 16 == 0 && j > 0)
-        {
-            l++;
-            k=0;
-        }
+        int i = mmu->currModifiedTile;
+        show_tile(i, Tile[i]);
         SDL_Rect pos;
-        pos.x = 8 * PX * k;
-        k++;
-        pos.y = PX * 8 * l;
-        SDL_BlitSurface(Tile[j], NULL, screen, &pos);
+        int MSB = (((int)(((uint16_t)i & 0xF00)) >> 8) == 0) ? 0 : 1;
+        int x = (int)(((uint8_t)i & 0xF0) >> 4), y = (int)(((uint8_t)i & 0x0F));
+        pos.x = 8 * SCALE * y;
+        pos.y = (x * 8 + MSB * 128) * SCALE;
+        SDL_BlitSurface(Tile[i], NULL, screen, &pos);
+        drawTileMap = true;
+        mmu->currModifiedTile = -1;
     }
 }
 
@@ -65,8 +63,8 @@ void Gpu::show_tile_line(uint8_t a, uint8_t b, SDL_Surface * screen, int line)
     for (int i = 7; i >= 0; i--)
     {
         SDL_Rect pos;
-        pos.x = (7 - i) * PX;
-        pos.y = line * PX;
+        pos.x = (7 - i) * SCALE;
+        pos.y = line * SCALE;
         if (!(a & (1 << i)))
         {
             if (!(b & (1 << i)))
@@ -275,8 +273,8 @@ void Gpu::draw_pixels(SDL_Surface *window)
         for (int j=0; j<160; j++)
         {
             int red = pixels[j][i][0], blue = pixels[j][i][1], green = pixels[j][i][2];
-            pixels_pos.x = j*PX;
-            pixels_pos.y = i*PX;
+            pixels_pos.x = j* SCALE;
+            pixels_pos.y = (i - 1)* SCALE;
             if (red == 0xFF && green == 0xFF && blue == 0xFF)
                 SDL_BlitSurface(W, NULL, window, &pixels_pos);
             else if (red == 0xCC && green == 0xCC && blue == 0xCC)
@@ -298,6 +296,17 @@ void Gpu::unset_draw()
 {
     draw = false;
 }
+
+bool Gpu::get_drawTileMap()
+{
+	return drawTileMap;
+}
+
+void Gpu::unset_drawTileMap()
+{
+	drawTileMap = false;
+}
+
 
 
 void Gpu::requestInterrupt(int id)
@@ -382,15 +391,16 @@ void Gpu::render_sprites(SDL_Surface *window)
             bool xFlip = (mmu->read_ram(attributes) & (1<<5)) ;
             show_tile(tileLocation,Tile[tileLocation]);
             SDL_Rect pos;
-            pos.x = xPos * PX;
-            pos.y = yPos * PX;
+            pos.x = xPos * SCALE;
+            pos.y = yPos * SCALE;
             SDL_BlitSurface(Tile[tileLocation],NULL,window,&pos);
         }
     }
 }
 
-void Gpu::gpuStep(int cycles, SDL_Surface *window)
+void Gpu::step(int cycles, SDL_Surface *window, SDL_Surface *tileMap)
 {
+    showTileMaps(tileMap);
     setLCDStatus();
     if (mmu->read_ram(0xFF40) & (1<<7))
         scanline_counter -= cycles;
@@ -401,11 +411,11 @@ void Gpu::gpuStep(int cycles, SDL_Surface *window)
         mmu->directSet(0xFF44, mmu->read_ram(0xFF44) + 1);
         uint8_t current_line = mmu->read_ram(0xFF44);
         scanline_counter = 456;
-        if (current_line == 144)
-            requestInterrupt(0);
-        else if (current_line > 153)
-            mmu->directSet(0xFF44, 0);
-        else if (current_line < 144)
+		if (current_line == 144)
+			requestInterrupt(0);
+		else if (current_line > 153)
+			mmu->directSet(0xFF44, 0);
+		else if (current_line < 144)
             draw_scanline(window);
     }
 }
@@ -433,11 +443,11 @@ void Gpu::gpuStep(int cycles, SDL_Surface *window)
 
 void Gpu::draw_scanline(SDL_Surface *window)
 {
-    if (mmu->read_ram(0xFF40) & (1<<0))
-        render_tiles();
-    if (mmu->read_ram(0xFF40) & (1<<1))
-        render_sprites(window);
-    draw = true;
+     if (mmu->read_ram(0xFF40) & (1<<0))
+         render_tiles();
+     if (mmu->read_ram(0xFF40) & (1<<1))
+         render_sprites(window);
+     draw = true;
 }
 
 

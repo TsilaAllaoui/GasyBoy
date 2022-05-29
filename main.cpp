@@ -1,8 +1,12 @@
+//#include "gameboy.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <iostream>
+#include "defs.h"
 #include "gameboy.h"
-#include <SDL/SDL.h>
 
-int main(int argc , char* argv[])
+int main(int argc, char* argv[])
 {
-    GameBoy("").boot();
-	return 0;
+	 GameBoy("").boot();
+	 return 0;
 }

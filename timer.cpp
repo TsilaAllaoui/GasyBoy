@@ -17,7 +17,7 @@ Timer::Timer(Mmu *p_mmu)
     timer_counter = 1024;
 }
 
-void Timer::update_timer(int m_cycle)
+void Timer::updateTimer(int m_cycle)
 {
 	divider(m_cycle);
 	if (timer_on())

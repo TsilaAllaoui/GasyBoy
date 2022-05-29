@@ -70,13 +70,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>C:\SDL-1.2.15\lib\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\SDL2-2.0.22\lib;$(LibraryPath)</LibraryPath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
-    <IncludePath>C:\SDL-1.2.15\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\SDL2-2.0.22\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\SDL-1.2.15\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\SDL-1.2.15\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\SDL2-2.0.22\include;C:\imgui-1.87;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\SDL2-2.0.22\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -99,7 +99,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>SDLmain.lib;SDL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -127,10 +127,11 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>SDLmain.lib;SDL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\SDL2-2.0.22\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -150,6 +151,11 @@
     <ClCompile Include="timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="gb.exe" />
+    <None Include="makefile" />
+    <None Include="SDL.dll" />
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="cartridge.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="defs.h" />
@@ -160,11 +166,6 @@
     <ClInclude Include="mmu.h" />
     <ClInclude Include="register.h" />
     <ClInclude Include="timer.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="gb.exe" />
-    <None Include="makefile" />
-    <None Include="SDL.dll" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

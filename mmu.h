@@ -5,6 +5,7 @@
 #include "gamepad.h"
 #include "defs.h"
 #include "cartridge.h"
+#include <vector>
 
 using namespace std;
 
@@ -52,7 +53,13 @@ class Mmu
 		//to check if vram is written
 		bool vramWritten;
 
+		//for storing the modified tiles
+		std::vector<int> modifiedTiles;
+
 	public:
+
+		//the current modified tile
+		int currModifiedTile;
 
 		//construcor/destructor
 		Mmu(string file);
@@ -97,4 +104,6 @@ class Mmu
 		//set vramWritten status
 		void setVramWriteStatus(bool value);
 
+		//get/set modified tiles list
+		vector<int> &getModifiedTiles();
 };

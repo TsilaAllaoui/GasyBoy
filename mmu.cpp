@@ -25,6 +25,8 @@ Mmu::Mmu(string file)
 
 	//gamepad
 	gamepad = new Gamepad();
+
+	currModifiedTile = -1;
 }
 
 Mmu::~Mmu()
@@ -78,8 +80,23 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
 		cartridge->handleRomMemory(adrr, value);
 	else if (adrr >= 0x8000 && adrr < 0xA000)
 	{
-		VRAM[adrr - 0x8000] = value;
-		vramWritten = true;
+		if (adrr <= 0x97FF)
+		{
+			if (adrr == 0x9000)
+			{
+				int a = 0;
+			}
+			VRAM[adrr - 0x8000] = value;
+			int MSB;
+			if (((adrr & 0xF000)) == 0x8000)
+				MSB = 0;
+			else MSB = 1;
+			int multiplier = ((adrr - 0x8000) & 0xF00) >> 8;
+			int index = ((adrr - 0x8000) & 0xF0) >> 4;
+			currModifiedTile = (index + multiplier * 16 + 256 * MSB);
+			//modifiedTiles.push_back(index + multiplier * 16 + 256 * MSB);
+		}
+		else VRAM[adrr - 0x8000] = value;
 	}
 	else if (adrr >= 0xA000 && adrr < 0xC000)
 	     cartridge->handleRamMemory(adrr, value);
@@ -228,4 +245,9 @@ bool Mmu::isVramWritten()
 void Mmu::setVramWriteStatus(bool value)
 {
 	vramWritten = value;
+}
+
+vector<int> &Mmu::getModifiedTiles()
+{
+	return modifiedTiles;
 }
