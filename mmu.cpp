@@ -94,7 +94,6 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
 			int multiplier = ((adrr - 0x8000) & 0xF00) >> 8;
 			int index = ((adrr - 0x8000) & 0xF0) >> 4;
 			currModifiedTile = (index + multiplier * 16 + 256 * MSB);
-			//modifiedTiles.push_back(index + multiplier * 16 + 256 * MSB);
 		}
 		else VRAM[adrr - 0x8000] = value;
 	}

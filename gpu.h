@@ -9,50 +9,106 @@ enum {WHITE,LIGHT,DARK,BLACK};
 
 using namespace std;
 
-class Mmu;
-
 class Gpu
 {
     private:
+		//for accessing the gameboy memory
         Mmu *mmu;
+
+		//graphic mode and clock mode
         int graphicMode, line;
         float modeClock;
-        SDL_Surface *W, *B, *L, *D, *Tile[384];
+
+		//buffer of pixel to show on screen
         int pixels[160][144][3];
+
+		//counting LY/scanlines
         int retraceLY;
-        int scanline_counter;
-        SDL_Rect pixels_pos;
-        bool draw;
+        int scanlineCounter;
+
+		//for checking if we have to draw screen/vram viewer
+        bool drawScreen;
 		bool drawTileMap;
+
+		//current graphical mode
+		int mode;
+
+       //textures representing VRAM Tiles
+		SDL_Texture* tiles[384];
+		SDL_Surface* tilesSurface[384];
+
+		//the VRAM Window
+		SDL_Window* VramViewer;
+
+		//the gameboy screen Window
+		SDL_Window* screen;
+
+		//the VRAM renderer
+		SDL_Renderer* VramRenderer;
+
+		//the gameboy screen renderer
+		SDL_Renderer* screenRenderer;
+
+
     public:
+		//constructor/desctructor
         Gpu();
         Gpu(Mmu *p_mmu);
         ~Gpu();
-        void increaseScanline();
-        uint8_t currScanline();
-        void step(int value, SDL_Surface *window, SDL_Surface *tileMap);
-        void requestInterrupt(int id);
-        void showTileMaps(SDL_Surface *screen);
-        void show_tile_line(uint8_t a, uint8_t b, SDL_Surface * screen, int line);
-        void show_tile(int i, SDL_Surface *tile);
-        void render_tiles();
-        uint8_t get_color(int id, uint16_t palette);
-        void draw_pixels(SDL_Surface *window);
-        uint8_t get_scy();
-        uint8_t get_scx();
-        uint8_t get_windowx();
-        uint8_t get_windowy();
-        uint8_t get_LCDC_status();
 
-        bool get_draw();
-        void unset_draw();
-		bool get_drawTileMap();
-		void unset_drawTileMap();
-        int BitGetVal(uint8_t data, int position);
-        int GetColour(uint8_t colourNum, uint16_t address);
-        void render_sprites(SDL_Surface *window);
-        void setLCDStatus();
-        void draw_currentline(SDL_Surface *window);
-        void draw_scanline(SDL_Surface *window);
+		//one step of the graphic processor unit
+        void step(int value);
+
+		//for requesting interrupt
+        void requestInterrupt(int id);
+
+		//showing VRAM content
+        void showTileMaps();
+        
+		//get/set drawing screen status
+		bool drawOnScreen();
+        void resetDrawScreenStatus();
+
+		//get/set darwing vram status
+		bool drawOnVramViewer();
+		void resetDrawVramStatus();
+
+		//getting the value of bit at given position
+		bool getBitValAt(uint8_t data, int position);
+      
+		//getters/setters for I/O register of fraphic processor unit
+		uint8_t LY();
+		void setLY(uint8_t value);
+		uint8_t LYC();
+		void setLYC(uint8_t value);
+        uint8_t SCY();
+		void setSCY(uint8_t value);
+        uint8_t SCX();
+		void setSCX(uint8_t value);
+        uint8_t WX();
+		void setWX(uint8_t value);
+        uint8_t WY();
+		void setWY(uint8_t value);
+        uint8_t LCDC();
+		void setLCDC(uint8_t value);
+		uint8_t LCDSTAT();
+        void setLCDSTAT(uint8_t value);
+		void setLCDStatus();
+
+		//render windows on screen
+		void render();
+
+		//drawing scanlines
+        void drawScanlines();
+
+		//draw tiles
+        void renderTiles();
+
+
+        //void draw_currentline(SDL_Surface *window);
+        //void render_sprites(SDL_Surface *window);
+        /*void draw_pixels(SDL_Surface *window);*/
+        /*void show_tile_line(uint8_t a, uint8_t b, SDL_Surface * screen, int line);
+        void show_tile(int i, SDL_Surface *tile);*/
 };
 

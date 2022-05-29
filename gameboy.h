@@ -19,17 +19,16 @@ class GameBoy
     private:
         Mmu *mmu;
         Cpu *cpu;
-        //Gpu *gpu;
+        Gpu *gpu;
         Timer *timer;
         Gamepad *gamepad;
         Interrupter *interruptHanlder;
 
         int cycleCounter;
 
-		SDL_Window *screen, *window, *tileMap;
+		SDL_Window * window;
 		SDL_GLContext glcontext;
         SDL_Rect tile_map_pos, bg_map_pos;
-		SDL_Renderer *screenRenderer, *tileMapRenderer;
 
     public:
         GameBoy(string filename);
