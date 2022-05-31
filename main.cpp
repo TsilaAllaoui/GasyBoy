@@ -3,6 +3,6 @@
 
 int main(int argc , char* argv[])
 {
-    GameBoy(string(argv[1])).boot();
+    GameBoy("").boot();
 	return 0;
 }
