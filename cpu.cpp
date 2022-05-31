@@ -24,7 +24,7 @@ Cpu::Cpu(bool bootBios, Mmu *p_mmu)
 	}
 
 	halted = false;
-	interrupt_enabled = false;
+	interrupt_enabled = true;
 	currentOpcode = 0;
 	cycle = 0;
 }

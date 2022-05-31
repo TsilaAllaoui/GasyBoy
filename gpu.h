@@ -34,8 +34,8 @@ class Gpu
 		int mode;
 
        //textures representing VRAM Tiles
-		SDL_Texture* tiles[384];
-		SDL_Surface* tilesSurface[384];
+		SDL_Texture* tilesAt8000[256], *tilesAt9000[128];
+		SDL_Texture* tilesForScreenAt8000[256], *tilesForScreenAt9000[128];
 
 		//the VRAM Window
 		SDL_Window* VramViewer;
@@ -103,6 +103,9 @@ class Gpu
 
 		//draw tiles
         void renderTiles();
+
+		//draw scanlines
+		void renderScanline(int line);
 
 
         //void draw_currentline(SDL_Surface *window);

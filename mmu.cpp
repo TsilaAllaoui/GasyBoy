@@ -95,7 +95,16 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
 			int index = ((adrr - 0x8000) & 0xF0) >> 4;
 			currModifiedTile = (index + multiplier * 16 + 256 * MSB);
 		}
-		else VRAM[adrr - 0x8000] = value;
+		else if (adrr >= 0x9800 && adrr <= 0x9A33 && value != 0 && value != 0xFF)
+		{
+			OAM_DATA_IN = true;
+			VRAM[adrr - 0x8000] = value;
+		}
+		else
+		{
+			VRAM[adrr - 0x8000] = value;
+		}
+		
 	}
 	else if (adrr >= 0xA000 && adrr < 0xC000)
 	     cartridge->handleRamMemory(adrr, value);
@@ -128,6 +137,8 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
         }
         else if (adrr == 0xFF44)
               WorkingRAM[adrr - 0xC000] = 0;
+		else if (adrr == 0xFF40)
+			WorkingRAM[adrr - 0xC000] = value;
         else WorkingRAM[adrr - 0xC000] = value;
 	}
 }

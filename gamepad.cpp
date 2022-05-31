@@ -13,73 +13,75 @@ Gamepad::Gamepad()
 void Gamepad::handleEvent()
 {
 	SDL_Event event;
-	SDL_PollEvent(&event);
-	if (event.type == SDL_QUIT)
-		exit(0);
-	if (event.type == SDL_KEYDOWN)
+	while (SDL_PollEvent(&event) != 0)
 	{
-		switch (event.key.keysym.sym)
-		{
-		case SDLK_ESCAPE:
+		if (event.type == SDL_QUIT)
 			exit(0);
-			break;
-		case SDLK_a:
-			keys[A] = true;
-			break;
-		case SDLK_z:
-			keys[B] = true;
-			break;
-		case SDLK_RETURN:
-			keys[SELECT] = true;
-			break;
-		case SDLK_SPACE:
-			keys[START] = true;
-			break;
-		case SDLK_UP:
-			keys[UP] = true;
-			break;
-		case SDLK_DOWN:
-			keys[DOWN] = true;
-			break;
-		case SDLK_LEFT:
-			keys[LEFT] = true;
-			break;
-		case SDLK_RIGHT:
-			keys[RIGHT] = true;
-			break;
+		if (event.type == SDL_KEYDOWN)
+		{
+			switch (event.key.keysym.sym)
+			{
+			case SDLK_ESCAPE:
+				exit(0);
+				break;
+			case SDLK_a:
+				keys[A] = true;
+				break;
+			case SDLK_z:
+				keys[B] = true;
+				break;
+			case SDLK_RETURN:
+				keys[SELECT] = true;
+				break;
+			case SDLK_SPACE:
+				keys[START] = true;
+				break;
+			case SDLK_UP:
+				keys[UP] = true;
+				break;
+			case SDLK_DOWN:
+				keys[DOWN] = true;
+				break;
+			case SDLK_LEFT:
+				keys[LEFT] = true;
+				break;
+			case SDLK_RIGHT:
+				keys[RIGHT] = true;
+				break;
+			}
 		}
-	}
-	if (event.type == SDL_KEYUP)
-	{
-		switch (event.key.keysym.sym)
+		if (event.type == SDL_KEYUP)
 		{
-		case SDLK_ESCAPE:
-			exit(0);
-			break;
-		case SDLK_a:
-			keys[A] = false;
-			break;
-		case SDLK_z:
-			keys[B] = false;
-			break;
-		case SDLK_RETURN:
-			keys[SELECT] = false;
-			break;
-		case SDLK_SPACE:
-			keys[START] = false;
-			break;
-		case SDLK_UP:
-			keys[UP] = false;
-			break;
-		case SDLK_DOWN:
-			keys[DOWN] = false;
-			break;
-		case SDLK_LEFT:
-			keys[LEFT] = false;
-			break;
-		case SDLK_RIGHT:
-			keys[RIGHT] = false;
-			break;
+			switch (event.key.keysym.sym)
+			{
+			case SDLK_ESCAPE:
+				exit(0);
+				break;
+			case SDLK_a:
+				keys[A] = false;
+				break;
+			case SDLK_z:
+				keys[B] = false;
+				break;
+			case SDLK_RETURN:
+				keys[SELECT] = false;
+				break;
+			case SDLK_SPACE:
+				keys[START] = false;
+				break;
+			case SDLK_UP:
+				keys[UP] = false;
+				break;
+			case SDLK_DOWN:
+				keys[DOWN] = false;
+				break;
+			case SDLK_LEFT:
+				keys[LEFT] = false;
+				break;
+			case SDLK_RIGHT:
+				keys[RIGHT] = false;
+				break;
+			}
 		}
 	}
 }

@@ -61,6 +61,8 @@ class Mmu
 		//the current modified tile
 		int currModifiedTile;
 
+		bool OAM_DATA_IN;
+
 		//construcor/destructor
 		Mmu(string file);
 		~Mmu();

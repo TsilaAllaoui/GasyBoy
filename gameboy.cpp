@@ -9,7 +9,7 @@ GameBoy::GameBoy(string filename)
 	{
 		filename = new char[100];
 		// filename = "./Roms/MBC1/SuperMarioLand.gb";
-		filename = "./Roms/NoBanks/DrMario.gb";
+		filename = "./Roms/NoBanks/TETRIS.gb";
 	}
 
 	//initializing SDL App
@@ -31,7 +31,7 @@ GameBoy::GameBoy(string filename)
 	
 
 	mmu = new Mmu(filename);
-	cpu = new Cpu(false, mmu);
+	cpu = new Cpu(true, mmu);
 	gpu = new Gpu(mmu);
 	timer = new Timer(mmu);
 	interruptHanlder = new Interrupter(mmu, cpu);
