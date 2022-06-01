@@ -15,6 +15,10 @@ Mmu::Mmu(string file)
 		ExtRAM[i] = 0x0;
 	for (int i = 0; i < 0x4000; i++)
 		WorkingRAM[i] = 0x0;
+
+	//setting joypad to off
+	WorkingRAM[0xFFFF - 0xC000] = 0xFF;
+
 	in_bios = true;
 	
 	cartridge = new Cartridge();
@@ -136,8 +140,10 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
             return;
         }
         else if (adrr == 0xFF44)
-              WorkingRAM[adrr - 0xC000] = 0;
+              WorkingRAM[adrr - 0xC000] = value;
 		else if (adrr == 0xFF40)
+			WorkingRAM[adrr - 0xC000] = value;
+		else if (adrr == 0xFFFF)
 			WorkingRAM[adrr - 0xC000] = value;
         else WorkingRAM[adrr - 0xC000] = value;
 	}

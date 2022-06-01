@@ -136,7 +136,6 @@ void Gpu::step(int cycles)
 		else if (LY() > 153)
 		{
 			setLY(0);
-			requestInterrupt(0);
 		}
 		else if (LY() < 144)
 		{
@@ -162,8 +161,8 @@ void Gpu::renderScanline(int line)
 	{
 		tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
 		SDL_Rect dst;
-		dst.x = 8 * SCALE * x;
-		dst.y = SCALE * line;
+		dst.x = 8 * SCALE * x - SCX() * SCALE;
+		dst.y = SCALE * line - SCY() * SCALE;
 		dst.w = 8 * SCALE;
 		dst.h = SCALE;
 		x++;
@@ -204,9 +203,8 @@ void Gpu::renderScanline(int line)
 			}
 		}
 	}
-	SDL_RenderPresent(screenRenderer);
-	SDL_Delay(10);
-	drawScreen = true;
+	//SDL_RenderPresent(screenRenderer);
+	//drawScreen = true;
 }
 
 uint8_t Gpu::LY()

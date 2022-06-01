@@ -24,7 +24,7 @@ Cpu::Cpu(bool bootBios, Mmu *p_mmu)
 	}
 
 	halted = false;
-	interrupt_enabled = true;
+	interrupt_enabled = false;
 	currentOpcode = 0;
 	cycle = 0;
 }
@@ -2359,8 +2359,9 @@ bool Cpu::get_interrupt_status()
 
 long Cpu::step()
 {
-	if (mmu->read_ram(0xFF50) == 0x1 && mmu->isInBios())
+	if ((mmu->read_ram(0xFF50) == 0x1 && mmu->isInBios()))
 		mmu->disableBios();
+
 	if (!halted)
 	{
      	fetch();
