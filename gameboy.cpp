@@ -9,7 +9,7 @@ GameBoy::GameBoy(string filename)
 	{
 		filename = new char[100];
 		// filename = "./Roms/MBC1/SuperMarioLand.gb";
-		filename = "./Roms/NoBanks/opus5.gb";
+		filename = "./Roms/NoBanks/TETRIS.gb";
 	}
 
 	//initializing SDL App
@@ -72,9 +72,11 @@ void GameBoy::boot()
 	{
 		cycleCounter = 0;
 		while (cycleCounter <= 69905)
+		{
 			step();
-
-		gpu->render();
+		}
+			gpu->render();
+		
 		/*SDL_Delay(100);*/
 		//if (gpu->drawOnScreen())
 		//{

@@ -22,7 +22,7 @@ Gpu::Gpu(Mmu *p_mmu)
 	VramRenderer = SDL_CreateRenderer(VramViewer, -1, SDL_RENDERER_ACCELERATED);
 
 	//creating gameboy screen and renderer
-	screen = SDL_CreateWindow("GasyBoy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_SHOWN);
+	screen = SDL_CreateWindow("GasyBoy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,SCREEN_WIDTH * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_SHOWN);
 	screenRenderer = SDL_CreateRenderer(screen, -1, SDL_RENDERER_ACCELERATED);
 
 	//creating all 384 possibles tiles in VRAM
@@ -131,6 +131,7 @@ void Gpu::step(int cycles)
 		if (LY() == 144)
 		{
 			requestInterrupt(0);
+			/*drawScreen = true;*/
 			drawScreen = true;
 		}
 		else if (LY() > 153)
@@ -140,7 +141,7 @@ void Gpu::step(int cycles)
 		else if (LY() < 144)
 		{
 			//draw on screen
-			renderScanline((int)LY());
+			renderScanline(LY());
 		}
 	}
 }
@@ -152,23 +153,20 @@ void Gpu::renderScanline(int line)
 	uint16_t adress;
 	if (line > 0)
 		line--;
-	int y = floor(line/8);
 	int x = 0;
-	if (floor(line / 8) == 1)
-		int a = 0;
-	uint16_t currTile = tileMap + 0x20 * floor(line / 8);
+	uint16_t currTile = tileMap + 0x20 * (floor((int)line / 8) + floor((int)SCY() / 8));
 	for (int i = currTile  ; i < currTile +  0x14; i++)
 	{
 		tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
 		SDL_Rect dst;
-		dst.x = 8 * SCALE * x - SCX() * SCALE;
-		dst.y = SCALE * line - SCY() * SCALE;
+		dst.x = 8 * SCALE * x;// -(int)SCX() * SCALE;
+		dst.y = SCALE * line;// -SCY() * SCALE;
 		dst.w = 8 * SCALE;
 		dst.h = SCALE;
 		x++;
 		SDL_Rect src;
 		src.x = 0;
-		src.y = line - 8 * floor(line/8);
+		src.y = line % 8;
 		src.w = 8;
 		src.h = 1;
 		if (tileData == 0x8000)
@@ -396,32 +394,27 @@ void Gpu::drawScanlines()
 
 void Gpu::renderTiles()
 {
-	SDL_SetRenderDrawColor(screenRenderer, 255, 0, 0, 255);
-	SDL_RenderClear(screenRenderer);
 	uint16_t tileMap = getBitValAt(LCDC(), 3) ? 0x9C00 : 0x9800;
 	uint16_t tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
-	uint16_t adress;
-	uint16_t startAdress[18];
-	for (int i = 0; i < 18; i++)
-		startAdress[i] = tileMap + (i * 0x20);
-	int y = 0;
-	for (int k = 0; k < 18; k++)
+	uint16_t currTile = tileMap;
+	for (int k = 0; k < 32; k++)
 	{
+		int y = 0;
 		int x = 0;
-		y = k;
-		for (int i = startAdress[k]; i < startAdress[k] + 0x14; i++)
+		for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + 0x20; i++)
 		{
 			tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
-			SDL_Rect pos;
-			pos.x = 8 * SCALE * x;
-			pos.y = 8 * SCALE * y;
+			SDL_Rect dst;
+			dst.x = 8 * SCALE * x;
+			dst.y = 8 * SCALE * k;
+			dst.w = 8 * SCALE;
+			dst.h = 8 * SCALE;
 			x++;
-			pos.w = pos.h = 8 * SCALE;
 			if (tileData == 0x8000)
 			{
 				uint8_t value = mmu->read_ram(i);
 				if (value >= 0 && value <= 255)
-					SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &pos);
+					SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
 				else
 				{
 					uint8_t tmp = value;
@@ -435,11 +428,11 @@ void Gpu::renderTiles()
 				{
 					if (value >= -127 && value < 0)
 					{
-						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &pos);
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
 					}
 					else if (value >= 0 && value < 128)
 					{
-						SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &pos);
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
 					}
 				}
 				else
@@ -450,8 +443,12 @@ void Gpu::renderTiles()
 			}
 		}
 	}
-	drawScreen = true;
+	SDL_Rect scroll = { SCX() * SCALE, SCY() * SCALE, 160 * SCALE, 144 * SCALE };
+	SDL_SetRenderDrawColor(screenRenderer, 0, 0, 0, 255);
+	SDL_RenderDrawRect(screenRenderer, &scroll);
+	////SDL_RenderPresent(screenRenderer);
 	//SDL_RenderPresent(screenRenderer);
+	drawScreen = true;
 }
  
 /*void Gpu::draw_currentline(SDL_Surface *window)

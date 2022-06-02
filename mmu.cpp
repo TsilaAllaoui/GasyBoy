@@ -101,7 +101,6 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
 		}
 		else if (adrr >= 0x9800 && adrr <= 0x9A33 && value != 0 && value != 0xFF)
 		{
-			OAM_DATA_IN = true;
 			VRAM[adrr - 0x8000] = value;
 		}
 		else
