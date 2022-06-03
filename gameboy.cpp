@@ -75,19 +75,6 @@ void GameBoy::boot()
 		{
 			step();
 		}
-			gpu->render();
-		
-		/*SDL_Delay(100);*/
-		//if (gpu->drawOnScreen())
-		//{
-		//	/*gpu->draw_pixels(window);
-		//	if (mmu->read_ram(0xFF40) & (1<<1))
-		//	gpu->render_sprites(window);
-		//	gpu->unset_draw();
-		//	SDL_BlitSurface(window, NULL, screen, NULL);
-		//	SDL_Flip(screen);*/
-		//	gpu->resetDrawScreenStatus();
-		//}
 	}
 }
 

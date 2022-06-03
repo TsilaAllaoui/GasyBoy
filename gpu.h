@@ -63,7 +63,7 @@ class Gpu
         void requestInterrupt(int id);
 
 		//showing VRAM content
-        void showTileMaps();
+        void showTileData();
         
 		//get/set drawing screen status
 		bool drawOnScreen();

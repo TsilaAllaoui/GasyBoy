@@ -139,7 +139,7 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
             return;
         }
         else if (adrr == 0xFF44)
-              WorkingRAM[adrr - 0xC000] = value;
+              WorkingRAM[adrr - 0xC000] = 0;
 		else if (adrr == 0xFF40)
 			WorkingRAM[adrr - 0xC000] = value;
 		else if (adrr == 0xFFFF)
