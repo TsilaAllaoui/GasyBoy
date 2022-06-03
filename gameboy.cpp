@@ -31,7 +31,7 @@ GameBoy::GameBoy(string filename)
 	
 
 	mmu = new Mmu(filename);
-	cpu = new Cpu(true, mmu);
+	cpu = new Cpu(false, mmu);
 	gpu = new Gpu(mmu);
 	timer = new Timer(mmu);
 	interruptHanlder = new Interrupter(mmu, cpu);

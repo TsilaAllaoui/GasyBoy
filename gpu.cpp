@@ -268,7 +268,7 @@ void Gpu::drawScanlines()
 	if (getBitValAt(LCDC(), 1))
 	{
 		//draw sprites
-		//TODO
+		renderSprites();
 	}
 }
 
@@ -328,27 +328,24 @@ void Gpu::renderTiles()
 	}
 }
 
-//void Gpu::render_sprites(SDL_Surface *window)
-//{
-//    if (mmu->read_ram(0xFF40) & (1<<1))
-//    {
-//        for (int i=0; i<40; i+=4)
-//        {
-//            uint8_t yPos = mmu->read_ram(0xFE00+i)- 16;
-//            uint8_t xPos = mmu->read_ram(0xFE01+i)-8;
-//            uint8_t tileLocation = mmu->read_ram(0xFE02+i) ;
-//            uint8_t attributes = mmu->read_ram(0xFE03+i) ;
-//
-//            bool yFlip = (mmu->read_ram(attributes) & (1<<6)) ;
-//            bool xFlip = (mmu->read_ram(attributes) & (1<<5)) ;
-//            show_tile(tileLocation,Tile[tileLocation]);
-//            SDL_Rect pos;
-//            pos.x = xPos * SCALE;
-//            pos.y = yPos * SCALE;
-//            SDL_BlitSurface(Tile[tileLocation],NULL,window,&pos);
-//        }
-//    }
-//}
+void Gpu::renderSprites()
+{
+    for (int i=0; i<40; i+=4)
+    {
+        uint8_t yPos = mmu->read_ram(0xFE00+i)- 16;
+        uint8_t xPos = mmu->read_ram(0xFE01+i)-8;
+        uint8_t tileLocation = mmu->read_ram(0xFE02+i) ;
+        uint8_t attributes = mmu->read_ram(0xFE03+i) ;
+        bool yFlip = (mmu->read_ram(attributes) & (1<<6)) ;
+        bool xFlip = (mmu->read_ram(attributes) & (1<<5)) ;     
+        SDL_Rect pos;
+        pos.x = xPos * SCALE;
+		pos.y = yPos * SCALE;
+		pos.h = 8 * SCALE;
+		pos.w = 8 * SCALE;
+		SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[tileLocation], NULL, &pos);
+    }
+}
 
 
 //render VRAM Viewer/Screen 

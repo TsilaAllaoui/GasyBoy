@@ -107,6 +107,9 @@ class Gpu
 		//draw scanlines
 		void renderScanline(int line);
 
+		//draw sprites
+		void renderSprites();
+
 
         //void draw_currentline(SDL_Surface *window);
         //void render_sprites(SDL_Surface *window);
