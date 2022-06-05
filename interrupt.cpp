@@ -14,7 +14,7 @@ Interrupter::~Interrupter()
 
 void Interrupter::handleInterrupts()
 {
-    if (cpu->get_interrupt_status())
+    if (cpu->getInterruptStatus())
     {
         uint8_t req = mmu->read_ram(0xFF0F);
         uint8_t enable = mmu->read_ram(0xFFFF);
@@ -44,6 +44,7 @@ void Interrupter::serviceInterrupt(int interrupt)
     req &= ~(1 << interrupt);
     mmu->write_ram(0xFF0F, req);
     cpu->push_SP(cpu->get_PC());
+	cpu->setHaltedStatus(false);
     switch (interrupt)
     {
         case 0: cpu->set_PC(0x40); break;

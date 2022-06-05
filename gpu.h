@@ -1,3 +1,5 @@
+//TODO: Implement Palette for OBJ
+
 #pragma once
 
 #include <iostream>

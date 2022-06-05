@@ -85,7 +85,7 @@ void Gpu::setLCDStatus()
 		setLY(0);
 		mmu->write_ram(0xFF44, 0);
 		LcdStat &= 252;
-		LcdStat |= (1 << 0);
+		LcdStat &= ~(1 << 0);
 		setLCDSTAT(LcdStat);
 		return;
 	}

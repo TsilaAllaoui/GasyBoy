@@ -159,6 +159,12 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
 			return;
 		}
 
+		else if (adrr == 0xFF40 && value == 0x3)
+		{
+			int a = 0;
+			WorkingRAM[adrr - 0xC000] = value;
+		}
+
 		//other write
 		else WorkingRAM[adrr - 0xC000] = value;
 	}

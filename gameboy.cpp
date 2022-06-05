@@ -2,6 +2,8 @@
 #include <ctime>
 #include <cstdlib>
 
+ofstream out("out.txt", std::ios::out);
+
 GameBoy::GameBoy(string filename)
 {
 	srand(time(0));
@@ -9,7 +11,7 @@ GameBoy::GameBoy(string filename)
 	{
 		filename = new char[100];
 		// filename = "./Roms/MBC1/SuperMarioLand.gb";
-		filename = "./Roms/NoBanks/TETRIS.gb";
+		filename = "./Roms/NoBanks/BubbleGhost.gb";
 	}
 
 	//initializing SDL App
@@ -63,6 +65,11 @@ void GameBoy::step()
 	gpu->step(cycle);
 	gamepad->handleEvent();
 	interruptHanlder->handleInterrupts();
+	/*if (cpu->get_PC() >= 0xB7B && cpu->get_PC() <= 0xB7F)
+	{
+		out << hex << (int)gpu->LCDC() << endl;
+		out << hex << (int)gpu->LCDSTAT() << endl << endl;
+	}*/
 }
 
 void GameBoy::boot()

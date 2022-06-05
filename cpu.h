@@ -52,11 +52,11 @@ class Cpu
 		void fetch();
 
 		//get the interrupt status of the cpu
-		bool get_interrupt_status();
-		bool get_halted_status();
+		bool getInterruptStatus();
+		bool getHaltedStatus();
 
 		//set halted status
-		void set_halted_status(bool value);
+		void setHaltedStatus(bool value);
 
 		//getters
 		uint16_t get_PC();

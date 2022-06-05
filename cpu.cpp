@@ -66,12 +66,12 @@ uint16_t Cpu::getRegister(string reg)
 		exit(4);
 }
 
-void Cpu::set_halted_status(bool value)
+void Cpu::setHaltedStatus(bool value)
 {
 	halted = value;
 }
 
-bool Cpu::get_halted_status()
+bool Cpu::getHaltedStatus()
 {
 	return halted;
 }
@@ -2352,7 +2352,7 @@ uint16_t Cpu::next2bytes(uint16_t adress)
 	return value;
 }
 
-bool Cpu::get_interrupt_status()
+bool Cpu::getInterruptStatus()
 {
 	return interrupt_enabled;
 }
@@ -2362,6 +2362,11 @@ long Cpu::step()
 	if ((mmu->read_ram(0xFF50) == 0x1 && mmu->isInBios()))
 		mmu->disableBios();
 
+	if (PC == 0xd25)
+	{
+ 		int a = 0;
+	}
+
 	if (!halted)
 	{
      	fetch();
@@ -2370,7 +2375,7 @@ long Cpu::step()
 	}
 	else
 	{
-		if (mmu->read_ram(0xFF0F) > 0)
+		if ((mmu->read_ram(0xFF0F) & 0xF) > 0)
 		{
 			halted = false;
 			PC++;
@@ -3360,7 +3365,6 @@ void Cpu::execute()
 		break;
 	case 0xC3:
 		JP_16(PC + 1);
-		//cout << hex << "2 bytes after 0xc3 " << (int)next2bytes(PC + 1) << endl;
 		cycle = 16;
 		break;
 	case 0xC4:
