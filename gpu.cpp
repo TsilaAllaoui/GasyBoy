@@ -22,7 +22,7 @@ Gpu::Gpu(Mmu *p_mmu)
 	VramRenderer = SDL_CreateRenderer(VramViewer, -1, SDL_RENDERER_ACCELERATED);
 
 	//creating gameboy screen and renderer
-	screen = SDL_CreateWindow("GasyBoy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,SCREEN_WIDTH * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_SHOWN);
+	screen = SDL_CreateWindow("GasyBoy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,SCREEN_WIDTH  * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_SHOWN);
 	screenRenderer = SDL_CreateRenderer(screen, -1, SDL_RENDERER_ACCELERATED);
 
 	//creating all 384 possibles tiles in VRAM
@@ -228,48 +228,97 @@ void Gpu::renderTiles()
 	uint16_t tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
 	uint16_t currTile = tileMap;
 	int index = 0;
-	for (int k = SCY()/8; k < SCY() / 8 + 19; k++)
+	int oldK = 0;
+	for (int k = SCY() / 8; k < SCY() / 8 + 19; k++)
 	{
 		int y = 0;
 		int x = 0;
-		for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + 0x14; i++)
+		if (k >= 32)
 		{
-			tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
-			SDL_Rect dst;
-			dst.x = 8 * SCALE * x - SCX() * SCALE;
-			dst.y = 8 * SCALE * k - SCY() * SCALE;
-			dst.w = 8 * SCALE;
-			dst.h = 8 * SCALE;
-			x++;
-			if (tileData == 0x8000)
+			for (int i = currTile + 0x20 * index; i < (currTile + 0x20 * index) + 0x20; i++)
 			{
-				uint8_t value = mmu->read_ram(i);
-				if (value >= 0 && value <= 255)
-					SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
-				else
+				tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
+				SDL_Rect dst;
+				dst.x = 8 * SCALE * x - SCX() * SCALE;
+				dst.y = 8 * SCALE * k - SCY() * SCALE;
+				dst.w = 8 * SCALE;
+				dst.h = 8 * SCALE;
+				x++;
+				if (tileData == 0x8000)
 				{
-					uint8_t tmp = value;
-					exit(99);
+					uint8_t value = mmu->read_ram(i);
+					if (value >= 0 && value <= 255)
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
+					else
+					{
+						uint8_t tmp = value;
+						exit(99);
+					}
+				}
+				else if (tileData == 0x8800)
+				{
+					int8_t value = (int8_t)mmu->read_ram(i);
+					if (value >= -128 && value <= 127)
+					{
+						if (value >= -128 && value < 0)
+						{
+							SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
+						}
+						else if (value >= 0 && value <= 127)
+						{
+							SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
+						}
+					}
+					else
+					{
+						uint8_t tmp = value;
+						exit(99);
+					}
 				}
 			}
-			else if (tileData == 0x8800)
+			index++;
+		}
+		else if (k < 32)
+		{
+			for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + 0x20; i++)
 			{
-				int8_t value = (int8_t)mmu->read_ram(i);
-				if (value >= -128 && value <= 127)
+				tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
+				SDL_Rect dst;
+				dst.x = 8 * SCALE * x - SCX() * SCALE;
+				dst.y = 8 * SCALE * k - SCY() * SCALE;
+				dst.w = 8 * SCALE;
+				dst.h = 8 * SCALE;
+				x++;
+				if (tileData == 0x8000)
 				{
-					if (value >= -128 && value < 0)
+					uint8_t value = mmu->read_ram(i);
+					if (value >= 0 && value <= 255)
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
+					else
 					{
-						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
-					}
-					else if (value >= 0 && value <= 127)
-					{
-						SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
+						uint8_t tmp = value;
+						exit(99);
 					}
 				}
-				else
+				else if (tileData == 0x8800)
 				{
-					uint8_t tmp = value;
-					exit(99);
+					int8_t value = (int8_t)mmu->read_ram(i);
+					if (value >= -128 && value <= 127)
+					{
+						if (value >= -128 && value < 0)
+						{
+							SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
+						}
+						else if (value >= 0 && value <= 127)
+						{
+							SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
+						}
+					}
+					else
+					{
+						uint8_t tmp = value;
+						exit(99);
+					}
 				}
 			}
 		}
