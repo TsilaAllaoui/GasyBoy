@@ -330,20 +330,42 @@ void Gpu::renderTiles()
 
 void Gpu::renderSprites()
 {
+	//iterating through the 40 possibles sprites in OAM
     for (int i=0; i<40; i+=4)
     {
-        uint8_t yPos = mmu->read_ram(0xFE00+i)- 16;
-        uint8_t xPos = mmu->read_ram(0xFE01+i)-8;
-        uint8_t tileLocation = mmu->read_ram(0xFE02+i) ;
-        uint8_t attributes = mmu->read_ram(0xFE03+i) ;
-        bool yFlip = (mmu->read_ram(attributes) & (1<<6)) ;
-        bool xFlip = (mmu->read_ram(attributes) & (1<<5)) ;     
+		//getting the sprite's informations
+        uint8_t yPos = mmu->read_ram(0xFE00 + i) - 16;
+        uint8_t xPos = mmu->read_ram(0xFE01 + i) - 8;
+        uint8_t tileNumber = mmu->read_ram(0xFE02 + i) ;
+        uint8_t attributes = mmu->read_ram(0xFE03 + i) ;
+
+		//the sprites flasg attributes
+		bool priority = getBitValAt(attributes, 7);
+        bool verticalFlip = getBitValAt(attributes, 6);
+        bool horizontalFlip = getBitValAt(attributes, 5);
+		bool colorPalette = getBitValAt(attributes, 4);
+
+		//rendering the sprite
         SDL_Rect pos;
         pos.x = xPos * SCALE;
 		pos.y = yPos * SCALE;
 		pos.h = 8 * SCALE;
 		pos.w = 8 * SCALE;
-		SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[tileLocation], NULL, &pos);
+		if (verticalFlip)
+		{
+			SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos, 0, NULL, SDL_FLIP_VERTICAL);
+			continue;
+		}
+		if (horizontalFlip)
+		{
+			SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos, 0, NULL, SDL_FLIP_HORIZONTAL);
+			continue;
+		}
+		if (!horizontalFlip && !verticalFlip)
+		{
+			SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos);
+			continue;
+		}
     }
 }
 

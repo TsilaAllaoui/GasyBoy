@@ -19,23 +19,25 @@ Mmu::Mmu(string file)
 	//setting joypad to off
 	WorkingRAM[0xFFFF - 0xC000] = 0xFF;
 
+	//to check if the gameboy is still in BIOS Bootrom mode
 	in_bios = true;
 	
+	//the game cartridge
 	cartridge = new Cartridge();
 	
-		//loading rom file via file
+	//loading rom file via file
 	cartridge->loadRom(file);
-	// ROM = cartridge->getROM();
 
 	//gamepad
 	gamepad = new Gamepad();
 
+	//to check if VRAM is modified
 	currModifiedTile = -1;
 }
 
 Mmu::~Mmu()
 {
-	delete VRAM, ExtRAM, WorkingRAM;
+	delete[] VRAM, ExtRAM, WorkingRAM;
 	in_bios = true;
 }
 
@@ -59,38 +61,46 @@ uint8_t Mmu::read_ram(uint16_t adrr)
 		//return ROM content otherwise
 		else return cartridge->RomBankRead(adrr);
 	}
-	else if (adrr >= 0x100)
+	//for reading ROM
+	else if (adrr >= 0x100 && adrr < 0x8000)
+		return cartridge->RomBankRead(adrr);
+
+	// fro reading VRAM
+	else if (adrr >= 0x8000 && adrr < 0xA000)
+		return VRAM[adrr - 0x8000];
+
+	//for reading ExtRAM
+	else if (adrr >= 0xA000 && adrr < 0xC000)
+		return cartridge->RamBankRead(adrr);
+
+	//for reading high RAM
+	else if (adrr >= 0xC000 && adrr < 0xFF00)
+		return WorkingRAM[adrr - 0xC000];
+
+	//for reading I/O region
+	if (adrr >= 0xFF00 && adrr <= 0xFFFF)
 	{
-		if (adrr < 0x8000)
-		    return cartridge->RomBankRead(adrr);
-		else if (adrr >= 0x8000 && adrr < 0xA000)
-            return VRAM[adrr - 0x8000];
-		else if (adrr >= 0xA000 && adrr < 0xC000)
-		{
-			return cartridge->RamBankRead(adrr);
-		}
-		else if (adrr >= 0xC000 && adrr <= 0xFFFF)
-		{
-			if (adrr == 0xFF00)
-				return gamepad->getState();
-			else return WorkingRAM[adrr - 0xC000];
-		}
+		if (adrr == 0xFF00)
+			return gamepad->getState();
+		else return WorkingRAM[adrr - 0xC000];
 	}
+
+	//for finding unsupported read
+	else exit(78);
 }
 
 void Mmu::write_ram(uint16_t adrr, uint8_t value)
 {
+	//if writing to ROM, manage memory banks
 	if (adrr < 0x8000)
 		cartridge->handleRomMemory(adrr, value);
+
+	//if writing to VRAM
 	else if (adrr >= 0x8000 && adrr < 0xA000)
 	{
+		//for notifying gpu that VRAM was modified and need t 
 		if (adrr <= 0x97FF)
 		{
-			if (adrr == 0x9000)
-			{
-				int a = 0;
-			}
-			VRAM[adrr - 0x8000] = value;
 			int MSB;
 			if (((adrr & 0xF000)) == 0x8000)
 				MSB = 0;
@@ -99,102 +109,62 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
 			int index = ((adrr - 0x8000) & 0xF0) >> 4;
 			currModifiedTile = (index + multiplier * 16 + 256 * MSB);
 		}
-		else if (adrr >= 0x9800 && adrr <= 0x9A33 && value != 0 && value != 0xFF)
-		{
-			VRAM[adrr - 0x8000] = value;
-		}
-		else
-		{
-			VRAM[adrr - 0x8000] = value;
-		}
-		
+		VRAM[adrr - 0x8000] = value;
 	}
+
+	//writing to ExtRAM
 	else if (adrr >= 0xA000 && adrr < 0xC000)
-	     cartridge->handleRamMemory(adrr, value);
+		cartridge->handleRamMemory(adrr, value);
+
+	//writing to WorkingRAM and HighRAM
 	else if (adrr >= 0xC000 && adrr <= 0xFFFF)
 	{
+		//writing to WorkingRAM
 		if (adrr >= 0xE000 && adrr <= 0xFE00)
 		{
 			WorkingRAM[adrr - 0xC000] = value;
 			WorkingRAM[adrr - 0x2000 - 0xC000] = value;
 		}
-		else if ( adrr >= 0xFEA0 && adrr <= 0xFEFF)
-		    return;
-	    else if (adrr == 0xFF00)
-        {
+
+		//for unsupported write in WorkingRAM
+		else if (adrr >= 0xFEA0 && adrr <= 0xFEFF)
+			return;
+
+		//I/O and HighRAM Region
+
+
+		//Joypad register
+		else if (adrr == 0xFF00)
 			gamepad->setState(value);
-        }
-        else if (adrr == 0xFF02)		//only for Blargg Test roms debugging, TODO: implement serial transfert protocol
-        {
-            if (value == 0x81)
-			{
-                cout << WorkingRAM[0xFF01 - 0xC000];
-			}
-        }
+
+		// for Serail IN/OUT
+		else if (adrr == 0xFF02)		//only for Blargg Test roms debugging, TODO: implement serial transfert protocol
+		{
+			if (value == 0x81)
+				cout << WorkingRAM[0xFF01 - 0xC000];
+		}
+
+		//writing to DIV register reset its counter
 		else if (adrr == 0xFF04)
-              WorkingRAM[adrr - 0xC000] = 0;
-        else if (adrr == 0xFF46)
-        {
-            DoDMATransfert(value);
-            return;
-        }
-        else if (adrr == 0xFF44)
-              WorkingRAM[adrr - 0xC000] = 0;
-		else if (adrr == 0xFF40)
-			WorkingRAM[adrr - 0xC000] = value;
-		else if (adrr == 0xFFFF)
-			WorkingRAM[adrr - 0xC000] = value;
-        else WorkingRAM[adrr - 0xC000] = value;
-	}
-}
+			WorkingRAM[adrr - 0xC000] = 0;
 
-uint8_t **Mmu::get_bg_array()
-{
-	uint8_t **matrix = new uint8_t *[256];
-	for (int i = 0; i < 256; i++)
-		matrix[i] = new uint8_t[256];
-	uint16_t baseAdress;
-	if (get_LCDC_BGTileMap())
-		baseAdress = 0x9C00;
-	else
-		baseAdress = 0x9800;
+		//writing to LY register reset it
+		else if (adrr == 0xFF44)
+			WorkingRAM[adrr - 0xC000] = 0;
 
-	for (int i = 0; i < 1024; i++)
-	{
-		uint8_t currentTile = read_ram(baseAdress + i);
-		uint16_t tileAdress;
-		if (get_LCDC_BGWindowTile())
-			tileAdress = 0x8000 + (currentTile * 0x10);
-		else
+		//OAM DMA Transfert
+		else if (adrr == 0xFF46)
 		{
-			if (currentTile <= 127)
-				tileAdress = 0x9000 + (currentTile * 0x10);
-			else
-				tileAdress = 0x8800 + (currentTile * 0x10);
+			DoDMATransfert(value);
+			return;
 		}
-		for (int j = 0; j < 8; j++)
-		{
-			for (int k = 0; k < 8; k++)
-			{
-				int x = 0, y = 0;
-				uint8_t pixel = (read_ram(tileAdress + (j * 2)) >> (7 - k)) & 1;
-				pixel = pixel << 1;
-				pixel = pixel | ((read_ram(tileAdress + 1 + (j * 2)) >> (7 - k)) & 1);
-				matrix[j + ((i / 32) * 8)][k + ((i % 32) * 8)] = get_paletteColor(pixel);
-			}
-		}
+
+		//other write
+		else WorkingRAM[adrr - 0xC000] = value;
 	}
-	return matrix;
-}
 
-bool Mmu::get_LCDC_BGTileMap()
-{
-	return (read_ram(0xFF40) & 0b00001000) == 0b00001000;
-}
-
-bool Mmu::get_LCDC_BGWindowTile()
-{
-	return (read_ram(0xFF40) & 0b00010000) == 0b00010000;
+	//for unsupported writes
+	else exit(78);
 }
 
 uint8_t Mmu::get_paletteColor(uint8_t index)
@@ -223,20 +193,6 @@ void Mmu::DoDMATransfert(uint8_t value)
 	}
 }
 
-uint8_t Mmu::get_0xFF00()
-{
-	return WorkingRAM[0xFF00 - 0xC000];
-}
-
-void Mmu::setOut(uint8_t value)
-{
-	out = value;
-}
-uint8_t Mmu::getOut()
-{
-	return out;
-}
-
 uint16_t Mmu::getNext2Bytes(uint16_t adress)
 {
 	return (read_ram(adress + 2) << 8) | read_ram(adress + 1);
@@ -260,9 +216,4 @@ bool Mmu::isVramWritten()
 void Mmu::setVramWriteStatus(bool value)
 {
 	vramWritten = value;
-}
-
-vector<int> &Mmu::getModifiedTiles()
-{
-	return modifiedTiles;
 }

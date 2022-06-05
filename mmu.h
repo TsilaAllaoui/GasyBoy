@@ -79,9 +79,6 @@ class Mmu
 
 		//graphic memory TODO: change functions names
 		uint8_t *getVRAM();
-		uint8_t **get_bg_array();
-		bool get_LCDC_BGTileMap();
-		bool get_LCDC_BGWindowTile();
 		uint8_t get_paletteColor(uint8_t index);
 
 		//directly set value in memory region
@@ -91,10 +88,6 @@ class Mmu
 		void DoDMATransfert(uint8_t value);
 
 		//gamepad
-		uint8_t get_0xFF00();
-		void setJoypad(uint8_t value);
-		void setOut(uint8_t value);
-		uint8_t getOut();
 		Gamepad *getGamepad();
 
 		//getting immediate 16bits in low endianess
@@ -105,7 +98,4 @@ class Mmu
 
 		//set vramWritten status
 		void setVramWriteStatus(bool value);
-
-		//get/set modified tiles list
-		vector<int> &getModifiedTiles();
 };
