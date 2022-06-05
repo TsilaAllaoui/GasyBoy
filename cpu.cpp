@@ -2362,11 +2362,6 @@ long Cpu::step()
 	if ((mmu->read_ram(0xFF50) == 0x1 && mmu->isInBios()))
 		mmu->disableBios();
 
-	if (PC == 0xd25)
-	{
- 		int a = 0;
-	}
-
 	if (!halted)
 	{
      	fetch();

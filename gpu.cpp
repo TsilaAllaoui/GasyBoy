@@ -137,64 +137,6 @@ void Gpu::setLCDStatus()
 	setLCDSTAT(LcdStat);
 }
 
-//render one scanline
-void Gpu::renderScanline(int line)
-{
-	uint16_t tileMap = getBitValAt(LCDC(), 3) ? 0x9C00 : 0x9800;
-	uint16_t tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
-	uint16_t adress;
-	if (line > 0)
-		line--;
-	int x = 0;
-	uint16_t currTile = tileMap + 0x20 * (floor((int)line / 8) + floor((int)SCY() / 8));
-	for (int i = currTile  ; i < currTile +  0x14; i++)
-	{
-		tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
-		SDL_Rect dst;
-		dst.x = 8 * SCALE * x;// -(int)SCX() * SCALE;
-		dst.y = SCALE * line;// -SCY() * SCALE;
-		dst.w = 8 * SCALE;
-		dst.h = SCALE;
-		x++;
-		SDL_Rect src;
-		src.x = 0;
-		src.y = line % 8;
-		src.w = 8;
-		src.h = 1;
-		if (tileData == 0x8000)
-		{
-			uint8_t value = mmu->read_ram(i);
-			if (value >= 0 && value <= 255)
-				SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], &src, &dst);
-			else
-			{
-				uint8_t tmp = value;
-				exit(99);
-			}
-		}
-		else if (tileData == 0x8800)
-		{
-			int8_t value = (int8_t)mmu->read_ram(i);
-			if (value >= -127 && value < 128)
-			{
-				if (value >= -127 && value < 0)
-				{
-					SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], &src, &dst);
-				}
-				else if (value >= 0 && value < 128)
-				{
-					SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], &src, &dst);
-				}
-			}
-			else
-			{
-				uint8_t tmp = value;
-				exit(99);
-			}
-		}
-	}
-}
-
 //showing VRAM TileData
 void Gpu::showTileData()
 {
@@ -265,6 +207,11 @@ void Gpu::drawScanlines()
 		//draw tiles
 		renderTiles();
 	}
+	if (getBitValAt(LCDC(), 5))
+	{
+		//render the window
+		renderWindow();
+	}
 	if (getBitValAt(LCDC(), 1))
 	{
 		//draw sprites
@@ -280,6 +227,7 @@ void Gpu::renderTiles()
 	uint16_t tileMap = getBitValAt(LCDC(), 3) ? 0x9C00 : 0x9800;
 	uint16_t tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
 	uint16_t currTile = tileMap;
+	int index = 0;
 	for (int k = SCY()/8; k < SCY() / 8 + 19; k++)
 	{
 		int y = 0;
@@ -307,13 +255,69 @@ void Gpu::renderTiles()
 			else if (tileData == 0x8800)
 			{
 				int8_t value = (int8_t)mmu->read_ram(i);
-				if (value >= -127 && value < 128)
+				if (value >= -128 && value <= 127)
 				{
-					if (value >= -127 && value < 0)
+					if (value >= -128 && value < 0)
 					{
 						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
 					}
-					else if (value >= 0 && value < 128)
+					else if (value >= 0 && value <= 127)
+					{
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
+					}
+				}
+				else
+				{
+					uint8_t tmp = value;
+					exit(99);
+				}
+			}
+		}
+	}
+}
+
+//render window if enabled
+void Gpu::renderWindow()
+{
+	if (WY() > LY() + 144)
+		return;
+	uint16_t tileMap = getBitValAt(LCDC(), 6) ? 0x9C00 : 0x9800;
+	uint16_t tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
+	uint16_t currTile = tileMap;
+	for (int k = 0; k < SCY() + 19; k++)
+	{
+		int y = 0;
+		int x = 0;
+		for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + 0x14; i++)
+		{
+			tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
+			SDL_Rect dst;
+			dst.x = 8 * SCALE * x + WX() * SCALE - 7 * SCALE;
+			dst.y = 8 * SCALE * k + WY() * SCALE;
+			dst.w = 8 * SCALE;
+			dst.h = 8 * SCALE;
+			x++;
+			if (tileData == 0x8000)
+			{
+				uint8_t value = mmu->read_ram(i);
+				if (value >= 0 && value <= 255)
+					SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
+				else
+				{
+					uint8_t tmp = value;
+					exit(99);
+				}
+			}
+			else if (tileData == 0x8800)
+			{
+				int8_t value = (int8_t)mmu->read_ram(i);
+				if (value >= -128 && value <= 127)
+				{
+					if (value >= -128 && value < 0)
+					{
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
+					}
+					else if (value >= 0 && value <= 127)
 					{
 						SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
 					}

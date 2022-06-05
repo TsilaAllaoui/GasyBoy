@@ -106,11 +106,11 @@ class Gpu
 		//draw tiles
         void renderTiles();
 
-		//draw scanlines
-		void renderScanline(int line);
-
 		//draw sprites
 		void renderSprites();
+
+		//draw the window if enabled
+		void renderWindow();
 
 
         //void draw_currentline(SDL_Surface *window);
