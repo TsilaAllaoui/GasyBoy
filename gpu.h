@@ -21,9 +21,6 @@ class Gpu
         int graphicMode, line;
         float modeClock;
 
-		//buffer of pixel to show on screen
-        int pixels[160][144][3];
-
 		//counting LY/scanlines
         int retraceLY;
         int scanlineCounter;
@@ -111,6 +108,9 @@ class Gpu
 
 		//draw the window if enabled
 		void renderWindow();
+
+		//render a tile
+		SDL_Surface *renderTile(uint8_t adress);
 
 
         //void draw_currentline(SDL_Surface *window);

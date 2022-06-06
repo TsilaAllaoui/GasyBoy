@@ -169,7 +169,7 @@ void Gpu::showTileData()
 				currPixel++;
 			}
 		}
-		SDL_Surface *tileSurface;
+		SDL_Surface *tileSurface = NULL;
 		if (baseAdress == 0x8000)
 		{
 			tileSurface = SDL_CreateRGBSurfaceFrom(pixels, 8, 8, 32, 8 * sizeof(Uint32), 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
@@ -182,6 +182,9 @@ void Gpu::showTileData()
 			tilesAt9000[index - 0xFF - 1] = SDL_CreateTextureFromSurface(VramRenderer, tileSurface);
 			tilesForScreenAt9000[index - 0xFF - 1] = SDL_CreateTextureFromSurface(screenRenderer, tileSurface);
 		}
+
+		SDL_FreeSurface(tileSurface);
+
 		//updating the tile on the window screen
 		int y = (int)(((baseAdress + (modifiedTile << 4)) & 0xF00) >> 8);
 		if (baseAdress == 0x9000)
@@ -444,6 +447,9 @@ void Gpu::renderSprites()
 	//iterating through the 40 possibles sprites in OAM
     for (int i=0; i<40; i+=4)
     {
+		//texture to be rendered
+		SDL_Texture* tile = SDL_CreateTexture(screenRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 8, 8);
+
 		//getting the sprite's informations
         uint8_t yPos = mmu->read_ram(0xFE00 + i) - 16;
         uint8_t xPos = mmu->read_ram(0xFE01 + i) - 8;
@@ -462,22 +468,68 @@ void Gpu::renderSprites()
 		pos.y = yPos * SCALE;
 		pos.h = 8 * SCALE;
 		pos.w = 8 * SCALE;
+
+		//counter for the current pixel
+		int currPixel = 0;
+
+		//pixels to be filled
+		Uint32 pixelData[64] = { 0 };
+
+		//making tile parts transparent
+		for (int i = 0x8000 + (tileNumber << 4); i < 0x8000 + (tileNumber << 4) + 15; i += 2)
+		{
+			uint8_t A = mmu->read_ram(i);
+			uint8_t B = mmu->read_ram(i + 1);
+
+			for (int bit = 7; bit >= 0; bit--)
+			{
+				if (getBitValAt(A, bit))
+				{
+					if (getBitValAt(B, bit))
+						pixelData[currPixel] = 0x000000FF;
+					else
+						pixelData[currPixel] = 0x777777FF;
+				}
+				else
+				{
+					if (getBitValAt(B, bit))
+						pixelData[currPixel] = 0xCCCCCCFF;
+					else
+						pixelData[currPixel] = 0xFFFFFFFF;
+				}
+				currPixel++;
+			}
+
+		}
+		SDL_Surface *s = SDL_CreateRGBSurfaceFrom(pixelData, 8, 8, 32, 8 * sizeof(Uint32), 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+
+		//Transparency
+		SDL_SetColorKey(s, SDL_TRUE, SDL_MapRGB(s->format, 255, 255, 255));
+
+		tile = SDL_CreateTextureFromSurface(screenRenderer, s);
+
 		if (verticalFlip)
 		{
-			SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos, 0, NULL, SDL_FLIP_VERTICAL);
+			//SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos, 0, NULL, SDL_FLIP_VERTICAL);
+			SDL_RenderCopyEx(screenRenderer, tile, NULL, &pos, 0, NULL, SDL_FLIP_VERTICAL);
 			continue;
 		}
 		if (horizontalFlip)
 		{
-			SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos, 0, NULL, SDL_FLIP_HORIZONTAL);
+			//SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos, 0, NULL, SDL_FLIP_HORIZONTAL);
+			SDL_RenderCopyEx(screenRenderer, tile, NULL, &pos, 0, NULL, SDL_FLIP_HORIZONTAL);
 			continue;
 		}
 		if (!horizontalFlip && !verticalFlip)
 		{
-			SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos);
+			//SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos);
+			SDL_RenderCopy(screenRenderer, tile, NULL, &pos);
 			continue;
 		}
+		SDL_FreeSurface(s);
+		SDL_DestroyTexture(tile);
     }
+
 }
 
 
@@ -495,6 +547,44 @@ void Gpu::render()
 		resetDrawScreenStatus();
 	}
 }
+
+SDL_Surface* Gpu::renderTile(uint8_t adress)
+{
+	//counter for the current pixel
+	int currPixel = 0;
+
+	//pixels to be filled
+	Uint32 pixelData[64] = { 0 };
+
+	//making tile parts transparent
+	for (int i = adress; i < adress + 15; i += 2)
+	{
+		uint8_t A = mmu->read_ram(i);
+		uint8_t B = mmu->read_ram(i + 1);
+
+		for (int bit = 7; bit >= 0; bit--)
+		{
+			if (getBitValAt(A, bit))
+			{
+				if (getBitValAt(B, bit))
+					pixelData[currPixel] = 0x000000FF;
+				else
+					pixelData[currPixel] = 0x777777FF;
+			}
+			else
+			{
+				if (getBitValAt(B, bit))
+					pixelData[currPixel] = 0xCCCCCCFF;
+				else
+					pixelData[currPixel] = 0xFFFFFFFF;
+			}
+			currPixel++;
+		}
+
+	}
+	return SDL_CreateRGBSurfaceFrom(pixelData, 8, 8, 32, 8 * sizeof(Uint32), 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+}
+
 
 uint8_t Gpu::LY()
 {
