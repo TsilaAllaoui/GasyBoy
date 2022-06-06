@@ -8,7 +8,7 @@ GameBoy::GameBoy(string filename)
 	if (filename == "")
 	{
 		filename = new char[100];
-		filename = "./Roms/01.gb";
+		filename = "./Roms/NoBanks/opus5.gb";
 	}
 
 	//initializing SDL App

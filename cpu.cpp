@@ -1273,8 +1273,8 @@ void Cpu::RLCA()
 	int old7bit = ((reg & 0x80) == 0x80) ? 1 : 0;
 	uint8_t value = ((reg << 1) | (old7bit));
 	AF.setLeftRegister(value);
-	(AF.getLeftRegister() == 0) ? AF.setFlag('Z') : AF.clearFlag('Z');
-	// AF.clearFlag('Z');
+	//(AF.getLeftRegister() == 0) ? AF.setFlag('Z') : AF.clearFlag('Z');
+	 AF.clearFlag('Z');
 	AF.clearFlag('H');
 	AF.clearFlag('N');
 }
@@ -1285,8 +1285,8 @@ void Cpu::RLA()
 	(AF.getLeftRegister() & 0x80) ? AF.setFlag('C') : AF.clearFlag('C');
 	uint8_t value = ((AF.getLeftRegister() << 1) | (oldCarry << 0));
 	AF.setLeftRegister(value);
-	(AF.getLeftRegister() == 0) ? AF.setFlag('Z') : AF.clearFlag('Z');
-	// AF.clearFlag('Z');
+	//(AF.getLeftRegister() == 0) ? AF.setFlag('Z') : AF.clearFlag('Z');
+	AF.clearFlag('Z');
 	AF.clearFlag('H');
 	AF.clearFlag('N');
 }
@@ -1295,8 +1295,8 @@ void Cpu::RRCA()
 {
 	(AF.getLeftRegister() & 0x1) ? AF.setFlag('C') : AF.clearFlag('C');
 	AF.setLeftRegister((AF.getLeftRegister() >> 1) | (AF.getFlag('C') << 7));
-	(AF.getLeftRegister() == 0) ? AF.setFlag('Z') : AF.clearFlag('Z');
-	// AF.clearFlag('H');
+	//(AF.getLeftRegister() == 0) ? AF.setFlag('Z') : AF.clearFlag('Z');
+	AF.clearFlag('H');
 	AF.clearFlag('N');
 	AF.clearFlag('Z');
 }
@@ -1307,8 +1307,8 @@ void Cpu::RRA()
 	(AF.getLeftRegister() & 0x1) ? AF.setFlag('C') : AF.clearFlag('C');
 	uint8_t value = ((AF.getLeftRegister() >> 1) | (oldCarry << 7));
 	AF.setLeftRegister(value);
-	(AF.getLeftRegister() == 0) ? AF.setFlag('Z') : AF.clearFlag('Z');
-	// AF.clearFlag('Z');
+	//(AF.getLeftRegister() == 0) ? AF.setFlag('Z') : AF.clearFlag('Z');
+	AF.clearFlag('Z');
 	AF.clearFlag('H');
 	AF.clearFlag('N');
 }

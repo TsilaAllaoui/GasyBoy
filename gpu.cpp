@@ -227,20 +227,28 @@ void Gpu::renderTiles()
 	uint16_t tileMap = getBitValAt(LCDC(), 3) ? 0x9C00 : 0x9800;
 	uint16_t tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
 	uint16_t currTile = tileMap;
-	int index = 0;
+	int overY = 0;
 	int oldK = 0;
+	int oldI = 0;
 	for (int k = SCY() / 8; k < SCY() / 8 + 19; k++)
 	{
-		int y = 0;
 		int x = 0;
 		if (k >= 32)
 		{
-			for (int i = currTile + 0x20 * index; i < (currTile + 0x20 * index) + 0x20; i++)
+			oldK = k;
+			k = overY;
+		}
+		if (SCX() / 8 + 21 >= 32)
+		{
+			int over = (SCX() / 8 + 21) - 32;
+			for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + ((SCX() / 8 + 21) - over); i++)
 			{
 				tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
 				SDL_Rect dst;
 				dst.x = 8 * SCALE * x - SCX() * SCALE;
-				dst.y = 8 * SCALE * k - SCY() * SCALE;
+				if (oldK >= 32)
+					dst.y = 8 * SCALE * oldK - SCY() * SCALE;
+				else dst.y = 8 * SCALE * k - SCY() * SCALE;
 				dst.w = 8 * SCALE;
 				dst.h = 8 * SCALE;
 				x++;
@@ -276,16 +284,61 @@ void Gpu::renderTiles()
 					}
 				}
 			}
-			index++;
+			for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + over; i++)
+			{
+				tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
+				SDL_Rect dst;
+				dst.x = 8 * SCALE * x - SCX() * SCALE;
+				if (oldK >= 32)
+					dst.y = 8 * SCALE * oldK - SCY() * SCALE;
+				else dst.y = 8 * SCALE * k - SCY() * SCALE;
+				dst.w = 8 * SCALE;
+				dst.h = 8 * SCALE;
+				x++;
+				if (tileData == 0x8000)
+				{
+					uint8_t value = mmu->read_ram(i);
+					if (value >= 0 && value <= 255)
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
+					else
+					{
+						uint8_t tmp = value;
+						exit(99);
+					}
+				}
+				else if (tileData == 0x8800)
+				{
+					int8_t value = (int8_t)mmu->read_ram(i);
+					if (value >= -128 && value <= 127)
+					{
+						if (value >= -128 && value < 0)
+						{
+							SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
+						}
+						else if (value >= 0 && value <= 127)
+						{
+							SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
+						}
+					}
+					else
+					{
+						uint8_t tmp = value;
+						exit(99);
+					}
+				}
+			}
 		}
-		else if (k < 32)
+		else if (SCX() / 8 + 21 < 32)
 		{
+			int overX = 0;
 			for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + 0x20; i++)
 			{
 				tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
 				SDL_Rect dst;
 				dst.x = 8 * SCALE * x - SCX() * SCALE;
-				dst.y = 8 * SCALE * k - SCY() * SCALE;
+				if (oldK >= 32)
+					dst.y = 8 * SCALE * oldK - SCY() * SCALE;
+				else dst.y = 8 * SCALE * k - SCY() * SCALE;
 				dst.w = 8 * SCALE;
 				dst.h = 8 * SCALE;
 				x++;
@@ -321,6 +374,11 @@ void Gpu::renderTiles()
 					}
 				}
 			}
+		}
+		if (oldK >= 32)
+		{
+			k = oldK;
+			overY++;
 		}
 	}
 }
