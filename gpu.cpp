@@ -24,6 +24,8 @@ Gpu::Gpu(Mmu *p_mmu)
 	//creating gameboy screen and renderer
 	screen = SDL_CreateWindow("GasyBoy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,SCREEN_WIDTH  * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_SHOWN);
 	screenRenderer = SDL_CreateRenderer(screen, -1, SDL_RENDERER_ACCELERATED);
+	//setting blend mode for transparency
+	SDL_SetRenderDrawBlendMode(screenRenderer, SDL_BLENDMODE_BLEND);
 
 	//creating all 384 possibles tiles in VRAM
 	for (int i = 0; i < 256; i++)
@@ -36,6 +38,10 @@ Gpu::Gpu(Mmu *p_mmu)
 		tilesAt9000[i] = SDL_CreateTexture(VramRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 8, 8);
 		tilesForScreenAt9000[i] = SDL_CreateTexture(VramRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 8, 8);
 	}
+
+	//settting palettes
+	OBP0 = getPalette(0xFF48);
+	OBP1 = getPalette(0xFF49);
 }
 
 Gpu::~Gpu()
@@ -70,9 +76,6 @@ void Gpu::step(int cycles)
 		else if (LY() < 144)
 			drawScanlines();
 	}
-
-	//draw on screen on any changes
-	render();
 }
 
 //setting LCD Status changes and managing modes
@@ -147,25 +150,16 @@ void Gpu::showTileData()
 		int index = mmu->currModifiedTile;
 		uint16_t baseAdress = (index < 256) ? 0x8000 : 0x9000;
 		uint8_t modifiedTile = (index & 0xFF);
+		Uint32 *palette = getPalette(0xFF47);
 		for (int j = (baseAdress + (modifiedTile << 4)); j < (baseAdress + (modifiedTile << 4) + 15); j += 2)
 		{
-			uint8_t A = mmu->read_ram(j), B = mmu->read_ram(j + 1);
+			uint8_t A = mmu->read_ram(j);
+			uint8_t B = mmu->read_ram(j + 1);
+
 			for (int bit = 7; bit >= 0; bit--)
 			{
-				if (getBitValAt(A, bit))
-				{
-					if (getBitValAt(B, bit))
-						pixels[currPixel] = 0x000000FF;
-					else
-						pixels[currPixel] = 0x777777FF;
-				}
-				else
-				{
-					if (getBitValAt(B, bit))
-						pixels[currPixel] = 0xCCCCCCFF;
-					else
-						pixels[currPixel] = 0xFFFFFFFF;
-				}
+				uint8_t color = (getBitValAt(A, bit) << 1) | getBitValAt(B, bit);
+				pixels[currPixel] = palette[color];
 				currPixel++;
 			}
 		}
@@ -259,7 +253,8 @@ void Gpu::renderTiles()
 				{
 					uint8_t value = mmu->read_ram(i);
 					if (value >= 0 && value <= 255)
-						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
+						//SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
+						renderTile(0x8000 + (value << 4), &dst, 0xFF47);
 					else
 					{
 						uint8_t tmp = value;
@@ -273,11 +268,13 @@ void Gpu::renderTiles()
 					{
 						if (value >= -128 && value < 0)
 						{
-							SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
+							renderTile(0x8000 + ((value + 256) << 4), &dst, 0xFF47);
+							//SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
 						}
 						else if (value >= 0 && value <= 127)
 						{
-							SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
+							renderTile(0x8000 + ((value + 128) << 4), &dst, 0xFF47);
+							//SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
 						}
 					}
 					else
@@ -302,6 +299,7 @@ void Gpu::renderTiles()
 				{
 					uint8_t value = mmu->read_ram(i);
 					if (value >= 0 && value <= 255)
+						//renderTile(0x8000 + (value << 4), &dst, 0xFF47);
 						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
 					else
 					{
@@ -316,10 +314,12 @@ void Gpu::renderTiles()
 					{
 						if (value >= -128 && value < 0)
 						{
+							//renderTile(0x8000 + ((value + 256) << 4), &dst, 0xFF47);
 							SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
 						}
 						else if (value >= 0 && value <= 127)
 						{
+							//renderTile(0x8000 + ((value + 128) << 4), &dst, 0xFF47);
 							SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
 						}
 					}
@@ -349,6 +349,7 @@ void Gpu::renderTiles()
 				{
 					uint8_t value = mmu->read_ram(i);
 					if (value >= 0 && value <= 255)
+						//renderTile(0x8000 + (value << 4), &dst, 0xFF47);
 						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
 					else
 					{
@@ -363,10 +364,12 @@ void Gpu::renderTiles()
 					{
 						if (value >= -128 && value < 0)
 						{
+							//renderTile(0x8000 + ((value + 256) << 4), &dst, 0xFF47);
 							SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
 						}
 						else if (value >= 0 && value <= 127)
 						{
+							//renderTile(0x8000 + ((value + 128) << 4), &dst, 0xFF47);
 							SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
 						}
 					}
@@ -445,11 +448,8 @@ void Gpu::renderWindow()
 void Gpu::renderSprites()
 {
 	//iterating through the 40 possibles sprites in OAM
-    for (int i=0; i<40; i+=4)
+    for (int i=0; i<0xA0; i+=4)
     {
-		//texture to be rendered
-		SDL_Texture* tile = SDL_CreateTexture(screenRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 8, 8);
-
 		//getting the sprite's informations
         uint8_t yPos = mmu->read_ram(0xFE00 + i) - 16;
         uint8_t xPos = mmu->read_ram(0xFE01 + i) - 8;
@@ -475,61 +475,12 @@ void Gpu::renderSprites()
 		//pixels to be filled
 		Uint32 pixelData[64] = { 0 };
 
-		//making tile parts transparent
-		for (int i = 0x8000 + (tileNumber << 4); i < 0x8000 + (tileNumber << 4) + 15; i += 2)
-		{
-			uint8_t A = mmu->read_ram(i);
-			uint8_t B = mmu->read_ram(i + 1);
+		//current used palette adress
+		uint16_t adress = (colorPalette) ? 0xFF48 : 0xFF49;
 
-			for (int bit = 7; bit >= 0; bit--)
-			{
-				if (getBitValAt(A, bit))
-				{
-					if (getBitValAt(B, bit))
-						pixelData[currPixel] = 0x000000FF;
-					else
-						pixelData[currPixel] = 0x777777FF;
-				}
-				else
-				{
-					if (getBitValAt(B, bit))
-						pixelData[currPixel] = 0xCCCCCCFF;
-					else
-						pixelData[currPixel] = 0xFFFFFFFF;
-				}
-				currPixel++;
-			}
-
-		}
-		SDL_Surface *s = SDL_CreateRGBSurfaceFrom(pixelData, 8, 8, 32, 8 * sizeof(Uint32), 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
-
-		//Transparency
-		SDL_SetColorKey(s, SDL_TRUE, SDL_MapRGB(s->format, 255, 255, 255));
-
-		tile = SDL_CreateTextureFromSurface(screenRenderer, s);
-
-		if (verticalFlip)
-		{
-			//SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos, 0, NULL, SDL_FLIP_VERTICAL);
-			SDL_RenderCopyEx(screenRenderer, tile, NULL, &pos, 0, NULL, SDL_FLIP_VERTICAL);
-			continue;
-		}
-		if (horizontalFlip)
-		{
-			//SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos, 0, NULL, SDL_FLIP_HORIZONTAL);
-			SDL_RenderCopyEx(screenRenderer, tile, NULL, &pos, 0, NULL, SDL_FLIP_HORIZONTAL);
-			continue;
-		}
-		if (!horizontalFlip && !verticalFlip)
-		{
-			//SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[tileNumber], NULL, &pos);
-			SDL_RenderCopy(screenRenderer, tile, NULL, &pos);
-			continue;
-		}
-		SDL_FreeSurface(s);
-		SDL_DestroyTexture(tile);
+		//rendering current sprite
+		renderTile(0x8000 + (tileNumber << 4), &pos, adress, true);
     }
-
 }
 
 
@@ -548,7 +499,7 @@ void Gpu::render()
 	}
 }
 
-SDL_Surface* Gpu::renderTile(uint8_t adress)
+void Gpu::renderTile(uint16_t adress, SDL_Rect *pos, uint16_t colorAdress, bool isSprite)
 {
 	//counter for the current pixel
 	int currPixel = 0;
@@ -556,7 +507,10 @@ SDL_Surface* Gpu::renderTile(uint8_t adress)
 	//pixels to be filled
 	Uint32 pixelData[64] = { 0 };
 
+	Uint32* palette = getPalette(colorAdress);
+
 	//making tile parts transparent
+	//getting srpites pixels
 	for (int i = adress; i < adress + 15; i += 2)
 	{
 		uint8_t A = mmu->read_ram(i);
@@ -564,25 +518,45 @@ SDL_Surface* Gpu::renderTile(uint8_t adress)
 
 		for (int bit = 7; bit >= 0; bit--)
 		{
-			if (getBitValAt(A, bit))
-			{
-				if (getBitValAt(B, bit))
-					pixelData[currPixel] = 0x000000FF;
-				else
-					pixelData[currPixel] = 0x777777FF;
-			}
-			else
-			{
-				if (getBitValAt(B, bit))
-					pixelData[currPixel] = 0xCCCCCCFF;
-				else
-					pixelData[currPixel] = 0xFFFFFFFF;
-			}
+			uint8_t color = (getBitValAt(A, bit) << 1) | getBitValAt(B, bit);
+			//transparency
+			if (palette[color] == palette[0] && isSprite)
+				pixelData[currPixel] = 0xFFFFFF00;
+			else pixelData[currPixel] = palette[color];
 			currPixel++;
 		}
 
 	}
-	return SDL_CreateRGBSurfaceFrom(pixelData, 8, 8, 32, 8 * sizeof(Uint32), 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+
+	//drawing sprites pixels directly on the window
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			SDL_SetRenderDrawColor(screenRenderer, ((pixelData[i * 8 + j] & 0xFF000000) >> 24), ((pixelData[i * 8 + j] & 0x00FF0000) >> 16), ((pixelData[i * 8 + j] & 0x0000FF00) >> 8), (pixelData[i * 8 + j] & 0x000000FF));
+			SDL_Rect tmp = { pos->x + (j * SCALE),pos->y + (i * SCALE),SCALE,SCALE };
+			SDL_RenderFillRect(screenRenderer, &tmp);
+		}
+	}
+}
+
+Uint32 *Gpu::getPalette(uint16_t adress)
+{
+	uint8_t value = mmu->read_ram(adress);
+	Uint32 palette[4];
+	int k = 0;
+	for (int i = 0; i < 8; i += 2)
+	{
+		switch ((getBitValAt(value, i) << 1) | getBitValAt(value, i + 1))
+		{
+		case 0:	palette[k] = 0xFFFFFFFF; break;
+		case 1:	palette[k] = 0xCCCCCCFF; break;
+		case 2:	palette[k] = 0x777777FF; break;
+		case 3:	palette[k] = 0x000000FF; break;
+		}
+		k++;
+	}
+	return palette;
 }
 
 

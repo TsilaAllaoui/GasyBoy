@@ -7,7 +7,11 @@
 #include "mmu.h"
 #include "defs.h"
 
-enum {WHITE,LIGHT,DARK,BLACK};
+#define WHITE 0xFFFFFFFF;
+#define LIGHTGRAY 0xCCCCCCFF;
+#define LIGHTDARK 0x777777FF;
+#define BLACK 0x000000FF;
+
 
 using namespace std;
 
@@ -47,6 +51,10 @@ class Gpu
 
 		//the gameboy screen renderer
 		SDL_Renderer* screenRenderer;
+
+		//palettes color
+		Uint32 *OBP0;
+		Uint32 *OBP1;
 
 
     public:
@@ -110,7 +118,10 @@ class Gpu
 		void renderWindow();
 
 		//render a tile
-		SDL_Surface *renderTile(uint8_t adress);
+		void renderTile(uint16_t adress, SDL_Rect* pos, uint16_t colorAdress, bool isSprite = false);
+
+		//get palette color
+		Uint32 *getPalette(uint16_t adress);
 
 
         //void draw_currentline(SDL_Surface *window);

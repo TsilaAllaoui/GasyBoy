@@ -8,7 +8,7 @@ GameBoy::GameBoy(string filename)
 	if (filename == "")
 	{
 		filename = new char[100];
-		filename = "./Roms/NoBanks/opus5.gb";
+		filename = "./Roms/NoBanks/DrMario.gb";
 	}
 
 	//initializing SDL App
@@ -70,10 +70,17 @@ void GameBoy::boot()
 	while (!exit)
 	{
 		cycleCounter = 0;
+		long firstTime = SDL_GetTicks();
 		while (cycleCounter <= 69905)
 		{
 			step();
 		}
+		//draw on screen on any changes
+		gpu->render();
+		/*if ((SDL_GetTicks() - firstTime) < 1000 / 60)
+		{
+			SDL_Delay(1000 / 60 - (SDL_GetTicks() - firstTime));
+		}*/
 	}
 }
 
