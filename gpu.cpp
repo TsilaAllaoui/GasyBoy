@@ -253,8 +253,8 @@ void Gpu::renderTiles()
 				{
 					uint8_t value = mmu->read_ram(i);
 					if (value >= 0 && value <= 255)
-						//SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
-						renderTile(0x8000 + (value << 4), &dst, 0xFF47);
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], NULL, &dst);
+						//renderTile(0x8000 + (value << 4), &dst, 0xFF47);
 					else
 					{
 						uint8_t tmp = value;
@@ -268,13 +268,13 @@ void Gpu::renderTiles()
 					{
 						if (value >= -128 && value < 0)
 						{
-							renderTile(0x8000 + ((value + 256) << 4), &dst, 0xFF47);
-							//SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
+							//renderTile(0x8000 + ((value + 256) << 4), &dst, 0xFF47);
+							SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], NULL, &dst);
 						}
 						else if (value >= 0 && value <= 127)
 						{
-							renderTile(0x8000 + ((value + 128) << 4), &dst, 0xFF47);
-							//SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
+							//renderTile(0x8000 + ((value + 128) << 4), &dst, 0xFF47);
+							SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], NULL, &dst);
 						}
 					}
 					else
