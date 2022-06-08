@@ -38,7 +38,8 @@ Gpu::Gpu(Mmu *p_mmu)
 		tilesAt9000[i] = SDL_CreateTexture(VramRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 8, 8);
 		tilesForScreenAt9000[i] = SDL_CreateTexture(VramRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 8, 8);
 	}
-
+	screenTexture = SDL_CreateTexture(screenRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 160 * SCALE, 144 * SCALE);
+	VramTexture = SDL_CreateTexture(screenRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE);
 	//settting palettes
 	OBP0 = getPalette(0xFF48);
 	OBP1 = getPalette(0xFF49);
@@ -145,6 +146,7 @@ void Gpu::showTileData()
 {
 	if (mmu->currModifiedTile >= 0)
 	{
+		SDL_SetRenderTarget(VramRenderer, VramTexture);
 		Uint32 pixels[64] = { 0xFFFFFFFF };
 		int currPixel = 0;
 		int index = mmu->currModifiedTile;
@@ -153,8 +155,8 @@ void Gpu::showTileData()
 		Uint32 *palette = getPalette(0xFF47);
 		for (int j = (baseAdress + (modifiedTile << 4)); j < (baseAdress + (modifiedTile << 4) + 15); j += 2)
 		{
-			uint8_t A = mmu->read_ram(j);
-			uint8_t B = mmu->read_ram(j + 1);
+			uint8_t B = mmu->read_ram(j);
+			uint8_t A = mmu->read_ram(j + 1);
 
 			for (int bit = 7; bit >= 0; bit--)
 			{
@@ -193,6 +195,7 @@ void Gpu::showTileData()
 		else SDL_RenderCopy(VramRenderer, tilesAt9000[index - 0xFF - 1], NULL, &pos);
 		drawTileMap = true;
 		mmu->currModifiedTile = -1;
+		SDL_SetRenderTarget(VramRenderer, NULL);
     }
 }
 
@@ -221,6 +224,7 @@ void Gpu::renderTiles()
 {
 	SDL_SetRenderDrawColor(screenRenderer, 255, 0, 0, 255);
 	SDL_RenderClear(screenRenderer);
+	SDL_SetRenderTarget(screenRenderer, screenTexture);
 	uint16_t tileMap = getBitValAt(LCDC(), 3) ? 0x9C00 : 0x9800;
 	uint16_t tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
 	uint16_t currTile = tileMap;
@@ -387,11 +391,13 @@ void Gpu::renderTiles()
 			overY++;
 		}
 	}
+	SDL_SetRenderTarget(screenRenderer, NULL);
 }
 
 //render window if enabled
 void Gpu::renderWindow()
 {
+	SDL_SetRenderTarget(screenRenderer, screenTexture);
 	if (WY() > LY() + 144)
 		return;
 	uint16_t tileMap = getBitValAt(LCDC(), 6) ? 0x9C00 : 0x9800;
@@ -443,10 +449,12 @@ void Gpu::renderWindow()
 			}
 		}
 	}
+	SDL_SetRenderTarget(screenRenderer, NULL);
 }
 
 void Gpu::renderSprites()
 {
+	SDL_SetRenderTarget(screenRenderer, screenTexture);
 	//iterating through the 40 possibles sprites in OAM
     for (int i=0; i<0xA0; i+=4)
     {
@@ -455,6 +463,10 @@ void Gpu::renderSprites()
         uint8_t xPos = mmu->read_ram(0xFE01 + i) - 8;
         uint8_t tileNumber = mmu->read_ram(0xFE02 + i) ;
         uint8_t attributes = mmu->read_ram(0xFE03 + i) ;
+
+		//skip if sprite is empty
+		if (tileNumber == 0 && attributes == 0)
+			continue;
 
 		//the sprites flasg attributes
 		bool priority = getBitValAt(attributes, 7);
@@ -476,11 +488,12 @@ void Gpu::renderSprites()
 		Uint32 pixelData[64] = { 0 };
 
 		//current used palette adress
-		uint16_t adress = (colorPalette) ? 0xFF48 : 0xFF49;
+		uint16_t adress = (!colorPalette) ? 0xFF48 : 0xFF49;
 
 		//rendering current sprite
-		renderTile(0x8000 + (tileNumber << 4), &pos, adress, true);
+		renderTile(0x8000 + (tileNumber << 4), &pos, adress, priority, verticalFlip, horizontalFlip);
     }
+	SDL_SetRenderTarget(screenRenderer, NULL);
 }
 
 
@@ -489,17 +502,21 @@ void Gpu::render()
 {
 	if (drawTileMap)
 	{
+		SDL_Rect pos = { 0, 0, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE };
+		SDL_RenderCopy(VramRenderer, VramTexture, NULL, &pos);
 		SDL_RenderPresent(VramRenderer);
 		resetDrawVramStatus();
 	}
 	if (drawScreen)
 	{
+		SDL_Rect pos = {0, 0, 160 * SCALE, 144 * SCALE};
+		SDL_RenderCopy(screenRenderer, screenTexture, NULL, &pos);
 		SDL_RenderPresent(screenRenderer);
 		resetDrawScreenStatus();
 	}
 }
 
-void Gpu::renderTile(uint16_t adress, SDL_Rect *pos, uint16_t colorAdress, bool isSprite)
+void Gpu::renderTile(uint16_t adress, SDL_Rect* pos, uint16_t colorAdress, bool priority, bool Xflip, bool Yflip)
 {
 	//counter for the current pixel
 	int currPixel = 0;
@@ -513,15 +530,21 @@ void Gpu::renderTile(uint16_t adress, SDL_Rect *pos, uint16_t colorAdress, bool 
 	//getting srpites pixels
 	for (int i = adress; i < adress + 15; i += 2)
 	{
-		uint8_t A = mmu->read_ram(i);
-		uint8_t B = mmu->read_ram(i + 1);
+		uint8_t B = mmu->read_ram(i);
+		uint8_t A = mmu->read_ram(i + 1);
 
 		for (int bit = 7; bit >= 0; bit--)
 		{
 			uint8_t color = (getBitValAt(A, bit) << 1) | getBitValAt(B, bit);
 			//transparency
-			if (palette[color] == palette[0] && isSprite)
-				pixelData[currPixel] = 0xFFFFFF00;
+			if (palette[color] == palette[0])
+				pixelData[currPixel] = 0;
+			//if (!priority)
+			//{
+			//	//TODO
+			//	if (palette[color] != 0xFFFFFFFF)
+			//		pixelData[currPixel] = 0;
+			//}
 			else pixelData[currPixel] = palette[color];
 			currPixel++;
 		}
@@ -529,12 +552,18 @@ void Gpu::renderTile(uint16_t adress, SDL_Rect *pos, uint16_t colorAdress, bool 
 	}
 
 	//drawing sprites pixels directly on the window
+	SDL_Rect tmp = {0, 0, SCALE, SCALE};
 	for (int i = 0; i < 8; i++)
 	{
 		for (int j = 0; j < 8; j++)
 		{
 			SDL_SetRenderDrawColor(screenRenderer, ((pixelData[i * 8 + j] & 0xFF000000) >> 24), ((pixelData[i * 8 + j] & 0x00FF0000) >> 16), ((pixelData[i * 8 + j] & 0x0000FF00) >> 8), (pixelData[i * 8 + j] & 0x000000FF));
-			SDL_Rect tmp = { pos->x + (j * SCALE),pos->y + (i * SCALE),SCALE,SCALE };
+			if (Yflip)
+				tmp.x = pos->x + ((7 - j) * SCALE);
+			else tmp.x = pos->x + j * SCALE;
+			if (Xflip)
+				tmp.y = pos->y + ((7 - i) * SCALE);
+			else tmp.y = pos->y + i * SCALE;
 			SDL_RenderFillRect(screenRenderer, &tmp);
 		}
 	}
@@ -557,6 +586,19 @@ Uint32 *Gpu::getPalette(uint16_t adress)
 		k++;
 	}
 	return palette;
+}
+
+Uint32 Gpu::getPixelColor(int x, int y, int bit)
+{
+	int j = 0x8FE0;// 0x8800 + ((y * 20 + x) << 4);
+	uint8_t A = mmu->read_ram(j);
+	uint8_t B = mmu->read_ram(j + 1);
+	uint8_t color = (getBitValAt(A, bit) << 1) | getBitValAt(B, bit);
+
+	Uint32 *palette = getPalette(0xFF47);
+
+
+	return palette[color];
 }
 
 

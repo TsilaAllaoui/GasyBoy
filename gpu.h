@@ -39,6 +39,8 @@ class Gpu
        //textures representing VRAM Tiles
 		SDL_Texture* tilesAt8000[256], *tilesAt9000[128];
 		SDL_Texture* tilesForScreenAt8000[256], *tilesForScreenAt9000[128];
+		SDL_Texture* screenTexture;
+		SDL_Texture* VramTexture;
 
 		//the VRAM Window
 		SDL_Window* VramViewer;
@@ -118,10 +120,13 @@ class Gpu
 		void renderWindow();
 
 		//render a tile
-		void renderTile(uint16_t adress, SDL_Rect* pos, uint16_t colorAdress, bool isSprite = false);
+		void renderTile(uint16_t adress, SDL_Rect* pos, uint16_t colorAdress, bool priority, bool Xflip, bool Yflip);
 
 		//get palette color
 		Uint32 *getPalette(uint16_t adress);
+
+		//get pixel color on screen
+		Uint32 getPixelColor(int x, int y,int bit);
 
 
         //void draw_currentline(SDL_Surface *window);

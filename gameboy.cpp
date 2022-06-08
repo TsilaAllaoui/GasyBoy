@@ -75,12 +75,7 @@ void GameBoy::boot()
 		{
 			step();
 		}
-			gpu->render();
-		//draw on screen on any changes
-		/*if ((SDL_GetTicks() - firstTime) < 1000 / 60)
-		{
-			SDL_Delay(1000 / 60 - (SDL_GetTicks() - firstTime));
-		}*/
+		gpu->render();
 	}
 }
 
