@@ -12,7 +12,7 @@ ifeq ($(OS), Windows_NT)
 	DEL_OBJ = del *.o
 	DEL_BIN = del *.exe
 else
-	CXX = g++-10
+	CXX = g++
 	OBJ = obj/*
 	LIB = .
 	HEADER = /usr/include/SDL/
@@ -23,7 +23,7 @@ else
 endif
 
 
-SRC = main.cpp
+SRC = *.cpp
 
 all:
 	@$(CLEAN_SCREEN)

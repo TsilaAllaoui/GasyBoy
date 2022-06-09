@@ -18,7 +18,7 @@ Gpu::Gpu( Mmu* p_mmu )
     retraceLY = 456;
     
     //creating VRAM window and renderer
-    VramViewer = SDL_CreateWindow( "VRAM Viewer", ( SCREEN_WIDTH * SCALE * 3.51 ), ( SCREEN_HEIGHT * SCALE + 108 ), VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE, SDL_WINDOW_SHOWN );
+    VramViewer = SDL_CreateWindow( "VRAM Viewer",1200, SDL_WINDOWPOS_CENTERED + VRAM_HEIGHT * SCALE, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE, SDL_WINDOW_SHOWN );
     VramRenderer = SDL_CreateRenderer( VramViewer, -1, SDL_RENDERER_ACCELERATED );
     
     //creating gameboy screen and renderer
@@ -183,7 +183,7 @@ void Gpu::showTileData()
         uint16_t baseAdress = ( index < 256 ) ? 0x8000 : 0x9000;
         uint8_t modifiedTile = ( index & 0xFF );
         //Uint32* palette = getPalette( 0xFF47 );
-        Uint32 palette[4] = { 0xFFFFFFFF, 0xCCCCCCFF, 0x777777FF, 0x000000FF };
+		Uint32 *palette = getPalette(0xFF47);
         
         for( int j = ( baseAdress + ( modifiedTile << 4 ) ); j < ( baseAdress + ( modifiedTile << 4 ) + 15 ); j += 2 )
         {
@@ -193,7 +193,7 @@ void Gpu::showTileData()
             for( int bit = 7; bit >= 0; bit-- )
             {
                 uint8_t color = ( getBitValAt( A, bit ) << 1 ) | getBitValAt( B, bit );
-                pixels[currPixel] = basePalette[color];
+                pixels[currPixel] = palette[color];
                 currPixel++;
             }
         }

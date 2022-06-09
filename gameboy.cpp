@@ -2,7 +2,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <fstream>
-#define FPS 30
+#define FPS 60
 
 
 GameBoy::GameBoy( string filename )
@@ -12,7 +12,7 @@ GameBoy::GameBoy( string filename )
     if( filename == "" )
     {
         filename = new char[100];
-        filename = "./Roms/03.gb";
+        filename = "./Roms/NoBanks/DrMario.gb";
     }
     
     //initializing SDL App
@@ -34,7 +34,7 @@ GameBoy::GameBoy( string filename )
     
     
     mmu = new Mmu( filename );
-    cpu = new Cpu( false, mmu );
+    cpu = new Cpu( true, mmu );
     gpu = new Gpu( mmu );
     timer = new Timer( mmu );
     interruptHanlder = new Interrupter( mmu, cpu );
