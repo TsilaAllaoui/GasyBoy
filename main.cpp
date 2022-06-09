@@ -4,9 +4,9 @@
 #include "defs.h"
 #include "gameboy.h"
 
-int main(int argc, char* argv[])
+int main( int argc, char* argv[] )
 {
-	string rom = (argc > 1) ? argv[1] : "";
-	GameBoy(rom).boot();
-	return 0;
+    string rom = ( argc > 1 ) ? argv[1] : "";
+    GameBoy( rom ).boot();
+    return 0;
 }

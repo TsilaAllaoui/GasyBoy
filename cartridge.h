@@ -34,6 +34,9 @@ class Cartridge
 
 	//number of banks of the ROM
 	int banksNumber;
+
+	//MBC type
+	string cartTypes[4] = { "No MBC", "MBC1", "MBC1+ExternalRAM", "MBC1+Battery" };
 	
   public:
 
@@ -43,9 +46,6 @@ class Cartridge
 
 	// loading ROM 
 	void loadRom(string filename);
-	
-	//getting the rom
-	uint8_t *getROM();
 	
 	//set MBC type
 	void setMBCType(uint8_t value);

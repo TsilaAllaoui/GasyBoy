@@ -21,7 +21,6 @@ Cartridge::~Cartridge()
 
 void Cartridge::loadRom(string file)
 {
-		cout << "IN";
 	std::ifstream Rom(file.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
 	if (Rom.is_open())
 	{
@@ -59,7 +58,7 @@ void Cartridge::loadRom(string file)
 			j++;
 		}
 		Rom.close();
-		std::ofstream out("./CartHeader.txt", std::ios::out);
+		std::ofstream out("C:/Users/Allaoui/Desktop/GasyBoy/Roms/NoBanks/CartHeader.txt", std::ios::out);
 		if (out.is_open())
 		{
 			out << "Cartridge ROM Name:  ";
@@ -81,7 +80,7 @@ void Cartridge::loadRom(string file)
 				out << "Yes" << endl;
 			else if (ROM[0][0x143] == 0)
 				out << "No" << endl;
-			out << "Cartridge Type:  " << hex << (int)ROM[0][0x147] << endl;
+			out << "Cartridge Type:  " << hex << cartTypes[(int)ROM[0][0x147]]<< endl;
 			out << "ROM Size:  " << hex << (int)ROM[0][0x148] << endl;
 			out << "RAM Size:  " << hex << (int)ROM[0][0x149] << endl;
 			out << "Japanese:  " << ((ROM[0][0x14A] & 0x1) ? "No" : "Yes") << endl;
@@ -91,24 +90,12 @@ void Cartridge::loadRom(string file)
 		}
 		else
 			exit(80);
-		ofstream dump("./dump.bin", std::ios::out | std::ios::binary);
-		for (int i=0; i<banksNumber; i++)
-			for (int j=0; j<0x4000; j++)
-				dump << ROM[i][j];
 	}
 	else
 	{
 		cout << "Rom not found!";
 		exit(1);
 	}
-}
-
-uint8_t *Cartridge::getROM()
-{
-	// uint8_t out[0x8000];
-	// for (int i=0; i<0x8000; i++)
-	// 	out[i] = ROM[i];
-	return NULL;
 }
 
 void Cartridge::setMBCType(uint8_t value)
