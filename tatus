@@ -1,0 +1,154 @@
+[33mcommit e6aa5eeec31b3dea124f609e319e930aafcd8680[m[33m ([m[1;36mHEAD -> [m[1;32mMBC[m[33m)[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Thu Jun 9 19:01:31 2022 +0300
+
+    lastest commit
+
+[33mcommit cd6bdaf520ba878a0eddaedf3a615d333638c8f0[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Wed Jun 8 22:22:29 2022 +0300
+
+    -better performance by rendering to main texture for tiles before rendering to screen
+    -fixed some sprites bad implementation (XFlip, YFlip)
+    -fixed wrong combinations in palette rendering (BG/Window and sprites)
+
+[33mcommit c18e530856747fd0aefd68234f424797c3a4b3f4[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Tue Jun 7 22:38:09 2022 +0300
+
+    using texture for BG/Window
+
+[33mcommit 94430c70c6bad67eadc91354fd0b3405df5fabd7[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Tue Jun 7 22:29:04 2022 +0300
+
+    -rendering sprites directly on screen
+    -added palette choice for BG/Window and Objects
+
+[33mcommit 331554e6243d46bc8f07e859fa3e4bb8b4b6fbb3[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Mon Jun 6 20:34:55 2022 +0300
+
+    Modified Readme
+
+[33mcommit e4d4f39b9abfce5f83cf83dda1f9df7e839d8203[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Mon Jun 6 20:33:29 2022 +0300
+
+    Modified Readme
+
+[33mcommit fc1e926fec8947a72a9dfd08bb37f8bc4329ff16[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Mon Jun 6 20:32:10 2022 +0300
+
+    Create README.md
+
+[33mcommit b55d1029cdfe5d32b12e29f72e6afb2826efcf75[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Mon Jun 6 20:29:19 2022 +0300
+
+    Delete tatqqgit stash
+
+[33mcommit 62da47b6f111f57a305299f7c453676c75ee4384[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Mon Jun 6 20:01:42 2022 +0300
+
+    clean up folder
+
+[33mcommit 3a0bbda04906662664d4fc29a3fc40eace8bfd2e[m[33m ([m[1;32mgpu[m[33m)[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Mon Jun 6 19:37:31 2022 +0300
+
+    sprites transparency fix
+
+[33mcommit bb2fc754d40005ca42d68256fa936009099eaf9f[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Mon Jun 6 12:31:29 2022 +0300
+
+    fixed scrolling in X axis
+
+[33mcommit bf06a6748203d1c62d08bd9aa661d03ca9896ec6[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Sun Jun 5 22:20:16 2022 +0300
+
+    fixed wrapping when scrolling in Y axis of SCY
+
+[33mcommit db63f060e60e09e0fa2a115d2b81d55d24b4b0bb[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Sun Jun 5 21:27:47 2022 +0300
+
+    added window
+
+[33mcommit 8cc0902fdc592de52c464d2517d276c3ededc2f2[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Sun Jun 5 18:40:50 2022 +0300
+
+    fixed wrong bits on LCDStat when LCD is off
+
+[33mcommit c480910dd19eed12be4ff0e8727330d3347af7c5[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Sun Jun 5 12:17:32 2022 +0300
+
+    cleaned MMU code and better read/write memory function
+
+[33mcommit 253d0a08481cc86c80bdabbc1bcbff5260dd2667[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Fri Jun 3 22:05:06 2022 +0300
+
+    added sprites rendering
+
+[33mcommit 98afa1f498a98173c1274669567b5931a1fd6497[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Fri Jun 3 21:49:40 2022 +0300
+
+    fixed lag in scrolling,
+    smoother vram rendering,
+    better and cleaner gpu code
+
+[33mcommit d9ad08abc9d9b47407fe38f0143b4220a43b30d8[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Thu Jun 2 22:39:26 2022 +0300
+
+    implemented scrolling but still choppy animation
+
+[33mcommit 2392559c16997d1af53bc8d14a19936bdadacbb9[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Wed Jun 1 20:51:47 2022 +0300
+
+    fixed SCY and SCX scrolling, TETRIS now work without sprites
+
+[33mcommit 0aecac9b578b9b66ff309cb0f0fdbeb244d4f4aa[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Tue May 31 22:40:10 2022 +0300
+
+    implemented per line drawing of scanlines
+
+[33mcommit eb799554578f2158238e05dfd4c9764f1dd53d19[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Sun May 29 21:05:55 2022 +0300
+
+    test using surface instead of texture for tiles
+
+[33mcommit 105517465b54e6666c33bc35d5e672af801c5bb7[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Sun May 29 11:21:46 2022 +0300
+
+    attempt before recreating gpu
+
+[33mcommit b42913b4e8bb72451e7639f6208c382d48e9d1ef[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Tue May 31 22:46:24 2022 +0300
+
+    added SDL.dll
+
+[33mcommit 6a9eb2863284eae7ebb0ae8f3cf2554e1d99ad3b[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Thu May 26 18:39:04 2022 +0300
+
+    fixed some MBC support error
+
+[33mcommit cb0ce027d23cd9fa3febed0c9680f0da68aa35ed[m
+Author: TsilaAllaoui <tsila.allaoui@gmail.com>
+Date:   Wed May 25 22:22:30 2022 +0300
+
+    -test adding MBC support

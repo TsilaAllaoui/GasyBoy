@@ -10,9 +10,9 @@ using namespace std;
 class Cartridge
 {
   private:
-  
-	// MBC Chip type
-	bool MBC1, MBC2;
+
+	//cartridge type
+	  int cartridgeType;
 	
 	//ROM memory
 	uint8_t **ROM;
@@ -29,8 +29,8 @@ class Cartridge
 	//for checking if RAM is writable
 	bool enabledRAM;
 	
-	//for checking if a Rom banking change is occuring
-	bool romBanking;
+	//MBC mode
+	bool mode;
 
 	//number of banks of the ROM
 	int banksNumber;

@@ -12,7 +12,7 @@ GameBoy::GameBoy( string filename )
     if( filename == "" )
     {
         filename = new char[100];
-        filename = "./Roms/NoBanks/DrMario.gb";
+        filename = "./Roms/03.gb";
     }
     
     //initializing SDL App

@@ -6,12 +6,12 @@ Cartridge::Cartridge()
 	RAMBanks = new uint8_t[0x8000];
 	std::memset(RAMBanks, 0, 0x8000);
 
-	MBC1 = MBC2 = false;
-
 	currRomBank = 1;
 	currRamBank = 0;
 	
-	romBanking = true;
+	mode = true;
+
+	cartridgeType = 0;
 }
 
 Cartridge::~Cartridge()
@@ -100,20 +100,7 @@ void Cartridge::loadRom(string file)
 
 void Cartridge::setMBCType(uint8_t value)
 {
-	switch (value)
-	{
-	case 0:
-	case 1:
-	case 2:
-		MBC1 = true;
-		break;
-	case 3:
-	case 4:
-		MBC2 = true;
-		break;
-	default:
-		break;
-	}
+	cartridgeType = (int)value;
 }
 
 void Cartridge::setBankNumber(uint8_t value)
@@ -166,60 +153,55 @@ bool Cartridge::isRamWriteEnabled()
 
 void Cartridge::handleRomMemory(uint16_t adrr, uint8_t value)
 {
+	//MBC1 External RAM Switch
 	if (adrr < 0x2000)
 	{
-		if (MBC1 || MBC2)
+		if (cartridgeType == 2 or cartridgeType == 3)
 		{
-			if (MBC2)
-			{
-				if ((adrr & 0x10) == 0x10)
-					return;
-			}
-			value &= 0xF;
-			if (value == 0xA)
-				enabledRAM = true;
-			else if (value == 0)
-				enabledRAM = false;
+			uint8_t byte = value & 0xF;
+			(byte == 0xA) ? enabledRAM = true : enabledRAM = false;
 		}
 	}
+
+	//MBC1 ROM Bank
 	else if (adrr >= 0x2000 && adrr < 0x4000)
 	{
-		if (MBC1 || MBC2)
+		if (cartridgeType == 1 or cartridgeType == 2 or cartridgeType == 3)
 		{
-			if (MBC2)
-			{
-				currRomBank = value & 0xF;
-				if (currRomBank == 0)
-					currRomBank++;
-			}
 			uint8_t lower5bits = value & 0x1F;
 			currRomBank &= 0xE0;
 			currRomBank |= lower5bits;
 			if (currRomBank == 0)
-				currRomBank++;
+				currRomBank = 1;
 		}  
 	}
+
+	//MBC1 RAM Bank
 	else if (adrr >= 0x4000 && adrr < 0x6000)
 	{
-		if (MBC1)
+		if (cartridgeType == 1 or cartridgeType == 2 or cartridgeType == 3)
 		{
-			if (romBanking)
+			if (!mode)
 			{
+				//ROM mode: Set high bits of bank
 				currRomBank &= 0x1F;
-				currRomBank &= 0xE0;
+				uint8_t upperBits = value & 0xE0;
 				currRomBank |= value;
 				if (currRomBank == 0)
-					currRomBank++;
+					currRomBank = 1;
 			}
+
+			//RAM mode: Set Bank
 			else currRamBank = value & 0x3;
 		}
 	}
+
+	//MBC1: Mode switch
 	else if (adrr >= 0x6000 && adrr < 0x8000)
 	{
-		if (MBC1)
+		if (cartridgeType == 2 or cartridgeType == 3)
 		{
-			romBanking = ((value & 0x1) == 0) ? true : false;
-			if (romBanking)	currRamBank = 0;
+			mode = (value & 0x1);
 		}
 	}
 }
@@ -227,7 +209,5 @@ void Cartridge::handleRomMemory(uint16_t adrr, uint8_t value)
 void Cartridge::handleRamMemory(uint16_t adrr, uint8_t value)
 {
 	if (enabledRAM)
-	{
 		RAMBanks[adrr - 0xA000 + currRamBank * 0x2000] = value;
-	}
 }
