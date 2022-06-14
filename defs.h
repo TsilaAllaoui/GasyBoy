@@ -1,7 +1,7 @@
 #pragma once
 
 #define MAXCYCLE 70224
-#define SCALE 3
+#define SCALE 2
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
 #define VRAM_WIDTH 128

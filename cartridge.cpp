@@ -37,20 +37,20 @@ void Cartridge::loadRom(string file)
 		Rom.read(buffer, 2);
 		setBankNumber(buffer[1]);
 		setMBCType(buffer[0]);
-		ROM = new uint8_t*[(int)banksNumber];
-		for (int i=0; i<(int)banksNumber; i++)
+		ROM = new uint8_t * [(int)banksNumber];
+		for (int i = 0; i < (int)banksNumber; i++)
 			ROM[i] = new uint8_t[0x4000];
-		for (int i=0; i<(int)banksNumber; i++)
-			for (int j=0; j<0x4000; j++)
+		for (int i = 0; i < (int)banksNumber; i++)
+			for (int j = 0; j < 0x4000; j++)
 				ROM[i][j] = 0;
-	
+
 		//reading file and put into ROM
 		Rom.seekg(0, std::ios::end);
 		long romSize = Rom.tellg();
- 		uint8_t *buff = new uint8_t[romSize];
+		uint8_t * buff = new uint8_t[romSize];
 		Rom.seekg(0, std::ios::beg);
 		// Rom.read((char*)buff, romSize);
-		int bank  = 0, j = 0;
+		int bank = 0, j = 0;
 		for (int i = 0; i < romSize; i++)
 		{
 			if (i % 0x4000 == 0 && j > 0)
@@ -65,7 +65,8 @@ void Cartridge::loadRom(string file)
 			j++;
 		}
 		Rom.close();
-		std::ofstream out("./CartHeader.txt", std::ios::out);
+	}
+		/*std::ofstream out("./CartHeader.txt", std::ios::out);
 		if (out.is_open())
 		{
 			out << "Cartridge ROM Name:  ";
@@ -97,7 +98,7 @@ void Cartridge::loadRom(string file)
 		}
 		else
 			exit(80);
-	}
+	}*/
 	else
 	{
 		cout << "Rom not found!";
@@ -189,7 +190,7 @@ void Cartridge::handleRomMemory(uint16_t adrr, uint8_t value)
 		//MBC3
 		else if (cartridgeType == 0x13)
 		{
-			MessageBox(0, "Rom/Ram Bank Change", "Bank Handler", MB_ICONINFORMATION | MB_OK);
+			//MessageBox(0, "Rom/Ram Bank Change", "Bank Handler", MB_ICONINFORMATION | MB_OK);
 			uint8_t lower7bits = value & 0x7F;
 			currRomBank &= 0x80;
 			currRomBank |= lower7bits;

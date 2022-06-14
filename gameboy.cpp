@@ -12,7 +12,7 @@ GameBoy::GameBoy( string filename )
     if( filename == "" )
     {
         filename = new char[100];
-        filename = "./Roms/NoBanks/TETRIS.gb";
+        filename = "./Roms/NoBanks/DrMario.gb";
     }
     
     //initializing SDL App
@@ -22,19 +22,8 @@ GameBoy::GameBoy( string filename )
         exit( 1 );
     }
     
-    //setting up opengl as backend
-    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-    SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 32 );
-    SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 2 );
-    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 2 );
-    
-    ////opengl content
-    //glcontext = SDL_GL_CreateContext(screen);
-    
-    
     mmu = new Mmu( filename );
-    cpu = new Cpu( false, mmu );
+    cpu = new Cpu( true, mmu );
     gpu = new Gpu( mmu );
     timer = new Timer( mmu );
     interruptHanlder = new Interrupter( mmu, cpu );

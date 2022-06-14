@@ -29,28 +29,37 @@ class Gpu {
         
         //for checking if we have to draw screen/vram viewer
         bool drawScreen;
-        bool drawTileMap;
+		bool drawTileMap;
+		bool drawBG;
         
         //current graphical mode
         int mode;
         
         //textures representing VRAM Tiles
         SDL_Texture* tilesAt8000[256], *tilesAt9000[128];
-        SDL_Texture* tilesForScreenAt8000[256], *tilesForScreenAt9000[128];
+		SDL_Texture* tilesForScreenAt8000[256], * tilesForScreenAt9000[128];
+		SDL_Texture* tilesForBGAt8000[256], *tilesForBGAt9000[128];
         SDL_Texture* screenTexture;
         SDL_Texture* VramTexture;
+		SDL_Texture* BGTexture;
         
         //the VRAM Window
         SDL_Window* VramViewer;
         
         //the gameboy screen Window
         SDL_Window* screen;
+
+		//the BG screen Window
+		SDL_Window* BGViewer;
         
         //the VRAM renderer
         SDL_Renderer* VramRenderer;
         
         //the gameboy screen renderer
         SDL_Renderer* screenRenderer;
+
+		//BG renderer
+		SDL_Renderer* BGRenderer;
         
         //palettes color
         Uint32* OBP0;
@@ -81,7 +90,8 @@ class Gpu {
         
         //get/set darwing vram status
         bool drawOnVramViewer();
-        void resetDrawVramStatus();
+		void resetDrawVramStatus();
+		void resetDrawBG();
         
         //getting the value of bit at given position
         bool getBitValAt( uint8_t data, int position );
@@ -120,6 +130,9 @@ class Gpu {
         //draw the window if enabled
         void renderWindow();
         
+		//draw the BG screen if enabled
+		void renderBG();
+
         //render a tile
         void renderTile( uint16_t adress, SDL_Rect* pos, uint16_t colorAdress, bool priority, bool Xflip, bool Yflip );
         
