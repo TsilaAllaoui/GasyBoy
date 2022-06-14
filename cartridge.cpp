@@ -3,15 +3,22 @@
 
 Cartridge::Cartridge()
 {
+	//allocating banks of External RAM
 	RAMBanks = new uint8_t[0x8000];
 	std::memset(RAMBanks, 0, 0x8000);
 
+	//setting current ROM Bank and RAM Bank (ROM usually start at 1)
 	currRomBank = 1;
 	currRamBank = 0;
 	
+	//mode for MBC1
 	mode = true;
 
+	//the cartridge type
 	cartridgeType = 0;
+
+	//setting current used RTC register
+	currRTCReg = 0;
 }
 
 Cartridge::~Cartridge()
@@ -58,7 +65,7 @@ void Cartridge::loadRom(string file)
 			j++;
 		}
 		Rom.close();
-		std::ofstream out("C:/Users/Allaoui/Desktop/GasyBoy/Roms/NoBanks/CartHeader.txt", std::ios::out);
+		std::ofstream out("./CartHeader.txt", std::ios::out);
 		if (out.is_open())
 		{
 			out << "Cartridge ROM Name:  ";
@@ -143,7 +150,11 @@ uint8_t Cartridge::RomBankRead(uint16_t adrr)
 
 uint8_t Cartridge::RamBankRead(uint16_t adrr)
 {
-	return RAMBanks[adrr - 0xA000 + currRamBank * 0x2000];
+	//if there is RTC
+	if (cartridgeType == 0x13)
+		return currRTCReg;
+	//else
+	else return RAMBanks[adrr - 0xA000 + currRamBank * 0x2000];
 }
 
 bool Cartridge::isRamWriteEnabled()
@@ -163,9 +174,10 @@ void Cartridge::handleRomMemory(uint16_t adrr, uint8_t value)
 		}
 	}
 
-	//MBC1 ROM Bank
+	//ROM Bank
 	else if (adrr >= 0x2000 && adrr < 0x4000)
 	{
+		//MBC1
 		if (cartridgeType == 1 or cartridgeType == 2 or cartridgeType == 3)
 		{
 			uint8_t lower5bits = value & 0x1F;
@@ -174,11 +186,22 @@ void Cartridge::handleRomMemory(uint16_t adrr, uint8_t value)
 			if (currRomBank == 0)
 				currRomBank = 1;
 		}  
+		//MBC3
+		else if (cartridgeType == 0x13)
+		{
+			MessageBox(0, "Rom/Ram Bank Change", "Bank Handler", MB_ICONINFORMATION | MB_OK);
+			uint8_t lower7bits = value & 0x7F;
+			currRomBank &= 0x80;
+			currRomBank |= lower7bits;
+			if (currRomBank == 0)
+				currRomBank = 1;
+		}
 	}
 
-	//MBC1 RAM Bank
+	//MBC RAM Bank/RTC
 	else if (adrr >= 0x4000 && adrr < 0x6000)
 	{
+		//MBC1
 		if (cartridgeType == 1 or cartridgeType == 2 or cartridgeType == 3)
 		{
 			if (!mode)
@@ -194,14 +217,42 @@ void Cartridge::handleRomMemory(uint16_t adrr, uint8_t value)
 			//RAM mode: Set Bank
 			else currRamBank = value & 0x3;
 		}
+		//MBC3
+		else if (cartridgeType == 0x13)
+		{
+			//for RAM banking
+			if (value >= 0 and value <= 3)
+				currRamBank = value & 0x3;
+
+			//for RTC register read/write
+			else if (value >= 8 and value <= 0xC)
+			{
+				switch (value)
+				{
+				case 0x8: currRTCReg = RTCS; break;
+				case 0x9: currRTCReg = RTCM; break;
+				case 0xA: currRTCReg = RTCH; break;
+				case 0xB: currRTCReg = RTCDL; break;
+				case 0xC: currRTCReg = RTCDH; break;
+				default:
+					break;
+				}
+			}
+		}
 	}
 
 	//MBC1: Mode switch
 	else if (adrr >= 0x6000 && adrr < 0x8000)
 	{
+		//Only for MBC1
 		if (cartridgeType == 2 or cartridgeType == 3)
 		{
 			mode = (value & 0x1);
+		}
+		//MBC3 RTC registers
+		else if (cartridgeType == 0x13)
+		{
+			//latching RTC register
 		}
 	}
 }

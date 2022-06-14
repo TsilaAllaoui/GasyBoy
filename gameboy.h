@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "interrupt.h"
 #include "gamepad.h"
+#include "eventListener.h"
 
 class Gpu;
 class Gamepad;

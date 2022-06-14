@@ -93,7 +93,14 @@ void Mmu::write_ram(uint16_t adrr, uint8_t value)
 {
 	//if writing to ROM, manage memory banks
 	if (adrr < 0x8000)
+	{
+		if (cartridge->cartridgeType == 0)
+		{
+			//MessageBox(0, "Illegal ROM Wrtite", "Illegal Action", MB_ICONEXCLAMATION | MB_OK);
+			return;
+		}
 		cartridge->handleRomMemory(adrr, value);
+	}
 
 	//if writing to VRAM
 	else if (adrr >= 0x8000 && adrr < 0xA000)

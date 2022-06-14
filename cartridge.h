@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cstring>
 #include <cmath>
+#include <SDL_syswm.h>
 
 using namespace std;
 
@@ -11,9 +12,6 @@ class Cartridge
 {
   private:
 
-	//cartridge type
-	  int cartridgeType;
-	
 	//ROM memory
 	uint8_t **ROM;
 	
@@ -28,6 +26,12 @@ class Cartridge
 	
 	//for checking if RAM is writable
 	bool enabledRAM;
+
+	//RTC registers
+	uint8_t RTCS, RTCM, RTCH, RTCDL, RTCDH;
+
+	//curren tused RTC register mapped in 0xA000-0xBFFFF
+	uint8_t currRTCReg;
 	
 	//MBC mode
 	bool mode;
@@ -43,6 +47,9 @@ class Cartridge
 	// constructor/destructor
 	Cartridge();
 	~Cartridge();
+
+	//cartridge type
+	int cartridgeType;
 
 	// loading ROM 
 	void loadRom(string filename);

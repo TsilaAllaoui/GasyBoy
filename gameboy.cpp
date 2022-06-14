@@ -12,7 +12,7 @@ GameBoy::GameBoy( string filename )
     if( filename == "" )
     {
         filename = new char[100];
-        filename = "./Roms/NoBanks/DrMario.gb";
+        filename = "./Roms/NoBanks/TETRIS.gb";
     }
     
     //initializing SDL App
@@ -34,7 +34,7 @@ GameBoy::GameBoy( string filename )
     
     
     mmu = new Mmu( filename );
-    cpu = new Cpu( true, mmu );
+    cpu = new Cpu( false, mmu );
     gpu = new Gpu( mmu );
     timer = new Timer( mmu );
     interruptHanlder = new Interrupter( mmu, cpu );
@@ -81,8 +81,11 @@ void GameBoy::boot()
         cycleCounter = 0;
         int firstTime = SDL_GetTicks();
         
-        while( cycleCounter <= 69905 )
-            step();
+		while (cycleCounter <= 69905)
+		{
+			step();
+		}
+		gpu->render();
             
         //setting main palette
         if( gamepad->changedPalette )
@@ -91,7 +94,7 @@ void GameBoy::boot()
             gamepad->changedPalette = false;
         }
         
-        gpu->render();
+		
         
         int elapsedTime = SDL_GetTicks() - firstTime;
         

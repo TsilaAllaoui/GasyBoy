@@ -80,20 +80,20 @@ void Gpu::step( int cycles )
         setLY( LY() + 1 );
         scanlineCounter = 456;
         
-        if( LY() == 144 )
-        {
-            requestInterrupt( 0 );
-            drawScanlines();
-        }
-        
-        else if( LY() > 153 )
-        {
-            setLY( 0 );
-            mmu->write_ram( 0xFF44, 0 );
-        }
-        
-        /* else if( LY() < 144 )
-             drawScanlines();*/
+		if (LY() == 144)
+		{
+			requestInterrupt(0);
+			drawScanlines();
+		}
+
+		else if (LY() > 153)
+		{
+			setLY(0);
+			mmu->write_ram(0xFF44, 0);
+		}
+
+		else if (LY() < 144)
+			renderCurrScanline((int)LY());
     }
 }
 
@@ -244,7 +244,7 @@ void Gpu::drawScanlines()
     if( getBitValAt( LCDC(), 0 ) )
     {
         //draw tiles
-        renderTiles();
+		drawScreen = true;
     }
     
     if( getBitValAt( LCDC(), 5 ) )
@@ -272,9 +272,12 @@ void Gpu::renderTiles()
     int overY = 0;
     int oldK = 0;
     int oldI = 0;
-    
-    for( int k = SCY() / 8; k < SCY() / 8 + 19; k++ )
+	int tmp = SCY();
+    for( int k = tmp / 8; k <tmp / 8 + 19; k++ )
     {
+
+		
+
         int x = 0;
         
         if( k >= 32 )
@@ -481,7 +484,7 @@ void Gpu::renderWindow()
     uint16_t tileData = getBitValAt( LCDC(), 4 ) ? 0x8000 : 0x8800;
     uint16_t currTile = tileMap;
     
-    for( int k = 0; k < SCY() + 19; k++ )
+    for( int k = 0; k < SCY()+19; k++ )
     {
         int y = 0;
         int x = 0;
@@ -490,7 +493,7 @@ void Gpu::renderWindow()
         {
             tileData = getBitValAt( LCDC(), 4 ) ? 0x8000 : 0x8800;
             SDL_Rect dst;
-            dst.x = 8 * SCALE * x + WX() * SCALE - 7 * SCALE;
+			dst.x = 8 * SCALE * x + WX() * SCALE - 7 * SCALE;
             dst.y = 8 * SCALE * k + WY() * SCALE;
             dst.w = 8 * SCALE;
             dst.h = 8 * SCALE;
@@ -546,9 +549,6 @@ void Gpu::renderSprites()
         uint8_t tileNumber = mmu->read_ram( 0xFE02 + i ) ;
         uint8_t attributes = mmu->read_ram( 0xFE03 + i ) ;
         
-        //skip if sprite is empty
-        if( tileNumber == 0 && attributes == 0 )
-            continue;
             
         //the sprites flasg attributes
         bool priority = getBitValAt( attributes, 7 );
@@ -598,6 +598,153 @@ void Gpu::render()
         SDL_RenderPresent( screenRenderer );
         resetDrawScreenStatus();
     }
+}
+
+void Gpu::renderCurrScanline(int line)
+{
+	SDL_SetRenderDrawColor(screenRenderer, 255, 0, 0, 255);
+	SDL_RenderClear(screenRenderer);
+	SDL_SetRenderTarget(screenRenderer, screenTexture);
+	uint16_t tileMap = getBitValAt(LCDC(), 3) ? 0x9C00 : 0x9800;
+	uint16_t tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
+	uint16_t currTile = tileMap;
+	int overY = 0;
+	int oldK = 0;
+	int oldI = 0;
+	int tmp = SCY();
+	int k = line / 8;
+	int x = 0;
+	SDL_Rect src;
+	src.x = 0;
+	src.y = line - 8 * floor(line / 8);
+	src.w = 8;
+	src.h = 1;
+	if (SCX() / 8 + 21 >= 32)
+	{
+		int over = (SCX() / 8 + 21) - 32;
+
+		for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + ((SCX() / 8 + 21) - over); i++)
+		{
+			tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
+			SDL_Rect dst;
+			dst.x = 8 * SCALE * x - SCX() * SCALE;
+			dst.y = line * SCALE;
+			dst.w = 8 * SCALE;
+			dst.h = 8 * SCALE;
+			x++;
+
+			if (tileData == 0x8000)
+			{
+				uint8_t value = mmu->read_ram(i);
+
+				if (value >= 0 && value <= 255)
+					SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], &src, &dst);
+			}
+
+			else if (tileData == 0x8800)
+			{
+				int8_t value = (int8_t)mmu->read_ram(i);
+
+				if (value >= -128 && value <= 127)
+				{
+					if (value >= -128 && value < 0)
+					{
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], &src, &dst);
+					}
+
+					else if (value >= 0 && value <= 127)
+					{
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], &src, &dst);
+					}
+				}
+
+			}
+		}
+
+		for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + over; i++)
+		{
+			tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
+			SDL_Rect dst;
+			dst.x = 8 * SCALE * x - SCX() * SCALE;
+			dst.y = line * SCALE;
+			dst.w = 8 * SCALE;
+			dst.h = 8 * SCALE;
+			x++;
+
+			if (tileData == 0x8000)
+			{
+				uint8_t value = mmu->read_ram(i);
+
+				if (value >= 0 && value <= 255)
+					//renderTile(0x8000 + (value << 4), &dst, 0xFF47);
+					SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], &src, &dst);
+			}
+
+			else if (tileData == 0x8800)
+			{
+				int8_t value = (int8_t)mmu->read_ram(i);
+
+				if (value >= -128 && value <= 127)
+				{
+					if (value >= -128 && value < 0)
+					{
+						//renderTile(0x8000 + ((value + 256) << 4), &dst, 0xFF47);
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], &src, &dst);
+					}
+
+					else if (value >= 0 && value <= 127)
+					{
+						//renderTile(0x8000 + ((value + 128) << 4), &dst, 0xFF47);
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], &src, &dst);
+					}
+				}
+
+			}
+		}
+	}
+
+	else if (SCX() / 8 + 21 < 32)
+	{
+		int overX = 0;
+
+		for (int i = currTile + 0x20 * k; i < (currTile + 0x20 * k) + 0x20; i++)
+		{
+			tileData = getBitValAt(LCDC(), 4) ? 0x8000 : 0x8800;
+			SDL_Rect dst;
+			dst.x = 8 * SCALE * x - SCX() * SCALE;
+			dst.y = line * SCALE;
+			dst.w = 8 * SCALE;
+			dst.h = 8 * SCALE;
+			x++;
+
+			if (tileData == 0x8000)
+			{
+				uint8_t value = mmu->read_ram(i);
+
+				if (value >= 0 && value <= 255)
+					SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[value], &src, &dst);
+			}
+
+			else if (tileData == 0x8800)
+			{
+				int8_t value = (int8_t)mmu->read_ram(i);
+
+				if (value >= -128 && value <= 127)
+				{
+					if (value >= -128 && value < 0)
+					{
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt8000[256 + value], &src, &dst);
+					}
+
+					else if (value >= 0 && value <= 127)
+					{
+						SDL_RenderCopy(screenRenderer, tilesForScreenAt9000[value], &src, &dst);
+					}
+				}
+			}
+		}
+	}
+	SDL_SetRenderTarget(screenRenderer, NULL);
 }
 
 void Gpu::renderTile( uint16_t adress, SDL_Rect* pos, uint16_t colorAdress, bool priority, bool Xflip, bool Yflip )

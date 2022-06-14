@@ -131,6 +131,9 @@ class Gpu {
         
         //change palette on the go
         void changeMainPalette();
+
+		//render a scanline
+		void renderCurrScanline(int line);
         
         
         //void draw_currentline(SDL_Surface *window);
