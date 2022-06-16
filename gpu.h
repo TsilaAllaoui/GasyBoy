@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <map>
 #include "mmu.h"
 #include "defs.h"
 
@@ -13,6 +14,19 @@
 #define BLACK 0x000000FF;
 
 using namespace std;
+
+class Sprite {
+    public:
+        uint8_t X, Y, tileNumber, attribute;
+        Sprite()
+        {
+            X = Y = tileNumber = attribute = 0;
+        }
+        ~Sprite()
+        {
+        
+        }
+};
 
 class Gpu {
     private:
@@ -29,37 +43,50 @@ class Gpu {
         
         //for checking if we have to draw screen/vram viewer
         bool drawScreen;
-		bool drawTileMap;
-		bool drawBG;
+        bool drawTileMap;
+        bool drawBG;
+		bool drawOAM;
+		bool drawWindow;
         
         //current graphical mode
         int mode;
         
         //textures representing VRAM Tiles
         SDL_Texture* tilesAt8000[256], *tilesAt9000[128];
-		SDL_Texture* tilesForScreenAt8000[256], * tilesForScreenAt9000[128];
-		SDL_Texture* tilesForBGAt8000[256], *tilesForBGAt9000[128];
+        SDL_Texture* tilesForScreenAt8000[256], * tilesForScreenAt9000[128];
+        SDL_Texture* tilesForBGAt8000[256], *tilesForBGAt9000[128];
+        SDL_Texture* tilesForOAMAt8000[256];
         SDL_Texture* screenTexture;
         SDL_Texture* VramTexture;
-		SDL_Texture* BGTexture;
+        SDL_Texture* BGTexture;
+        SDL_Texture* OAMTexture;
+        
+        //placeholder for no sprite
+        SDL_Texture* placeholder;
         
         //the VRAM Window
         SDL_Window* VramViewer;
         
         //the gameboy screen Window
         SDL_Window* screen;
-
-		//the BG screen Window
-		SDL_Window* BGViewer;
+        
+        //the BG screen Window
+        SDL_Window* BGViewer;
+        
+        //the OAM screen Window
+        SDL_Window* OAMViewer;
         
         //the VRAM renderer
         SDL_Renderer* VramRenderer;
         
         //the gameboy screen renderer
         SDL_Renderer* screenRenderer;
-
-		//BG renderer
-		SDL_Renderer* BGRenderer;
+        
+        //BG renderer
+        SDL_Renderer* BGRenderer;
+        
+        //OAM renderer
+        SDL_Renderer* OAMRenderer;
         
         //palettes color
         Uint32* OBP0;
@@ -67,6 +94,9 @@ class Gpu {
         
         //base Palette
         Uint32* basePalette;
+        
+        //all 40 sprites
+        Sprite sprites[40];
         
         
     public:
@@ -90,8 +120,8 @@ class Gpu {
         
         //get/set darwing vram status
         bool drawOnVramViewer();
-		void resetDrawVramStatus();
-		void resetDrawBG();
+        void resetDrawVramStatus();
+        void resetDrawBG();
         
         //getting the value of bit at given position
         bool getBitValAt( uint8_t data, int position );
@@ -121,18 +151,15 @@ class Gpu {
         //drawing scanlines
         void drawScanlines();
         
-        //draw tiles
-        void renderTiles();
-        
         //draw sprites
         void renderSprites();
         
         //draw the window if enabled
         void renderWindow();
         
-		//draw the BG screen if enabled
-		void renderBG();
-
+        //draw the BG screen if enabled
+        void renderBG();
+        
         //render a tile
         void renderTile( uint16_t adress, SDL_Rect* pos, uint16_t colorAdress, bool priority, bool Xflip, bool Yflip );
         
@@ -144,10 +171,12 @@ class Gpu {
         
         //change palette on the go
         void changeMainPalette();
-
-		//render a scanline
-		void renderCurrScanline(int line);
         
+        //render a scanline
+        void renderCurrScanline( int line );
+
+		//render OAM Viewer
+		void renderOAM();
         
         //void draw_currentline(SDL_Surface *window);
         //void render_sprites(SDL_Surface *window);
