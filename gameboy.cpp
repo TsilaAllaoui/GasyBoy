@@ -12,7 +12,7 @@ GameBoy::GameBoy( string filename )
     if( filename == "" )
     {
         filename = new char[100];
-        filename = "./Roms/NoBanks/SuperMarioLand.gb";
+        filename = "./Roms/01.gb";
     }
     
     //initializing SDL App
@@ -70,10 +70,12 @@ void GameBoy::boot()
         cycleCounter = 0;
         int firstTime = SDL_GetTicks();
         
-        while( cycleCounter <= 69905 )
-            step();
-            
-        gpu->render();
+		while (cycleCounter <= 69905)
+		{
+			step();
+
+			gpu->render();
+		}
         
         //setting main palette
         if( gamepad->changedPalette )

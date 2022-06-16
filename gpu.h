@@ -100,6 +100,7 @@ class Gpu {
         
         
     public:
+
         //constructor/desctructor
         Gpu();
         Gpu( Mmu* p_mmu );

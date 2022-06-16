@@ -38,7 +38,7 @@ Gpu::Gpu( Mmu* p_mmu )
     BGRenderer = SDL_CreateRenderer( BGViewer, -1, SDL_RENDERER_ACCELERATED );
     
     //creating OAM window and renderer
-    OAMViewer = SDL_CreateWindow( "OAM Viewer", xScreen + ( 64 * SCALE ), yScreen, 64 * 2 * SCALE, 40 * 2 * SCALE, SDL_WINDOW_SHOWN );
+    OAMViewer = SDL_CreateWindow( "OAM Viewer", xScreen, yScreen + (SCREEN_HEIGHT * SCALE) + 30, 64 * 2 * SCALE, 40 * 2 * SCALE, SDL_WINDOW_SHOWN );
     OAMRenderer = SDL_CreateRenderer( OAMViewer, -1, SDL_RENDERER_ACCELERATED );
     
     
@@ -71,6 +71,7 @@ Gpu::Gpu( Mmu* p_mmu )
     basePalette[1] = 0xCCCCCCFF;
     basePalette[2] = 0x777777FF;
     basePalette[3] = 0x000000FF;
+
 }
 
 Gpu::~Gpu()
@@ -120,6 +121,10 @@ void Gpu::step( int cycles )
 			drawWindow = true;
 			drawBG = true;
 			drawOAM = true;
+			/*SDL_SetRenderDrawColor(screenRenderer, 0, 0, 255, 255);
+			SDL_RenderClear(screenRenderer);
+			SDL_RenderPresent(screenRenderer);
+			SDL_Delay(100);*/
         }
         
         else if( LY() > 153 )
@@ -332,7 +337,6 @@ void Gpu::showTileData()
     }
 }
 
-
 //render window if enabled
 void Gpu::renderWindow()
 {
@@ -437,7 +441,7 @@ void Gpu::renderBG()
     }
     
     //draw the rectangle fomring the viewport
-    SDL_Rect rect = { SCX(), SCY(), 160 * SCALE, 144 * SCALE };
+    SDL_Rect rect = { SCX() * SCALE, SCY() * SCALE, 160 * SCALE, 144 * SCALE };
     SDL_SetRenderDrawColor( BGRenderer, 255, 0, 0, 255 );
     SDL_RenderDrawRect( BGRenderer, &rect );
     SDL_SetRenderTarget( BGRenderer, NULL );
@@ -489,6 +493,8 @@ void Gpu::renderSprites()
 void Gpu::renderCurrScanline( int line )
 {
 
+	if (SCY() == 0x98)
+		int a = 0;
     if( line > 0 )
         line--;
         
@@ -501,19 +507,16 @@ void Gpu::renderCurrScanline( int line )
     SDL_Rect dst, src;
     
     SDL_Texture* texture = nullptr;
-    
-    /*SDL_SetRenderDrawColor( screenRenderer, 255, 255, 255, 255 );
-    SDL_RenderClear( screenRenderer );*/
+
     SDL_SetRenderTarget( screenRenderer, screenTexture );
-    
+
     //source to render
-    src.y = ( line ) % 8; // ( line % 8 ); //
+    src.y = (line % 8 + (SCY() % 8)) % 8;;
     src.x = 0;
     src.h = 1;
     src.w = 8;
     
-    int tileYoffset = ( SCY() / 8 + line / 8 ) * 32;
-    
+	int tileYoffset = ((SCY() + line ) / 8) * 32;
     for( int j = X; j < X + 20; j++ )
     {
         uint16_t adress = baseTileIndex + tileYoffset + j;
@@ -547,6 +550,7 @@ void Gpu::renderCurrScanline( int line )
             }
             
         }
+
         
         //rendering the BG
         SDL_RenderCopy( screenRenderer, texture, &src, &dst );
@@ -588,7 +592,6 @@ void Gpu::renderCurrScanline( int line )
 			}
 		}
     }
-    
     SDL_SetRenderTarget( screenRenderer, NULL );
 }
 
