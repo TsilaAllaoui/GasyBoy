@@ -528,16 +528,37 @@ void Gpu::renderCurrScanline( int line )
         tileYoffset = ( ( ( SCY() + line ) / 8 ) % 32 ) * 32;
     
     else tileYoffset = ( ( SCY() + line ) / 8 ) * 32;
-    
-    if( SCX() > 0 )
-        src.x = SCX() % 8;
+
+	int lastW = 0;
         
-    for( int j = 0; j <= 20; j++ )
+    for( int j = SCX()/8; j <= SCX() / 8 + 20; j++ )
     {
-        uint16_t adress = baseTileIndex + tileYoffset + j + SCX() / 8;
-        uint8_t value = mmu->read_ram( adress );
+		uint16_t adress = 0;
         
-		dst.x = x * 8 * SCALE;
+		if (j - SCX() / 8 == 0)
+		{
+			adress = baseTileIndex + tileYoffset + SCX()/8;
+			dst.x = (-SCX() % 8) *  SCALE;
+			lastW = dst.x + dst.w;
+		}
+
+		else
+		{
+			if (j >= 32)
+			{
+				adress = baseTileIndex + tileYoffset + (j % 32);
+			}
+			else
+			{
+				adress = baseTileIndex + tileYoffset + j;
+			}
+			dst.x = lastW;
+			lastW = dst.x + dst.w;
+		}
+
+		uint8_t value = mmu->read_ram(adress);
+        
+		//dst.x *= (x * 8 * SCALE);
 
 		x++;
         
