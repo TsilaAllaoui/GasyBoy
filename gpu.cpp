@@ -30,15 +30,15 @@ Gpu::Gpu( Mmu* p_mmu )
     SDL_GetWindowPosition( screen, &xScreen, &yScreen );
     
     //creating VRAM window and renderer
-    VramViewer = SDL_CreateWindow( "VRAM Viewer", xScreen + ( SCREEN_WIDTH * SCALE ), yScreen, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE, SDL_WINDOW_HIDDEN );
+    VramViewer = SDL_CreateWindow( "VRAM Viewer", xScreen + ( SCREEN_WIDTH * SCALE ), yScreen, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE, SDL_WINDOW_SHOWN );
     VramRenderer = SDL_CreateRenderer( VramViewer, -1, SDL_RENDERER_ACCELERATED );
     
     //creating BG window and renderer
-    BGViewer = SDL_CreateWindow( "BG Viewer", xScreen + ( ( SCREEN_WIDTH + VRAM_WIDTH ) * SCALE ), yScreen, 32 * 8 * SCALE, 32 * 8 * SCALE, SDL_WINDOW_HIDDEN );
+    BGViewer = SDL_CreateWindow( "BG Viewer", xScreen + ( ( SCREEN_WIDTH + VRAM_WIDTH ) * SCALE ), yScreen, 32 * 8 * SCALE, 32 * 8 * SCALE, SDL_WINDOW_SHOWN );
     BGRenderer = SDL_CreateRenderer( BGViewer, -1, SDL_RENDERER_ACCELERATED );
     
     //creating OAM window and renderer
-    OAMViewer = SDL_CreateWindow( "OAM Viewer", xScreen, yScreen + ( SCREEN_HEIGHT * SCALE ) + 30, 64 * 2 * SCALE, 40 * 2 * SCALE, SDL_WINDOW_HIDDEN );
+    OAMViewer = SDL_CreateWindow( "OAM Viewer", xScreen, yScreen + ( SCREEN_HEIGHT * SCALE ) + 30, 64 * 2 * SCALE, 40 * 2 * SCALE, SDL_WINDOW_SHOWN );
     OAMRenderer = SDL_CreateRenderer( OAMViewer, -1, SDL_RENDERER_ACCELERATED );
     
     
@@ -491,8 +491,8 @@ void Gpu::renderSprites()
 
 void Gpu::renderCurrScanline( int line )
 {
-    if( line > 0 )
-        line--;
+    /*if( line > 0 )
+        line--;*/
         
     uint16_t baseTileIndex = getBitValAt( LCDC(), 3 ) ? 0x9C00 : 0x9800;
     uint16_t tileData = getBitValAt( LCDC(), 4 ) ? 0x8000 : 0x8800;
@@ -557,8 +557,6 @@ void Gpu::renderCurrScanline( int line )
 		}
 
 		uint8_t value = mmu->read_ram(adress);
-        
-		//dst.x *= (x * 8 * SCALE);
 
 		x++;
         
@@ -589,6 +587,9 @@ void Gpu::renderCurrScanline( int line )
         //rendering the BG
         SDL_RenderCopy( screenRenderer, texture, &src, &dst );
 
+		//rendering spites
+		SDL_Texture* spriteTex = nullptr;
+
         if( getBitValAt( LCDC(), 1 ) )
         {
             //addng sprites lines if any
@@ -600,26 +601,58 @@ void Gpu::renderCurrScanline( int line )
                 uint8_t tileNumber = sprites[i].tileNumber;
                 uint8_t attributes = sprites[i].attribute;
                 
-                if( line >= yPos && ( line <= yPos + 8 ) && sprites[i].tileNumber != 0 )
-                {
-                    //the sprites flasg attributes
-                    bool priority = getBitValAt( attributes, 7 );
-                    bool verticalFlip = getBitValAt( attributes, 6 );
-                    bool horizontalFlip = getBitValAt( attributes, 5 );
-                    bool colorPalette = getBitValAt( attributes, 4 );
-                    
-                    //rendering the sprite
-                    SDL_Rect spriteSrc = { 0, line - yPos, 8, 8 };
+				if (line >= yPos && (line <= yPos + 8))
+				{
+					//the sprites flasg attributes
+					bool priority = getBitValAt(attributes, 7);
+					bool verticalFlip = getBitValAt(attributes, 6);
+					bool horizontalFlip = getBitValAt(attributes, 5);
+					bool colorPalette = getBitValAt(attributes, 4);
+
+					//getting sprite palette
+					uint16_t paletteAdress = colorPalette ? 0xFF48 : 0xFF49;
+
+					//rendering the sprite
+					SDL_Rect spriteSrc;
+					spriteSrc.x = 0;
+					spriteSrc.y = line % 8; //(line % 8 + (SCY() % 8)) % 8;
+					if (spriteSrc.y == 7)
+						int a = 0;
+					spriteSrc.w = 8;
+					spriteSrc.h = 1;
+
                     SDL_Rect spriteDst;
-                    spriteDst.y = sprites[i].Y * SCALE;
+                    spriteDst.y = (sprites[i].Y + (line % 8)) * SCALE;
                     spriteDst.x = sprites[i].X * SCALE;
-                    spriteDst.h = SCALE * 8;
+                    spriteDst.h = SCALE;
                     spriteDst.w = SCALE * 8;
-                    
-                    //getting the sprite texture
-                    texture = tilesForScreenAt8000[sprites[i].tileNumber];
-                    
-                    SDL_RenderCopy( screenRenderer, texture, NULL, &spriteDst );
+					/*int pitch = sizeof(Uint32) * 8;
+					void* data = nullptr;
+					Uint32* palette = getPalette(colorPalette);
+					SDL_Texture* text = SDL_CreateTexture(screenRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 8, 8);
+					SDL_LockTexture(text, &spriteSrc, &data, &pitch);
+					Uint32* pix = (Uint32*)data;
+				   for (int i = 0; i < 8; i++)
+					{
+					   int b = 0;
+						if (pix[i] == getPalette(paletteAdress)[0])
+						{
+							pix[i] = 0x00000000;
+						}
+
+					}
+					SDL_UnlockTexture(text);*/
+
+					if (line >= yPos && line <= yPos + 8)
+					{
+						if (verticalFlip)
+							SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[sprites[i].tileNumber], &spriteSrc, &spriteDst, 0, NULL, SDL_FLIP_VERTICAL);
+						else if (horizontalFlip)
+							SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[sprites[i].tileNumber], &spriteSrc, &spriteDst, 0, NULL, SDL_FLIP_HORIZONTAL);
+						else SDL_RenderCopyEx(screenRenderer, tilesForScreenAt8000[sprites[i].tileNumber], &spriteSrc, &spriteDst, 0, NULL, SDL_FLIP_NONE);
+					}
+
+					//renderTile(0x8000 + (sprites[i].tileNumber << 4), &spriteDst, 0xFF48, false, false, false);
                     
                     /*SDL_DestroyTexture(texture);*/
                 }
@@ -643,6 +676,33 @@ void Gpu::renderOAM()
             SDL_RenderCopy( OAMRenderer, t, NULL, &rect );
         }
     }
+}
+
+Uint32* Gpu::getSpritePixels(uint16_t adress, uint16_t colorAdress)
+{
+	//counter for the current pixel
+	int currPixel = 0;
+
+	//pixels to be filled
+	Uint32 pixelData[64] = { 0 };
+
+	Uint32* palette = getPalette(colorAdress);
+
+	//making tile parts transparent
+	//getting srpites pixels
+	for (int i = adress; i < adress + 15; i += 2)
+	{
+		uint8_t B = mmu->read_ram(i);
+		uint8_t A = mmu->read_ram(i + 1);
+
+		for (int bit = 7; bit >= 0; bit--)
+		{
+			uint8_t color = (getBitValAt(A, bit) << 1) | getBitValAt(B, bit);
+			pixelData[currPixel] = palette[color];
+			currPixel++;
+		}
+	}
+	return pixelData;
 }
 
 void Gpu::renderTile( uint16_t adress, SDL_Rect* pos, uint16_t colorAdress, bool priority, bool Xflip, bool Yflip )

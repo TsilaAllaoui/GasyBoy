@@ -12,7 +12,7 @@ GameBoy::GameBoy( string filename )
     if( filename == "" )
     {
         filename = new char[100];
-        filename = "./Roms/MBC1/SuperMarioLand.gb";
+        filename = "./Roms/MBC1/PokemonRed.gb";
     }
     
     //initializing SDL App
@@ -23,7 +23,7 @@ GameBoy::GameBoy( string filename )
     }
     
     mmu = new Mmu( filename );
-    cpu = new Cpu( true, mmu );
+    cpu = new Cpu( true , mmu );
     gpu = new Gpu( mmu );
     timer = new Timer( mmu );
     interruptHanlder = new Interrupter( mmu, cpu );

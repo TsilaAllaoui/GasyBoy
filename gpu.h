@@ -178,6 +178,9 @@ class Gpu {
 
 		//render OAM Viewer
 		void renderOAM();
+
+		//getting sprites texture
+		Uint32* getSpritePixels(uint16_t adress, uint16_t colorAdress);
         
         //void draw_currentline(SDL_Surface *window);
         //void render_sprites(SDL_Surface *window);
