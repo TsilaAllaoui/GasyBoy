@@ -14,7 +14,7 @@ Gpu::Gpu( Mmu* p_mmu )
     line = 0;
     drawScreen = false;
     drawTileMap = false;
-	drawWindow = false;
+    drawWindow = false;
     scanlineCounter = 456;
     retraceLY = 456;
     
@@ -30,15 +30,15 @@ Gpu::Gpu( Mmu* p_mmu )
     SDL_GetWindowPosition( screen, &xScreen, &yScreen );
     
     //creating VRAM window and renderer
-    VramViewer = SDL_CreateWindow( "VRAM Viewer", xScreen + ( SCREEN_WIDTH * SCALE ), yScreen, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE, SDL_WINDOW_SHOWN);
+    VramViewer = SDL_CreateWindow( "VRAM Viewer", xScreen + ( SCREEN_WIDTH * SCALE ), yScreen, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE, SDL_WINDOW_HIDDEN );
     VramRenderer = SDL_CreateRenderer( VramViewer, -1, SDL_RENDERER_ACCELERATED );
     
     //creating BG window and renderer
-    BGViewer = SDL_CreateWindow( "BG Viewer", xScreen + ( ( SCREEN_WIDTH + VRAM_WIDTH ) * SCALE ), yScreen, 32 * 8 * SCALE, 32 * 8 * SCALE, SDL_WINDOW_SHOWN );
+    BGViewer = SDL_CreateWindow( "BG Viewer", xScreen + ( ( SCREEN_WIDTH + VRAM_WIDTH ) * SCALE ), yScreen, 32 * 8 * SCALE, 32 * 8 * SCALE, SDL_WINDOW_HIDDEN );
     BGRenderer = SDL_CreateRenderer( BGViewer, -1, SDL_RENDERER_ACCELERATED );
     
     //creating OAM window and renderer
-    OAMViewer = SDL_CreateWindow( "OAM Viewer", xScreen, yScreen + (SCREEN_HEIGHT * SCALE) + 30, 64 * 2 * SCALE, 40 * 2 * SCALE, SDL_WINDOW_SHOWN );
+    OAMViewer = SDL_CreateWindow( "OAM Viewer", xScreen, yScreen + ( SCREEN_HEIGHT * SCALE ) + 30, 64 * 2 * SCALE, 40 * 2 * SCALE, SDL_WINDOW_HIDDEN );
     OAMRenderer = SDL_CreateRenderer( OAMViewer, -1, SDL_RENDERER_ACCELERATED );
     
     
@@ -62,7 +62,7 @@ Gpu::Gpu( Mmu* p_mmu )
     VramTexture = SDL_CreateTexture( VramRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE );
     BGTexture = SDL_CreateTexture( BGRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 32 * 8 * SCALE, 32 * 8 * SCALE );
     OAMTexture = SDL_CreateTexture( OAMRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 64 * SCALE, 40 * SCALE );
-	SDL_Surface* s = SDL_LoadBMP("placeholder.bmp");
+    SDL_Surface* s = SDL_LoadBMP( "placeholder.bmp" );
     placeholder = SDL_CreateTextureFromSurface( OAMRenderer, s );
     
     //setting up palettes
@@ -71,7 +71,7 @@ Gpu::Gpu( Mmu* p_mmu )
     basePalette[1] = 0xCCCCCCFF;
     basePalette[2] = 0x777777FF;
     basePalette[3] = 0x000000FF;
-
+    
 }
 
 Gpu::~Gpu()
@@ -87,18 +87,19 @@ void Gpu::step( int cycles )
     
     if( mmu->DMARegionWritten )
     {
-		//fetch all sprites if any
-		for (int i = 0; i < 40; i++)
-		{
-			//getting the sprite's informations
-			sprites[i].Y = mmu->read_ram(0xFE00 + i * 4) - 16;
-			sprites[i].X = mmu->read_ram(0xFE01 + i * 4) - 8;
-			sprites[i].tileNumber = mmu->read_ram(0xFE02 + i * 4);
-			sprites[i].attribute = mmu->read_ram(0xFE03 + i * 4);
-		}
+        //fetch all sprites if any
+        for( int i = 0; i < 40; i++ )
+        {
+            //getting the sprite's informations
+            sprites[i].Y = mmu->read_ram( 0xFE00 + i * 4 ) - 16;
+            sprites[i].X = mmu->read_ram( 0xFE01 + i * 4 ) - 8;
+            sprites[i].tileNumber = mmu->read_ram( 0xFE02 + i * 4 );
+            sprites[i].attribute = mmu->read_ram( 0xFE03 + i * 4 );
+        }
+        
         mmu->DMARegionWritten = false;
     }
-
+    
     
     //set LCD Status changes
     
@@ -117,27 +118,25 @@ void Gpu::step( int cycles )
         if( LY() == 144 )
         {
             requestInterrupt( 0 );
-			drawScreen = true;
-			drawWindow = true;
-			drawBG = true;
-			drawOAM = true;
-			/*SDL_SetRenderDrawColor(screenRenderer, 0, 0, 255, 255);
-			SDL_RenderClear(screenRenderer);
-			SDL_RenderPresent(screenRenderer);
-			SDL_Delay(100);*/
+            drawScreen = true;
+            drawWindow = true;
+            drawBG = true;
+            drawOAM = true;
+            /*SDL_SetRenderDrawColor(screenRenderer, 0, 0, 255, 255);
+            SDL_RenderClear(screenRenderer);
+            SDL_RenderPresent(screenRenderer);
+            SDL_Delay(100);*/
         }
         
         else if( LY() > 153 )
         {
             setLY( 0 );
             mmu->write_ram( 0xFF44, 0 );
-			drawScanlines();
+            drawScanlines();
         }
         
-		else if (LY() < 144)
-		{
-			renderCurrScanline((int)LY());
-		}
+        else if( LY() < 144 )
+            renderCurrScanline( ( int )LY() );
     }
 }
 
@@ -217,54 +216,54 @@ void Gpu::setLCDStatus()
 //render VRAM Viewer/Screen
 void Gpu::render()
 {
-	if (drawTileMap)
-	{
-		SDL_Rect pos = { 0, 0, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE };
-		SDL_RenderCopy(VramRenderer, VramTexture, NULL, &pos);
-		SDL_RenderPresent(VramRenderer);
-		drawTileMap = false;
-	}
-
-	if (drawScreen)
-	{
-		SDL_Rect rect = { 0, 0, 160 * SCALE, 144 * SCALE };
-		SDL_RenderCopy(screenRenderer, screenTexture, NULL, &rect);
-		SDL_RenderPresent(screenRenderer);
-		drawScreen = false;
-	}
-
-	if (drawBG)
-	{
-		SDL_Rect pos = { 0, 0, 32 * 8 * SCALE, 32 * 8 * SCALE };
-		SDL_RenderCopy(BGRenderer, BGTexture, NULL, &pos);
-		SDL_RenderPresent(BGRenderer);
-		drawBG = false;
-	}
-
-	if (drawOAM)
-	{
-		SDL_RenderPresent(OAMRenderer);
-		drawOAM = false;
-	}
+    if( drawTileMap )
+    {
+        SDL_Rect pos = { 0, 0, VRAM_WIDTH * SCALE, VRAM_HEIGHT * SCALE };
+        SDL_RenderCopy( VramRenderer, VramTexture, NULL, &pos );
+        SDL_RenderPresent( VramRenderer );
+        drawTileMap = false;
+    }
+    
+    if( drawScreen )
+    {
+        SDL_Rect rect = { 0, 0, 160 * SCALE, 144 * SCALE };
+        SDL_RenderCopy( screenRenderer, screenTexture, NULL, &rect );
+        SDL_RenderPresent( screenRenderer );
+        drawScreen = false;
+    }
+    
+    if( drawBG )
+    {
+        SDL_Rect pos = { 0, 0, 32 * 8 * SCALE, 32 * 8 * SCALE };
+        SDL_RenderCopy( BGRenderer, BGTexture, NULL, &pos );
+        SDL_RenderPresent( BGRenderer );
+        drawBG = false;
+    }
+    
+    if( drawOAM )
+    {
+        SDL_RenderPresent( OAMRenderer );
+        drawOAM = false;
+    }
 }
 
 
 //render all 144 scanlines if LCD is ON
 void Gpu::drawScanlines()
 {
-	//drawing on screen (BG and sprites)
+    //drawing on screen (BG and sprites)
     if( getBitValAt( LCDC(), 0 ) )
         drawScreen = true;
-
+        
     //render the window
     if( getBitValAt( LCDC(), 5 ) )
         renderWindow();
-
-	//render OAM
-	renderOAM();
-
-	//render BG
-	renderBG();
+        
+    //render OAM
+    renderOAM();
+    
+    //render BG
+    renderBG();
 }
 
 //showing VRAM TileData
@@ -441,7 +440,7 @@ void Gpu::renderBG()
     }
     
     //draw the rectangle fomring the viewport
-    SDL_Rect rect = { SCX() * SCALE, SCY() * SCALE, 160 * SCALE, 144 * SCALE };
+    SDL_Rect rect = { SCX()* SCALE, SCY()* SCALE, 160 * SCALE, 144 * SCALE };
     SDL_SetRenderDrawColor( BGRenderer, 255, 0, 0, 255 );
     SDL_RenderDrawRect( BGRenderer, &rect );
     SDL_SetRenderTarget( BGRenderer, NULL );
@@ -492,9 +491,6 @@ void Gpu::renderSprites()
 
 void Gpu::renderCurrScanline( int line )
 {
-
-	if (SCY() == 0x98)
-		int a = 0;
     if( line > 0 )
         line--;
         
@@ -507,26 +503,43 @@ void Gpu::renderCurrScanline( int line )
     SDL_Rect dst, src;
     
     SDL_Texture* texture = nullptr;
-
+    
     SDL_SetRenderTarget( screenRenderer, screenTexture );
 
+	int x = 0;
+    
     //source to render
-    src.y = (line % 8 + (SCY() % 8)) % 8;;
+    src.y = ( line % 8 + ( SCY() % 8 ) ) % 8;
     src.x = 0;
     src.h = 1;
     src.w = 8;
+
+	//where to render the texture
+
+	dst.y = line * SCALE;
+	dst.x = x * 8 * SCALE; //; (j * SCALE * 8) - SCX() * SCALE;
+	dst.h = SCALE;
+	dst.w = SCALE * 8;
     
-	int tileYoffset = ((SCY() + line ) / 8) * 32;
-    for( int j = X; j < X + 20; j++ )
+    //what to draw
+    int tileYoffset = 0;
+    
+    if( ( SCY() + line ) / 8 >= 32 )
+        tileYoffset = ( ( ( SCY() + line ) / 8 ) % 32 ) * 32;
+    
+    else tileYoffset = ( ( SCY() + line ) / 8 ) * 32;
+    
+    if( SCX() > 0 )
+        src.x = SCX() % 8;
+        
+    for( int j = 0; j <= 20; j++ )
     {
-        uint16_t adress = baseTileIndex + tileYoffset + j;
+        uint16_t adress = baseTileIndex + tileYoffset + j + SCX() / 8;
         uint8_t value = mmu->read_ram( adress );
         
-        //where to render the texture
-        dst.y = line * SCALE;
-        dst.x = ( j - X ) * SCALE * 8;
-        dst.h = SCALE;
-        dst.w = SCALE * 8;
+		dst.x = x * 8 * SCALE;
+
+		x++;
         
         //choose tile to render
         if( tileData == 0x8000 )
@@ -550,64 +563,65 @@ void Gpu::renderCurrScanline( int line )
             }
             
         }
-
+        
         
         //rendering the BG
         SDL_RenderCopy( screenRenderer, texture, &src, &dst );
-        
-		if (getBitValAt(LCDC(), 1))
-		{
-			//addng sprites lines if any
-			for (int i = 0; i < 40; i++)
-			{
-				//getting the sprite's informations
-				uint8_t yPos = sprites[i].Y + 0x10;
-				uint8_t xPos = sprites[i].X + 8;
-				uint8_t tileNumber = sprites[i].tileNumber;
-				uint8_t attributes = sprites[i].attribute;
 
-				if (line >= yPos && (line <= yPos + 8) && sprites[i].tileNumber != 0)
-				{
-					//the sprites flasg attributes
-					bool priority = getBitValAt(attributes, 7);
-					bool verticalFlip = getBitValAt(attributes, 6);
-					bool horizontalFlip = getBitValAt(attributes, 5);
-					bool colorPalette = getBitValAt(attributes, 4);
-
-					//rendering the sprite
-					SDL_Rect spriteSrc = { 0, line - yPos, 8, 8 };
-					SDL_Rect spriteDst;
-					spriteDst.y = sprites[i].Y * SCALE;
-					spriteDst.x = sprites[i].X * SCALE;
-					spriteDst.h = SCALE * 8;
-					spriteDst.w = SCALE * 8;
-
-					//getting the sprite texture
-					texture = tilesForScreenAt8000[sprites[i].tileNumber];
-
-					SDL_RenderCopy(screenRenderer, texture, NULL, &spriteDst);
-
-					/*SDL_DestroyTexture(texture);*/
-				}
-			}
-		}
+        if( getBitValAt( LCDC(), 1 ) )
+        {
+            //addng sprites lines if any
+            for( int i = 0; i < 40; i++ )
+            {
+                //getting the sprite's informations
+                uint8_t yPos = sprites[i].Y + 0x10;
+                uint8_t xPos = sprites[i].X + 8;
+                uint8_t tileNumber = sprites[i].tileNumber;
+                uint8_t attributes = sprites[i].attribute;
+                
+                if( line >= yPos && ( line <= yPos + 8 ) && sprites[i].tileNumber != 0 )
+                {
+                    //the sprites flasg attributes
+                    bool priority = getBitValAt( attributes, 7 );
+                    bool verticalFlip = getBitValAt( attributes, 6 );
+                    bool horizontalFlip = getBitValAt( attributes, 5 );
+                    bool colorPalette = getBitValAt( attributes, 4 );
+                    
+                    //rendering the sprite
+                    SDL_Rect spriteSrc = { 0, line - yPos, 8, 8 };
+                    SDL_Rect spriteDst;
+                    spriteDst.y = sprites[i].Y * SCALE;
+                    spriteDst.x = sprites[i].X * SCALE;
+                    spriteDst.h = SCALE * 8;
+                    spriteDst.w = SCALE * 8;
+                    
+                    //getting the sprite texture
+                    texture = tilesForScreenAt8000[sprites[i].tileNumber];
+                    
+                    SDL_RenderCopy( screenRenderer, texture, NULL, &spriteDst );
+                    
+                    /*SDL_DestroyTexture(texture);*/
+                }
+            }
+        }
     }
+    
     SDL_SetRenderTarget( screenRenderer, NULL );
 }
 
 void Gpu::renderOAM()
 {
-	//Drawing sprites to OAM Viewer
-	for (int i = 0; i < 5; i++)
-	{
-		for (int j = 0; j < 8; j++)
-		{
-			SDL_Rect rect = { j * 8 * 2 * SCALE, i * 8 * 2 * SCALE, 2 * 8 * SCALE, 2 * 8 * SCALE };
-			Sprite s = sprites[i * 8 + j];
-			SDL_Texture* t =  tilesForOAMAt8000[s.tileNumber];
-			SDL_RenderCopy(OAMRenderer, t, NULL, &rect);
-		}
-	}
+    //Drawing sprites to OAM Viewer
+    for( int i = 0; i < 5; i++ )
+    {
+        for( int j = 0; j < 8; j++ )
+        {
+            SDL_Rect rect = { j * 8 * 2 * SCALE, i * 8 * 2 * SCALE, 2 * 8 * SCALE, 2 * 8 * SCALE };
+            Sprite s = sprites[i * 8 + j];
+            SDL_Texture* t =  tilesForOAMAt8000[s.tileNumber];
+            SDL_RenderCopy( OAMRenderer, t, NULL, &rect );
+        }
+    }
 }
 
 void Gpu::renderTile( uint16_t adress, SDL_Rect* pos, uint16_t colorAdress, bool priority, bool Xflip, bool Yflip )
