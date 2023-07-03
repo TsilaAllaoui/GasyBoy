@@ -1,33 +1,49 @@
-# GasyBoy 
-Gameboy emulator made with C++/SDL2.
+# 🕹️ **GasyBoy** 🕹️
+**Gameboy** emulator made with **C++/SDL2**.
+
+###### ⬜⬜⬜⬜⬜⬜⬜⬜
+###### ⬜🌫️🌫️🌫️🌫️🌫️🌫️⬜
+###### ⬜🌫️🟩🟩🟩🟩🌫️⬜
+###### ⬜🌫️🟩🟩🟩🟩🌫️⬜
+###### ⬜🌫️🟩🟩🟩🟩🌫️⬜
+###### ⬜🌫️🟩🟩🟩🟩🌫️⬜
+###### ⬜🌫️🌫️🌫️🌫️🌫️🌫️⬜
+###### ⬜⬜⬜⬜⬜⬜⬜⬜
+###### ⬜⬜⬛⬜⬜⬜🔴⬜
+###### ⬜⬛⬛⬛⬜🔴⬜⬜
+###### ⬜⬜⬛⬜⬜⬜⬜⬜
+###### ⬜⬜⬜⬜⬜⬜⬜⬜
+###### ⬜⬜⬜⬜⬜⬜⬜⬜
+###### ⬜⬜⬜⬜⬜⬜⬜⬜
+
+-----
+
+## 🔥 **Features**
+- [x] Fully working **Zilog Z80 CPU** with all opcodes
+- [x] Working NoMBC and MBC1 roms (MBC1 may cause visual bugs)
+- [x] Working buttons
 
 
-## Features
-- Fully working Zilog Z80 CPU with all opcodes
-- Working NoMBC and MBC1 roms (MBC1 may cause visual bugs)
-- Working buttons
+## ⛔ **About ROM and illegal stuff**
+
+**All stuff related to Nintendo belongs to Nintendo**. I don't support piracy so **FIND ROMS ON YOUR OWN**. Or for tesing purpose, use test roms available [here](https://github.com/c-sp/gameboy-test-roms/) (roms are in .gb extension).
 
 
-## About ROM and illegal stuff 
+## 🛠️ **Building**
 
-All stuff related to Nintendo belongs to Nintendo. For roms, get them on the internet or use test roms [here](https://github.com/c-sp/gameboy-test-roms/).
-
-
-## Building
-
- - ### Requirements
-    - Visual Stdio 15/17/22
+ - ### **Requirements**
+    - **Visual Studio** 15/17/22
     - SDL2 (already included)
 
- - ### Build
+ - ### **Build**
     Just build the solution of the project
 
-## Screenshots
+## 📸 **Screenshots** 📸
 
-1) Nintendo Boot Logo 
+1) **<u>Nintendo Boot Logo</u>**
 ![nintendo_boot_logo](./screenshots/nintendo_screen.png)
 
-2) Super Mario Land
+2) **<u>Super Mario Land</u>**
 
 <table>
     <tr>
@@ -40,7 +56,7 @@ All stuff related to Nintendo belongs to Nintendo. For roms, get them on the int
     </tr>
 </table>
 
-3) Tetris
+3) **<u>Tetris</u>**
 
 <table>
     <tr>
@@ -53,7 +69,7 @@ All stuff related to Nintendo belongs to Nintendo. For roms, get them on the int
     </tr>
 </table>
 
-4) Super Mario Land
+4) **<u>Super Mario Land</u>**
 
 <table>
     <tr>
@@ -66,8 +82,8 @@ All stuff related to Nintendo belongs to Nintendo. For roms, get them on the int
     </tr>
 </table>
 
-## TODO:
-- Fix PPU sprites transparency bug
-- Add supprt for more MBCs memory support
-- Add savestates
-- Make better UI and window
+## 📝 **TODO:**
+- [ ] Fix PPU sprites transparency bug
+- [ ] Add supprt for more MBCs memory support
+- [ ] Add savestates
+- [ ] Make better UI and window
