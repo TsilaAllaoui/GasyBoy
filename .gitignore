@@ -1,13 +1,3 @@
-*.exe
-*.txt
-*.bin
-/Roms
-/.vs
-/Debug
-/x64
-/.vscode
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
-*.dll
-*.sln
+.vs/
+.vscode/
+x64/
