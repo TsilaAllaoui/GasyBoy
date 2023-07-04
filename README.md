@@ -32,7 +32,7 @@
 ## 🛠️ **Building**
 
  - ### **Requirements**
-    - **Visual Studio** 15/17/22
+    - **Visual Studio** (any version from VS15 will work)
     - SDL2 (already included)
 
  - ### **Build**
