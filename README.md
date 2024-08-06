@@ -33,11 +33,13 @@
 ## 🛠️ **Building**
 
  - ### **Requirements**
-    - **Visual Studio** (any version from VS15 will work)
-    - SDL2 (already included)
+    - **Cmake** (any version from 3.10+)
 
  - ### **Build**
-    Just build the solution of the project
+    - mkdir build (in the project root)
+    - cd build
+    - cmake ..
+    - cmake --build . or open the solution file (VS17+)
 
 ## 📸 **Screenshots** 📸
 
