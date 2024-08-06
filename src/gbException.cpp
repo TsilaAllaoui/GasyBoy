@@ -4,12 +4,12 @@ namespace gasyboy
 {
     namespace exception
     {
-        explicit GbException::GbException(const std::string &message)
+        GbException::GbException(const std::string &message)
             : _message(message)
         {
         }
 
-        virtual const char *what() const noexcept
+        const char *GbException::what() const noexcept
         {
             return _message.c_str();
         }

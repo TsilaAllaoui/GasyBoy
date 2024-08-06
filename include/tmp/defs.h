@@ -1,5 +1,8 @@
-#pragma once
+#ifndef _DEFS_H_
+#define _DEFS_H_
 
+namespace gasyboy
+{
 #define MAXCYCLE 70224
 #define SCALE 2
 #define SCREEN_WIDTH 160
@@ -9,4 +12,6 @@
 #define BG_MAP_WIDTH 256
 #define BG_MAP_HEIGTH 256
 #define SPEED 3.6
+}
 
+#endif

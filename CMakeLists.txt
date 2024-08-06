@@ -9,19 +9,28 @@ set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
 set(GASYBOY_SOURCES_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cartridge.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/eventListener.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/gameboy.cpp
+
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/eventListener.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/gbException.cpp
+
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/gameboy.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gamepad.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/gpu.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/interrupt.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/mmu.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/register.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/timer.cpp
+
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/gpu.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/interrupt.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/logger.cpp
+
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/mmu.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/register.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/timer.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/src/utils.cpp
 )
 
 set(GASYBOY_HEADERS_DIR
+
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 

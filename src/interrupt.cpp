@@ -1,6 +1,6 @@
 #include "interrupt.h"
 
-Interrupter::Interrupter(Mmu *pmmu,Cpu *pcpu)
+Interrupter::Interrupter(Mmu *pmmu, Cpu *pcpu)
 {
     MasterInterrupt = false;
     mmu = pmmu;
@@ -9,7 +9,6 @@ Interrupter::Interrupter(Mmu *pmmu,Cpu *pcpu)
 
 Interrupter::~Interrupter()
 {
-
 }
 
 void Interrupter::handleInterrupts()
@@ -20,7 +19,7 @@ void Interrupter::handleInterrupts()
         uint8_t enable = mmu->read_ram(0xFFFF);
         if (req > 0)
         {
-            for (int i=0; i<5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 if (req & (1 << i))
                     if (enable & (1 << i))
@@ -43,14 +42,21 @@ void Interrupter::serviceInterrupt(int interrupt)
     uint8_t req = mmu->read_ram(0xFF0F);
     req &= ~(1 << interrupt);
     mmu->write_ram(0xFF0F, req);
-    cpu->push_SP(cpu->get_PC());
-	cpu->setHaltedStatus(false);
+    cpu->pushSP(cpu->getPC());
+    cpu->setHaltedStatus(false);
     switch (interrupt)
     {
-        case 0: cpu->set_PC(0x40); break;
-        case 1: cpu->set_PC(0x48); break;
-        case 2: cpu->set_PC(0x50); break;
-        case 4: cpu->set_PC(0x60); break;
+    case 0:
+        cpu->setPC(0x40);
+        break;
+    case 1:
+        cpu->setPC(0x48);
+        break;
+    case 2:
+        cpu->setPC(0x50);
+        break;
+    case 4:
+        cpu->setPC(0x60);
+        break;
     }
 }
-
