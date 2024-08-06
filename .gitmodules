@@ -1,0 +1,6 @@
+[submodule "externals/SDL"]
+	path = externals/SDL
+	url = https://github.com/libsdl-org/SDL
+[submodule "externals/gb-test-roms"]
+	path = externals/gb-test-roms
+	url = https://github.com/retrio/gb-test-roms
