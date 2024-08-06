@@ -26,7 +26,8 @@
 
 ## ⛔ **About ROM and illegal stuff**
 
-**All stuff related to Nintendo belongs to Nintendo**. I don't support piracy so **FIND ROMS ON YOUR OWN**. Or for tesing purpose, use test roms available [here](https://github.com/c-sp/gameboy-test-roms/) (roms are in .gb extension).
+**All stuff related to Nintendo belongs to Nintendo**. I don't support piracy so **FIND ROMS ON YOUR OWN**. Or for tesing purpose, use test roms available [here](https://github.com/retrio/gb-test-roms) (roms are in .gb extension).
+- Note that the repo of the test-roms are submodule of the project
 
 
 ## 🛠️ **Building**
