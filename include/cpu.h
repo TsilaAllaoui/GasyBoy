@@ -1,6 +1,7 @@
 #ifndef _CPU_H_
 #define _CPU_H_
 
+#include "registers.h"
 #include "register.h"
 #include "mmu.h"
 #include <memory>
@@ -12,20 +13,11 @@ namespace gasyboy
 	class Cpu
 	{
 	private:
-		// a special register for A && F(flags)
-		SpecialRegister _AF;
+		// Registers
+		Registers _registers;
 
-		// 3 16bits registers fromed of two 8bits registers each
-		Register _BC, _DE, _HL;
-
-		// the memory management unit used by the cpu
-		std::shared_ptr<Mmu> _mmu;
-
-		// the Program Counter
-		uint16_t _PC;
-
-		// the Stack Pointer
-		uint16_t _SP;
+		// MMU
+		Mmu &_mmu;
 
 		// boolean to check if cpu is halted
 		bool _halted;
@@ -42,7 +34,7 @@ namespace gasyboy
 
 	public:
 		// contructor/destructor
-		Cpu(const bool &bootBios, std::shared_ptr<Mmu> mmu);
+		Cpu(const bool &bootBios, Mmu &mmu);
 		~Cpu() = default;
 
 		// a step of the cpu
@@ -64,6 +56,7 @@ namespace gasyboy
 		// getters
 		uint16_t getPC();
 		uint16_t getRegister(const std::string &reg);
+		uint8_t getRegister(const char &reg);
 		uint16_t getSP();
 
 		// setters
@@ -79,10 +72,10 @@ namespace gasyboy
 		bool checkAddHalfCarry(const uint8_t &a, const uint8_t &b, const uint8_t &c);
 		bool checkAddHalfCarry(const uint16_t &a, const uint16_t &b, const uint16_t &c);
 		bool checkAddHalfCarry(const uint16_t &a, const uint16_t &b);
-		bool &checkSubHalfCarry(const uint8_t &a, const uint8_t &b);
-		bool &checkSubHalfCarry(const uint16_t &a, const uint16_t &b);
-		bool &checkSubCarry(const uint16_t &a, const uint16_t &b);
-		bool &checkAddCarry(const uint8_t &a, const uint8_t &b, const uint8_t &c);
+		bool checkSubHalfCarry(const uint8_t &a, const uint8_t &b);
+		bool checkSubHalfCarry(const uint16_t &a, const uint16_t &b);
+		bool checkSubCarry(const uint16_t &a, const uint16_t &b);
+		bool checkAddCarry(const uint8_t &a, const uint8_t &b, const uint8_t &c);
 		bool checkAddCarry(const uint16_t &a, const uint16_t &b, const uint16_t &c);
 
 		/*******8bits load group instructions*******/
@@ -94,18 +87,18 @@ namespace gasyboy
 		void LD_r_n(const uint8_t &from, const char &to);
 
 		// load memory value at a 16bit adress to a register
-		void LD_r_16(const uint16_t &adress, char to);
+		void LD_r_16(const uint16_t &adress, const char &to);
 
 		// the content of the register is loaded at the memory location of a 16bit adress
-		void LD_16_r(const uint16_t &adress, char from);
+		void LD_16_r(const uint16_t &adress, const char &from);
 
 		// an integer is loaded at the memory location of a 16bit adress
-		void LD_16_n(const uint16_t &adress, uint8_t value);
+		void LD_16_n(const uint16_t &adress, const uint8_t &value);
 
 		/*******16bits load group instructions*******/
 
 		// a 16bits integer is loaded in a 16bits register pair
-		void LD_rr_nn(const int16_t &value, const std::string &reg);
+		void LD_rr_nn(const uint16_t &value, const std::string &reg);
 
 		// load the content of the nex two bytes in memory starting at an adress to the appropriate 16bits register
 		void LD_rr_16(const uint16_t &adress, const std::string &reg);
@@ -153,22 +146,22 @@ namespace gasyboy
 
 		// AND operation on A && the operand
 		void AND_r(const char &reg);
-		void AND_n(uint8_t value);
+		void AND_n(const uint8_t &value);
 		void AND_16();
 
 		// OR operation on A && the operand
 		void OR_r(const char &reg);
-		void OR_n(uint8_t value);
+		void OR_n(const uint8_t &value);
 		void OR_16();
 
 		// XOR operation on A && the operand
 		void XOR_r(const char &reg);
-		void XOR_n(uint8_t value);
+		void XOR_n(const uint8_t &value);
 		void XOR_16();
 
 		// compare the Accumulator && the operand
 		void CP_r(const char &reg);
-		void CP_n(uint8_t reg);
+		void CP_n(const uint8_t &reg);
 		void CP_16();
 
 		// increment a 8bit register
@@ -314,7 +307,7 @@ namespace gasyboy
 		void JP_16(const uint16_t &adress);
 
 		// jump with conditions
-		void JP_c_16(const std::string &condition, uint16_t adress);
+		void JP_c_16(const std::string &condition, const uint16_t &adress);
 
 		// jump relative
 		void JR_e(const uint8_t &value);

@@ -1,23 +1,30 @@
 #ifndef _GAMEPAD_H_
 #define _GAMEPAD_H_
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
+#include <vector>
 
 namespace gasyboy
 {
     class Gamepad
     {
     private:
-        bool buttonSelected;
-        bool directionSelected;
-        uint8_t currState;
-        bool keys[8];
-        enum
+        bool _buttonSelected;
+        bool _directionSelected;
+        uint8_t _currentState;
+        std::vector<bool> _directionKeys;
+        std::vector<bool> _buttonKeys;
+
+        enum Button
         {
             A,
             B,
             START,
-            SELECT,
+            SELECT
+        };
+
+        enum Direction
+        {
             UP,
             DOWN,
             LEFT,
@@ -26,9 +33,12 @@ namespace gasyboy
 
     public:
         Gamepad();
-        ~Gamepad() {};
+        ~Gamepad() = default;
+
         void handleEvent();
-        void setState(uint8_t value);
+
+        void setState(const uint8_t &value);
+
         uint8_t getState();
 
         static bool changedPalette;

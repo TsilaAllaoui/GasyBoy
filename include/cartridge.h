@@ -42,7 +42,7 @@ namespace gasyboy
     public:
         // constructor/destructor
         Cartridge();
-        ~Cartridge();
+        ~Cartridge() = default;
 
         // MBC type
         enum class CartridgeType

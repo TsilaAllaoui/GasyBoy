@@ -12,6 +12,13 @@ namespace gasyboy
 #define BG_MAP_WIDTH 256
 #define BG_MAP_HEIGTH 256
 #define SPEED 3.6
+
+    enum ExitState
+    {
+        SUCCESS = 0,
+        CRITICAL_ERROR = 1,
+        MANUAL_STOP = 2
+    };
 }
 
 #endif

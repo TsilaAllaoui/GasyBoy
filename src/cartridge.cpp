@@ -26,10 +26,6 @@ namespace gasyboy
 		_currRTCReg = 0;
 	}
 
-	Cartridge::~Cartridge()
-	{
-	}
-
 	void Cartridge::loadRom(const std::string &filePath)
 	{
 		std::ifstream rom(filePath.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
@@ -93,7 +89,7 @@ namespace gasyboy
 				cartridgeHeaderInfo << "Yes" << std::endl;
 			else if (_rom[0][0x143] == 0)
 				cartridgeHeaderInfo << "No" << std::endl;
-			cartridgeHeaderInfo << "Cartridge Type:  " << std::hex <<  (int)_rom[0][0x147]] << std::endl;
+			cartridgeHeaderInfo << "Cartridge Type:  " << std::hex << (int)_rom[0][0x147] << std::endl;
 			cartridgeHeaderInfo << "_rom Size:  " << std::hex << (int)_rom[0][0x148] << std::endl;
 			cartridgeHeaderInfo << "RAM Size:  " << std::hex << (int)_rom[0][0x149] << std::endl;
 			cartridgeHeaderInfo << "Japanese:  " << ((_rom[0][0x14A] & 0x1) ? "No" : "Yes") << std::endl;
@@ -102,14 +98,15 @@ namespace gasyboy
 		}
 		else
 		{
-			utils::Logger::getInstance()->log("Rom: \"" + filePath + "\" not found!");
+			utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+											  "Rom: \"" + filePath + "\" not found!");
 			exit(1);
 		}
 	}
 
 	void Cartridge::setMBCType(const uint8_t &value)
 	{
-		_cartridgeType = uint8ToCartridgeType(value);
+		_cartridgeType = utils::uint8ToCartridgeType(value);
 	}
 
 	void Cartridge::setBankNumber(const uint8_t &value)
@@ -165,7 +162,7 @@ namespace gasyboy
 		return _currRamBank;
 	}
 
-	uint8_t Cartridge::romBankRead(uint16_t adrr)
+	uint8_t Cartridge::romBankRead(const uint16_t &adrr)
 	{
 		if (adrr >= 0 && adrr <= 0x3FFF)
 			return _rom[0][adrr];
@@ -175,7 +172,7 @@ namespace gasyboy
 			exit(45);
 	}
 
-	uint8_t Cartridge::ramBankRead(uint16_t adrr)
+	uint8_t Cartridge::ramBankRead(const uint16_t &adrr)
 	{
 		// if there is RTC
 		if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
@@ -190,15 +187,16 @@ namespace gasyboy
 		return _enabledRAM;
 	}
 
-	void Cartridge::handleRomMemory(uint16_t adrr, uint8_t value)
+	void Cartridge::handleRomMemory(const uint16_t &adrr, const uint8_t &value)
 	{
 		// MBC1 External RAM Switch
 		if (adrr < 0x2000)
 		{
-			if (_cartridgeType == 2 || _cartridgeType == 3)
+			if (_cartridgeType == CartridgeType::MBC1_RAM ||
+				_cartridgeType == CartridgeType::MBC1_RAM_BATT)
 			{
 				uint8_t byte = value & 0xF;
-				(byte == 0xA) ? enabledRAM = true : enabledRAM = false;
+				_enabledRAM = (byte == 0xA) ? true : false;
 			}
 		}
 
@@ -217,7 +215,7 @@ namespace gasyboy
 					_currRomBank = 1;
 			}
 			// MBC3
-			else if (_cartridgeType == 0x13)
+			else if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
 			{
 				uint8_t lower7bits = value & 0x7F;
 				_currRomBank &= 0x80;
@@ -250,7 +248,7 @@ namespace gasyboy
 					_currRamBank = value & 0x3;
 			}
 			// MBC3
-			else if (_cartridgeType == 0x13)
+			else if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
 			{
 				// for RAM banking
 				if (value >= 0 && value <= 3)
@@ -287,19 +285,20 @@ namespace gasyboy
 		else if (adrr >= 0x6000 && adrr < 0x8000)
 		{
 			// Only for MBC1
-			if (_cartridgeType == 2 || _cartridgeType == 3)
+			if (_cartridgeType == CartridgeType::MBC1_RAM ||
+				_cartridgeType == CartridgeType::MBC1_RAM_BATT)
 			{
 				_mode = (value & 0x1);
 			}
 			// MBC3 RTC registers
-			else if (_cartridgeType == 0x13)
+			else if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
 			{
 				// latching RTC register
 			}
 		}
 	}
 
-	void Cartridge::handleRamMemory(uint16_t adrr, uint8_t value)
+	void Cartridge::handleRamMemory(const uint16_t &adrr, const uint8_t &value)
 	{
 		if (_enabledRAM)
 			_ramBanks[adrr - 0xA000 + _currRamBank * 0x2000] = value;

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "logger.h"
 
 namespace gasyboy
@@ -6,6 +7,16 @@ namespace gasyboy
     {
         std::shared_ptr<Logger> Logger::_instance = nullptr;
         std::stringstream gasyboy::utils::Logger::_log;
+        std::stringstream gasyboy::utils::Logger::_serialDebugLog;
+
+        Logger::Logger()
+        {
+            clear();
+            _logTypeMap = {{LogType::CRITICAL, "[CRITICAL] - "},
+                           {LogType::DEBUG, "[DEBUG] - "},
+                           {LogType::FUNCTIONAL, "[FUNCTIONAL] - "},
+                           {LogType::INFO, "[INFO] - "}};
+        }
 
         std::shared_ptr<Logger> Logger::getInstance()
         {
@@ -16,9 +27,12 @@ namespace gasyboy
             return _instance;
         }
 
-        void Logger::log(const std::string &message)
+        void Logger::log(const LogType &type, const std::string &message)
         {
-            _log << message << std::endl;
+            std::stringstream currentLog;
+            currentLog << _logTypeMap[type] << message << std::endl;
+            type == LogType::SERIAL_DEBUG ? _serialDebugLog : _log << currentLog.str();
+            std::cout << currentLog.str();
         }
 
         void Logger::clear()

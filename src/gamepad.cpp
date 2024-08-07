@@ -1,4 +1,5 @@
 #include "gamepad.h"
+#include "defs.h"
 
 namespace gasyboy
 {
@@ -6,12 +7,11 @@ namespace gasyboy
 
     Gamepad::Gamepad()
     {
-        buttonSelected = true;
-        directionSelected = true;
-        currState = 0;
-
-        for (int i = 0; i < 8; i++)
-            keys[i] = false;
+        _buttonSelected = true;
+        _directionSelected = true;
+        _currentState = 0;
+        _directionKeys = std::vector<bool>(4, false);
+        _buttonKeys = std::vector<bool>(4, false);
     }
 
     void Gamepad::handleEvent()
@@ -21,50 +21,50 @@ namespace gasyboy
         while (SDL_PollEvent(&event) != 0)
         {
             if (event.type == SDL_QUIT)
-                exit(0);
+                exit(ExitState::MANUAL_STOP);
 
             if (event.type == SDL_KEYDOWN)
             {
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_ESCAPE:
-                    exit(0);
+                    exit(ExitState::MANUAL_STOP);
                     break;
 
                 case SDLK_a:
-                    keys[A] = true;
+                    _buttonKeys[Button::A] = true;
                     break;
 
                 case SDLK_z:
-                    keys[B] = true;
+                    _buttonKeys[Button::B] = true;
                     break;
 
                 case SDLK_RETURN:
-                    keys[SELECT] = true;
+                    _buttonKeys[Button::SELECT] = true;
                     break;
 
                 case SDLK_SPACE:
-                    keys[START] = true;
+                    _buttonKeys[Button::START] = true;
                     break;
 
                 case SDLK_UP:
                 case SDLK_o:
-                    keys[UP] = true;
+                    _directionKeys[Direction::UP] = true;
                     break;
 
                 case SDLK_DOWN:
                 case SDLK_l:
-                    keys[DOWN] = true;
+                    _directionKeys[Direction::DOWN] = true;
                     break;
 
                 case SDLK_LEFT:
                 case SDLK_k:
-                    keys[LEFT] = true;
+                    _directionKeys[Direction::LEFT] = true;
                     break;
 
                 case SDLK_RIGHT:
                 case SDLK_m:
-                    keys[RIGHT] = true;
+                    _directionKeys[Direction::RIGHT] = true;
                     break;
 
                 case SDLK_p:
@@ -77,93 +77,75 @@ namespace gasyboy
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_ESCAPE:
-                    exit(0);
+                    exit(ExitState::MANUAL_STOP);
                     break;
 
                 case SDLK_a:
-                    keys[A] = false;
+                    _buttonKeys[Button::A] = false;
                     break;
 
                 case SDLK_z:
-                    keys[B] = false;
+                    _buttonKeys[Button::B] = false;
                     break;
 
                 case SDLK_RETURN:
-                    keys[SELECT] = false;
+                    _buttonKeys[Button::SELECT] = false;
                     break;
 
                 case SDLK_SPACE:
-                    keys[START] = false;
+                    _buttonKeys[Button::START] = false;
                     break;
 
                 case SDLK_UP:
                 case SDLK_o:
-                    keys[UP] = false;
+                    _directionKeys[Direction::UP] = false;
                     break;
 
                 case SDLK_DOWN:
                 case SDLK_l:
-                    keys[DOWN] = false;
+                    _directionKeys[Direction::DOWN] = false;
                     break;
 
                 case SDLK_LEFT:
                 case SDLK_k:
-                    keys[LEFT] = false;
+                    _directionKeys[Direction::LEFT] = false;
                     break;
 
                 case SDLK_RIGHT:
                 case SDLK_m:
-                    keys[RIGHT] = false;
+                    _directionKeys[Direction::RIGHT] = false;
                     break;
                 }
             }
         }
     }
 
-    void Gamepad::setState(uint8_t value)
+    void Gamepad::setState(const uint8_t &value)
     {
-        buttonSelected = ((value & 0x20) == 0x20);
-        directionSelected = ((value & 0x10) == 0x10);
+        _buttonSelected = ((value & 0x20) == 0x20);
+        _directionSelected = ((value & 0x10) == 0x10);
     }
 
     uint8_t Gamepad::getState()
     {
-        currState = 0xCF;
+        _currentState = 0xCF;
 
-        if (!buttonSelected)
-        {
-            if (keys[A])
-                currState &= ~(1 << 0);
+        auto &keys = _buttonSelected ? _buttonKeys : _directionKeys;
 
-            if (keys[B])
-                currState &= ~(1 << 1);
+        if (keys[_buttonSelected ? Button::A : Direction::UP])
+            _currentState &= ~(1 << 0);
 
-            if (keys[SELECT])
-                currState &= ~(1 << 2);
+        if (keys[_buttonSelected ? Button::B : Direction::DOWN])
+            _currentState &= ~(1 << 1);
 
-            if (keys[START])
-                currState &= ~(1 << 3);
+        if (keys[_buttonSelected ? Button::START : Direction::LEFT])
+            _currentState &= ~(1 << 2);
 
-            currState |= 0x10;
-        }
+        if (keys[_buttonSelected ? Button::SELECT : Direction::RIGHT])
+            _currentState &= ~(1 << 3);
 
-        else if (!directionSelected)
-        {
-            if (keys[RIGHT])
-                currState &= ~(1 << 0);
+        _currentState |= 0x10;
 
-            if (keys[LEFT])
-                currState &= ~(1 << 1);
-
-            if (keys[UP])
-                currState &= ~(1 << 2);
-
-            if (keys[DOWN])
-                currState &= ~(1 << 3);
-
-            currState |= 0x20;
-        }
-
-        return currState;
+        return _currentState;
     }
 }

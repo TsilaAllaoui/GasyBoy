@@ -4,15 +4,15 @@
 #include <string>
 #include "gbException.h"
 #include "logger.h"
+#include "mmu.h"
 // #include "argparse.hpp"
 // #include "gameboy.h"
 // #include "SDL.h"
 
 int main(int argc, char *argv[])
 {
-    auto logger = gasyboy::utils::Logger::getInstance();
-    logger->log("TEST");
-    std::cout << logger->getLogContent();
+    gasyboy::Mmu mmu("C:/Users/trasoloallaoui/C++/GasyBoy/externals/gb-test-roms/cpu_instrs/cpu_instrs.gb");
+
     // argparse::ArgumentParser program("gayboy");
 
     // program.add_argument("-r", "--rom")

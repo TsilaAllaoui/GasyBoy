@@ -3,10 +3,10 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include "cartridge.h"
 #include "gamepad.h"
 #include "defs.h"
-#include "cartridge.h"
-#include <vector>
 
 namespace gasyboy
 {
@@ -45,10 +45,10 @@ namespace gasyboy
         bool _executeBios;
 
         // context of the gamepad
-        std::shared_ptr<Gamepad> _gamepad;
+        Gamepad _gamepad;
 
         // the actual cartridge
-        std::shared_ptr<Cartridge> _cartridge;
+        Cartridge _cartridge;
 
         // to check if vram is written
         bool _vramWritten;
@@ -69,7 +69,8 @@ namespace gasyboy
 
         // construcor/destructor
         Mmu();
-        ~Mmu();
+        Mmu(const std::string &romFilePath);
+        ~Mmu() = default;
 
         // Set file path to be loaded in cartrdige class
         void setRomFile(const std::string &file);
@@ -85,7 +86,7 @@ namespace gasyboy
         bool isInBios();
 
         // graphic memory TODO: change functions names
-        uint8_t *getVram();
+        std::vector<uint8_t> getVram();
         uint8_t getPaletteColor(const uint8_t &index);
 
         // directly set value in memory region
@@ -95,7 +96,7 @@ namespace gasyboy
         void doDmaTransfert(const uint8_t &value);
 
         // gamepad
-        Gamepad *getGamepad();
+        Gamepad &getGamepad();
 
         // getting immediate 16bits in low endianess
         uint16_t getNext2Bytes(const uint16_t &adress);
