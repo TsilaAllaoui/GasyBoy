@@ -1,15 +1,16 @@
-# tests/CMakeLists.txt
-# Specify the source files for the tests
-file(GLOB TEST_SOURCES "*.cpp")
+cmake_minimum_required(VERSION 3.25)
+
+# Project info setup
+project(gasyboy_tests VERSION 1.0 LANGUAGES CXX)
+
+# Add tests source files
+file(GLOB GASYBOY_TEST_SOURCES "*.cpp")
 
 # Add an executable for the tests
-add_executable(${PROJECT_NAME}_tests ${TEST_SOURCES})
+add_executable(${PROJECT_NAME} ${GASYBOY_TEST_SOURCES})
 
-# Link GoogleTest libraries
-target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main)
-
-# Link the main project library
-target_link_libraries(${PROJECT_NAME}_tests gasyboy_lib)
+# Link GoogleTest libraries and main project lib
+target_link_libraries(${PROJECT_NAME} gtest gtest_main gasyboy_lib)
 
 # Add the tests to CTest
-add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
+add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})

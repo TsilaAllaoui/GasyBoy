@@ -29,7 +29,7 @@ namespace gasyboy
         return _registerValue;
     }
 
-    uint8_t Register::getRigthRegister()
+    uint8_t Register::getRightRegister()
     {
         return static_cast<uint8_t>(_registerValue & 0xFF);
     }
@@ -44,7 +44,7 @@ namespace gasyboy
         _registerValue = (value << 8) | (_registerValue & 0x00FF);
     }
 
-    void Register::setRigthRegister(const uint8_t &value)
+    void Register::setRightRegister(const uint8_t &value)
     {
         _registerValue = (_registerValue & 0xFF00) | value;
     }
@@ -75,16 +75,16 @@ namespace gasyboy
             switch (reg)
             {
             case 'Z':
-                value = getRigthRegister() & (1 << 7);
+                value = getRightRegister() & (1 << 7);
                 break;
             case 'N':
-                value = getRigthRegister() & (1 << 6);
+                value = getRightRegister() & (1 << 6);
                 break;
             case 'H':
-                value = getRigthRegister() & (1 << 5);
+                value = getRightRegister() & (1 << 5);
                 break;
             case 'C':
-                value = getRigthRegister() & (1 << 4);
+                value = getRightRegister() & (1 << 4);
                 break;
             default:
                 std::string message("Invalid register: \"");
@@ -125,8 +125,8 @@ namespace gasyboy
                 message += reg + "\"";
                 throw exception::GbException(message);
             }
-            bit |= getRigthRegister();
-            setRigthRegister(bit);
+            bit |= getRightRegister();
+            setRightRegister(bit);
         }
         catch (const std::exception &e)
         {
@@ -161,8 +161,8 @@ namespace gasyboy
                 throw exception::GbException(message);
             }
 
-            bit = getRigthRegister() & bit;
-            setRigthRegister(bit);
+            bit = getRightRegister() & bit;
+            setRightRegister(bit);
         }
         catch (const std::exception &e)
         {

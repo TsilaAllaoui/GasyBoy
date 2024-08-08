@@ -24,7 +24,7 @@ namespace gasyboy
         uint16_t get();
 
         // get the the lower nibble (ie : the rigth 8bit register)
-        uint8_t getRigthRegister();
+        uint8_t getRightRegister();
 
         // get the the higher nibble (ie : the left 8bit register)
         uint8_t getLeftRegister();
@@ -33,7 +33,7 @@ namespace gasyboy
         void set(const uint16_t &hex);
 
         // set the rigth 8bit register
-        void setRigthRegister(const uint8_t &byte);
+        void setRightRegister(const uint8_t &byte);
 
         // set the rigth 8bit register
         void setLeftRegister(const uint8_t &byte);

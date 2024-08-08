@@ -1,7 +1,7 @@
 #ifndef _GAMEPAD_H_
 #define _GAMEPAD_H_
 
-#include <SDL.h>
+#include "SDL.h"
 #include <vector>
 
 namespace gasyboy

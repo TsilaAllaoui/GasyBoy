@@ -4,11 +4,9 @@
 namespace gasyboy
 {
 
-	Cpu::Cpu(const bool &bootBios, Mmu &mmu)
+	Cpu::Cpu(const bool &bootBios, Mmu &mmu, Registers &registers)
 		: _mmu(mmu),
-		  _registers(),
-		  _halted(false),
-		  _interruptEnabled(false),
+		  _registers(registers),
 		  _currentOpcode(0),
 		  _cycle(0)
 	{
@@ -23,21 +21,6 @@ namespace gasyboy
 			_registers.PC = 0x100;
 			_registers.SP = 0xFFFE;
 		}
-	}
-
-	void Cpu::setPC(const uint16_t &adress)
-	{
-		_registers.PC = adress;
-	}
-
-	uint16_t Cpu::getPC()
-	{
-		return _registers.PC;
-	}
-
-	uint16_t Cpu::getSP()
-	{
-		return _registers.SP;
 	}
 
 	uint16_t Cpu::getRegister(const std::string &reg)
@@ -59,26 +42,6 @@ namespace gasyboy
 	uint8_t Cpu::getRegister(const char &reg)
 	{
 		return _registers.getRegister(reg);
-	}
-
-	void Cpu::setHaltedStatus(const bool &value)
-	{
-		_halted = value;
-	}
-
-	bool Cpu::getHaltedStatus()
-	{
-		return _halted;
-	}
-
-	void Cpu::pushSP(const uint16_t &adress)
-	{
-		uint8_t firstByte = static_cast<uint8_t>(_registers.PC >> 8);
-		uint8_t secondByte = static_cast<uint8_t>(_registers.PC & 0xFF);
-		_registers.SP--;
-		_mmu.writeRam(_registers.SP, firstByte);
-		_registers.SP--;
-		_mmu.writeRam(_registers.SP, secondByte);
 	}
 
 	void Cpu::LD_HL_SP_n()
@@ -105,19 +68,19 @@ namespace gasyboy
 			regFrom = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			regFrom = _registers.BC.getRigthRegister();
+			regFrom = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			regFrom = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			regFrom = _registers.DE.getRigthRegister();
+			regFrom = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			regFrom = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			regFrom = _registers.HL.getRigthRegister();
+			regFrom = _registers.HL.getRightRegister();
 			break;
 		default:
 			throw exception::GbException("Invalid register");
@@ -132,19 +95,19 @@ namespace gasyboy
 			_registers.BC.setLeftRegister(regFrom);
 			break;
 		case 'C':
-			_registers.BC.setRigthRegister(regFrom);
+			_registers.BC.setRightRegister(regFrom);
 			break;
 		case 'D':
 			_registers.DE.setLeftRegister(regFrom);
 			break;
 		case 'E':
-			_registers.DE.setRigthRegister(regFrom);
+			_registers.DE.setRightRegister(regFrom);
 			break;
 		case 'H':
 			_registers.HL.setLeftRegister(regFrom);
 			break;
 		case 'L':
-			_registers.HL.setRigthRegister(regFrom);
+			_registers.HL.setRightRegister(regFrom);
 			break;
 		default:
 			cout << "Flag error.";
@@ -161,25 +124,25 @@ namespace gasyboy
 			_registers.AF.setLeftRegister(from);
 			break;
 		case 'F':
-			_registers.AF.setRigthRegister(from);
+			_registers.AF.setRightRegister(from);
 			break;
 		case 'B':
 			_registers.BC.setLeftRegister(from);
 			break;
 		case 'C':
-			_registers.BC.setRigthRegister(from);
+			_registers.BC.setRightRegister(from);
 			break;
 		case 'D':
 			_registers.DE.setLeftRegister(from);
 			break;
 		case 'E':
-			_registers.DE.setRigthRegister(from);
+			_registers.DE.setRightRegister(from);
 			break;
 		case 'H':
 			_registers.HL.setLeftRegister(from);
 			break;
 		case 'L':
-			_registers.HL.setRigthRegister(from);
+			_registers.HL.setRightRegister(from);
 			break;
 		default:
 			cout << "Flag error.";
@@ -200,19 +163,19 @@ namespace gasyboy
 			_registers.BC.setLeftRegister(from);
 			break;
 		case 'C':
-			_registers.BC.setRigthRegister(from);
+			_registers.BC.setRightRegister(from);
 			break;
 		case 'D':
 			_registers.DE.setLeftRegister(from);
 			break;
 		case 'E':
-			_registers.DE.setRigthRegister(from);
+			_registers.DE.setRightRegister(from);
 			break;
 		case 'H':
 			_registers.HL.setLeftRegister(from);
 			break;
 		case 'L':
-			_registers.HL.setRigthRegister(from);
+			_registers.HL.setRightRegister(from);
 			break;
 		default:
 			cout << "Flag error.";
@@ -233,19 +196,19 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error."; // TODO: add gbException here
@@ -379,25 +342,25 @@ namespace gasyboy
 			value = _registers.AF.getLeftRegister();
 			break;
 		case 'F':
-			value = _registers.AF.getRigthRegister();
+			value = _registers.AF.getRightRegister();
 			break;
 		case 'B':
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -446,19 +409,19 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -520,25 +483,25 @@ namespace gasyboy
 			value = _registers.AF.getLeftRegister();
 			break;
 		case 'F':
-			value = _registers.AF.getRigthRegister();
+			value = _registers.AF.getRightRegister();
 			break;
 		case 'B':
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -583,19 +546,19 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -658,25 +621,25 @@ namespace gasyboy
 			value = _registers.AF.getLeftRegister();
 			break;
 		case 'F':
-			value = _registers.AF.getRigthRegister();
+			value = _registers.AF.getRightRegister();
 			break;
 		case 'B':
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -725,19 +688,19 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -786,19 +749,19 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -844,25 +807,25 @@ namespace gasyboy
 			value = _registers.AF.getLeftRegister();
 			break;
 		case 'F':
-			value = _registers.AF.getRigthRegister();
+			value = _registers.AF.getRightRegister();
 			break;
 		case 'B':
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -906,9 +869,9 @@ namespace gasyboy
 			_registers.AF.setLeftRegister(value);
 			break;
 		case 'F':
-			oldReg = _registers.AF.getRigthRegister();
-			value = _registers.AF.getRigthRegister() + 1;
-			_registers.AF.setRigthRegister(value);
+			oldReg = _registers.AF.getRightRegister();
+			value = _registers.AF.getRightRegister() + 1;
+			_registers.AF.setRightRegister(value);
 			break;
 		case 'B':
 			oldReg = _registers.BC.getLeftRegister();
@@ -916,9 +879,9 @@ namespace gasyboy
 			_registers.BC.setLeftRegister(value);
 			break;
 		case 'C':
-			oldReg = _registers.BC.getRigthRegister();
-			value = _registers.BC.getRigthRegister() + 1;
-			_registers.BC.setRigthRegister(value);
+			oldReg = _registers.BC.getRightRegister();
+			value = _registers.BC.getRightRegister() + 1;
+			_registers.BC.setRightRegister(value);
 			break;
 		case 'D':
 			oldReg = _registers.DE.getLeftRegister();
@@ -926,9 +889,9 @@ namespace gasyboy
 			_registers.DE.setLeftRegister(value);
 			break;
 		case 'E':
-			oldReg = _registers.DE.getRigthRegister();
-			value = _registers.DE.getRigthRegister() + 1;
-			_registers.DE.setRigthRegister(value);
+			oldReg = _registers.DE.getRightRegister();
+			value = _registers.DE.getRightRegister() + 1;
+			_registers.DE.setRightRegister(value);
 			break;
 		case 'H':
 			oldReg = _registers.HL.getLeftRegister();
@@ -936,9 +899,9 @@ namespace gasyboy
 			_registers.HL.setLeftRegister(value);
 			break;
 		case 'L':
-			oldReg = _registers.HL.getRigthRegister();
-			value = _registers.HL.getRigthRegister() + 1;
-			_registers.HL.setRigthRegister(value);
+			oldReg = _registers.HL.getRightRegister();
+			value = _registers.HL.getRightRegister() + 1;
+			_registers.HL.setRightRegister(value);
 			break;
 		default:
 			cout << "Flag error.";
@@ -969,25 +932,25 @@ namespace gasyboy
 			value = _registers.AF.getLeftRegister();
 			break;
 		case 'F':
-			value = _registers.AF.getRigthRegister();
+			value = _registers.AF.getRightRegister();
 			break;
 		case 'B':
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -1000,25 +963,25 @@ namespace gasyboy
 			_registers.AF.setLeftRegister(value - 1);
 			break;
 		case 'F':
-			_registers.AF.setRigthRegister(value - 1);
+			_registers.AF.setRightRegister(value - 1);
 			break;
 		case 'B':
 			_registers.BC.setLeftRegister(value - 1);
 			break;
 		case 'C':
-			_registers.BC.setRigthRegister(value - 1);
+			_registers.BC.setRightRegister(value - 1);
 			break;
 		case 'D':
 			_registers.DE.setLeftRegister(value - 1);
 			break;
 		case 'E':
-			_registers.DE.setRigthRegister(value - 1);
+			_registers.DE.setRightRegister(value - 1);
 			break;
 		case 'H':
 			_registers.HL.setLeftRegister(value - 1);
 			break;
 		case 'L':
-			_registers.HL.setRigthRegister(value - 1);
+			_registers.HL.setRightRegister(value - 1);
 			break;
 		default:
 			cout << "Flag error.";
@@ -1082,18 +1045,18 @@ namespace gasyboy
 
 	void Cpu::CCF()
 	{
-		uint8_t value = _registers.AF.getRigthRegister();
+		uint8_t value = _registers.AF.getRightRegister();
 		value ^= 0x10;
-		_registers.AF.setRigthRegister(value);
+		_registers.AF.setRightRegister(value);
 		_registers.AF.clearFlag('N');
 		_registers.AF.clearFlag('H');
 	}
 
 	void Cpu::SCF()
 	{
-		uint8_t value = _registers.AF.getRigthRegister();
+		uint8_t value = _registers.AF.getRightRegister();
 		value |= 0x10;
-		_registers.AF.setRigthRegister(value);
+		_registers.AF.setRightRegister(value);
 		_registers.AF.clearFlag('N');
 		_registers.AF.clearFlag('H');
 	}
@@ -1104,17 +1067,17 @@ namespace gasyboy
 
 	void Cpu::HALT()
 	{
-		_halted = true;
+		_registers.setHalted(true);
 	}
 
 	void Cpu::DI()
 	{
-		_interruptEnabled = false;
+		_registers.setInterruptEnabled(false);
 	}
 
 	void Cpu::EI()
 	{
-		_interruptEnabled = true;
+		_registers.setInterruptEnabled(true);
 	}
 
 	void Cpu::ADD_HL_rr(const std::string &reg)
@@ -1327,11 +1290,11 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			(_registers.BC.getRigthRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.BC.setRigthRegister((_registers.BC.getRigthRegister() << 1) | static_cast<uint8_t>(_registers.AF.getFlag('C')));
+			(_registers.BC.getRightRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.BC.setRightRegister((_registers.BC.getRightRegister() << 1) | static_cast<uint8_t>(_registers.AF.getFlag('C')));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			(_registers.DE.getLeftRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1341,11 +1304,11 @@ namespace gasyboy
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			(_registers.DE.getRigthRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.DE.setRigthRegister((_registers.DE.getRigthRegister() << 1) | static_cast<uint8_t>(_registers.AF.getFlag('C')));
+			(_registers.DE.getRightRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.DE.setRightRegister((_registers.DE.getRightRegister() << 1) | static_cast<uint8_t>(_registers.AF.getFlag('C')));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			(_registers.HL.getLeftRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1355,11 +1318,11 @@ namespace gasyboy
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			(_registers.HL.getRigthRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.HL.setRigthRegister((_registers.HL.getRigthRegister() << 1) | static_cast<uint8_t>(_registers.AF.getFlag('C')));
+			(_registers.HL.getRightRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.HL.setRightRegister((_registers.HL.getRightRegister() << 1) | static_cast<uint8_t>(_registers.AF.getFlag('C')));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -1411,11 +1374,11 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			(_registers.BC.getRigthRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.BC.setRigthRegister((_registers.BC.getRigthRegister() << 1) | oldCarry);
+			(_registers.BC.getRightRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.BC.setRightRegister((_registers.BC.getRightRegister() << 1) | oldCarry);
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			(_registers.DE.getLeftRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1425,11 +1388,11 @@ namespace gasyboy
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			(_registers.DE.getRigthRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.DE.setRigthRegister((_registers.DE.getRigthRegister() << 1) | oldCarry);
+			(_registers.DE.getRightRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.DE.setRightRegister((_registers.DE.getRightRegister() << 1) | oldCarry);
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			(_registers.HL.getLeftRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1439,11 +1402,11 @@ namespace gasyboy
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			(_registers.HL.getRigthRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.HL.setRigthRegister((_registers.HL.getRigthRegister() << 1) | oldCarry);
+			(_registers.HL.getRightRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.HL.setRightRegister((_registers.HL.getRightRegister() << 1) | oldCarry);
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -1474,11 +1437,11 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			(_registers.BC.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.BC.setRigthRegister((_registers.BC.getRigthRegister() >> 1) | (oldCarry << 7));
+			(_registers.BC.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.BC.setRightRegister((_registers.BC.getRightRegister() >> 1) | (oldCarry << 7));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			(_registers.DE.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1488,11 +1451,11 @@ namespace gasyboy
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			(_registers.DE.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.DE.setRigthRegister((_registers.DE.getRigthRegister() >> 1) | (oldCarry << 7));
+			(_registers.DE.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.DE.setRightRegister((_registers.DE.getRightRegister() >> 1) | (oldCarry << 7));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			(_registers.HL.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1502,11 +1465,11 @@ namespace gasyboy
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			(_registers.HL.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.HL.setRigthRegister((_registers.HL.getRigthRegister() >> 1) | (oldCarry << 7));
+			(_registers.HL.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.HL.setRightRegister((_registers.HL.getRightRegister() >> 1) | (oldCarry << 7));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -1548,11 +1511,11 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			(_registers.BC.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.BC.setRigthRegister((_registers.BC.getRigthRegister() >> 1) | (_registers.AF.getFlag('C') << 7));
+			(_registers.BC.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.BC.setRightRegister((_registers.BC.getRightRegister() >> 1) | (_registers.AF.getFlag('C') << 7));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			(_registers.DE.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1562,11 +1525,11 @@ namespace gasyboy
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			(_registers.DE.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.DE.setRigthRegister((_registers.DE.getRigthRegister() >> 1) | (_registers.AF.getFlag('C') << 7));
+			(_registers.DE.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.DE.setRightRegister((_registers.DE.getRightRegister() >> 1) | (_registers.AF.getFlag('C') << 7));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			(_registers.HL.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1576,11 +1539,11 @@ namespace gasyboy
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			(_registers.HL.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.HL.setRigthRegister((_registers.HL.getRigthRegister() >> 1) | (_registers.AF.getFlag('C') << 7));
+			(_registers.HL.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.HL.setRightRegister((_registers.HL.getRightRegister() >> 1) | (_registers.AF.getFlag('C') << 7));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -1621,11 +1584,11 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			(_registers.BC.getRigthRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.BC.setRigthRegister((_registers.BC.getRigthRegister() << 1));
+			(_registers.BC.getRightRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.BC.setRightRegister((_registers.BC.getRightRegister() << 1));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			(_registers.DE.getLeftRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1635,11 +1598,11 @@ namespace gasyboy
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			(_registers.DE.getRigthRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.DE.setRigthRegister((_registers.DE.getRigthRegister() << 1));
+			(_registers.DE.getRightRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.DE.setRightRegister((_registers.DE.getRightRegister() << 1));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			(_registers.HL.getLeftRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1649,11 +1612,11 @@ namespace gasyboy
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			(_registers.HL.getRigthRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.HL.setRigthRegister((_registers.HL.getRigthRegister() << 1));
+			(_registers.HL.getRightRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.HL.setRightRegister((_registers.HL.getRightRegister() << 1));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -1697,12 +1660,12 @@ namespace gasyboy
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			(_registers.BC.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			old7thbit = (_registers.BC.getRigthRegister() & 0x80);
-			_registers.BC.setRigthRegister((_registers.BC.getRigthRegister() >> 1) | (old7thbit));
+			(_registers.BC.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			old7thbit = (_registers.BC.getRightRegister() & 0x80);
+			_registers.BC.setRightRegister((_registers.BC.getRightRegister() >> 1) | (old7thbit));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			(_registers.DE.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1713,12 +1676,12 @@ namespace gasyboy
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			(_registers.DE.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			old7thbit = (_registers.DE.getRigthRegister() & 0x80);
-			_registers.DE.setRigthRegister((_registers.DE.getRigthRegister() >> 1) | (old7thbit));
+			(_registers.DE.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			old7thbit = (_registers.DE.getRightRegister() & 0x80);
+			_registers.DE.setRightRegister((_registers.DE.getRightRegister() >> 1) | (old7thbit));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			(_registers.HL.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1729,12 +1692,12 @@ namespace gasyboy
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			(_registers.HL.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			old7thbit = (_registers.HL.getRigthRegister() & 0x80);
-			_registers.HL.setRigthRegister((_registers.HL.getRigthRegister() >> 1) | (old7thbit));
+			(_registers.HL.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			old7thbit = (_registers.HL.getRightRegister() & 0x80);
+			_registers.HL.setRightRegister((_registers.HL.getRightRegister() >> 1) | (old7thbit));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -1777,11 +1740,11 @@ namespace gasyboy
 			(_registers.BC.getLeftRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 			break;
 		case 'C':
-			(_registers.BC.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.BC.setRigthRegister((_registers.BC.getRigthRegister() >> 1));
+			(_registers.BC.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.BC.setRightRegister((_registers.BC.getRightRegister() >> 1));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			(_registers.BC.getRigthRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
+			(_registers.BC.getRightRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 			break;
 		case 'D':
 			(_registers.DE.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1791,11 +1754,11 @@ namespace gasyboy
 			(_registers.DE.getLeftRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 			break;
 		case 'E':
-			(_registers.DE.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.DE.setRigthRegister((_registers.DE.getRigthRegister() >> 1));
+			(_registers.DE.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.DE.setRightRegister((_registers.DE.getRightRegister() >> 1));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			(_registers.DE.getRigthRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
+			(_registers.DE.getRightRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 			break;
 		case 'H':
 			(_registers.HL.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
@@ -1805,11 +1768,11 @@ namespace gasyboy
 			(_registers.HL.getLeftRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 			break;
 		case 'L':
-			(_registers.HL.getRigthRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.HL.setRigthRegister((_registers.HL.getRigthRegister() >> 1));
+			(_registers.HL.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+			_registers.HL.setRightRegister((_registers.HL.getRightRegister() >> 1));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
-			(_registers.HL.getRigthRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
+			(_registers.HL.getRightRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 			break;
 		default:
 			cout << "Flag error.";
@@ -1847,10 +1810,10 @@ namespace gasyboy
 			_registers.BC.setLeftRegister(value);
 			break;
 		case 'C':
-			left = _registers.BC.getRigthRegister() & 0xF0;
-			rigth = _registers.BC.getRigthRegister() & 0xF;
+			left = _registers.BC.getRightRegister() & 0xF0;
+			rigth = _registers.BC.getRightRegister() & 0xF;
 			value = ((left >> 4) | (rigth << 4));
-			_registers.BC.setRigthRegister(value);
+			_registers.BC.setRightRegister(value);
 			break;
 		case 'D':
 			left = _registers.DE.getLeftRegister() & 0xF0;
@@ -1859,10 +1822,10 @@ namespace gasyboy
 			_registers.DE.setLeftRegister(value);
 			break;
 		case 'E':
-			left = _registers.DE.getRigthRegister() & 0xF0;
-			rigth = _registers.DE.getRigthRegister() & 0xF;
+			left = _registers.DE.getRightRegister() & 0xF0;
+			rigth = _registers.DE.getRightRegister() & 0xF;
 			value = ((left >> 4) | (rigth << 4));
-			_registers.DE.setRigthRegister(value);
+			_registers.DE.setRightRegister(value);
 			break;
 		case 'H':
 			left = _registers.HL.getLeftRegister() & 0xF0;
@@ -1871,10 +1834,10 @@ namespace gasyboy
 			_registers.HL.setLeftRegister(value);
 			break;
 		case 'L':
-			left = _registers.HL.getRigthRegister() & 0xF0;
-			rigth = _registers.HL.getRigthRegister() & 0xF;
+			left = _registers.HL.getRightRegister() & 0xF0;
+			rigth = _registers.HL.getRightRegister() & 0xF;
 			value = ((left >> 4) | (rigth << 4));
-			_registers.HL.setRigthRegister(value);
+			_registers.HL.setRightRegister(value);
 			break;
 		}
 		_registers.AF.clearFlag('N');
@@ -1910,25 +1873,25 @@ namespace gasyboy
 			value = _registers.AF.getLeftRegister();
 			break;
 		case 'F':
-			value = _registers.AF.getRigthRegister();
+			value = _registers.AF.getRightRegister();
 			break;
 		case 'B':
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
-			value = _registers.BC.getRigthRegister();
+			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
-			value = _registers.DE.getRigthRegister();
+			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
-			value = _registers.HL.getRigthRegister();
+			value = _registers.HL.getRightRegister();
 			break;
 		default:
 			cout << "Flag error.";
@@ -1967,25 +1930,25 @@ namespace gasyboy
 			_registers.AF.setLeftRegister(_registers.AF.getLeftRegister() | value);
 			break;
 		case 'F':
-			_registers.AF.setRigthRegister(_registers.AF.getRigthRegister() | value);
+			_registers.AF.setRightRegister(_registers.AF.getRightRegister() | value);
 			break;
 		case 'B':
 			_registers.BC.setLeftRegister(_registers.BC.getLeftRegister() | value);
 			break;
 		case 'C':
-			_registers.BC.setRigthRegister(_registers.BC.getRigthRegister() | value);
+			_registers.BC.setRightRegister(_registers.BC.getRightRegister() | value);
 			break;
 		case 'D':
 			_registers.DE.setLeftRegister(_registers.DE.getLeftRegister() | value);
 			break;
 		case 'E':
-			_registers.DE.setRigthRegister(_registers.DE.getRigthRegister() | value);
+			_registers.DE.setRightRegister(_registers.DE.getRightRegister() | value);
 			break;
 		case 'H':
 			_registers.HL.setLeftRegister(_registers.HL.getLeftRegister() | value);
 			break;
 		case 'L':
-			_registers.HL.setRigthRegister(_registers.HL.getRigthRegister() | value);
+			_registers.HL.setRightRegister(_registers.HL.getRightRegister() | value);
 			break;
 		default:
 			cout << "Flag error.";
@@ -2022,19 +1985,19 @@ namespace gasyboy
 			_registers.BC.setLeftRegister(_registers.BC.getLeftRegister() & ~value);
 			break;
 		case 'C':
-			_registers.BC.setRigthRegister(_registers.BC.getRigthRegister() & ~value);
+			_registers.BC.setRightRegister(_registers.BC.getRightRegister() & ~value);
 			break;
 		case 'D':
 			_registers.DE.setLeftRegister(_registers.DE.getLeftRegister() & ~value);
 			break;
 		case 'E':
-			_registers.DE.setRigthRegister(_registers.DE.getRigthRegister() & ~value);
+			_registers.DE.setRightRegister(_registers.DE.getRightRegister() & ~value);
 			break;
 		case 'H':
 			_registers.HL.setLeftRegister(_registers.HL.getLeftRegister() & ~value);
 			break;
 		case 'L':
-			_registers.HL.setRigthRegister(_registers.HL.getRigthRegister() & ~value);
+			_registers.HL.setRightRegister(_registers.HL.getRightRegister() & ~value);
 			break;
 		default:
 			cout << "Flag error.";
@@ -2281,7 +2244,7 @@ namespace gasyboy
 
 	void Cpu::RETI() // TODO Unkown behaviour (may produce bugs)
 	{
-		_interruptEnabled = true;
+		_registers.setInterruptEnabled(true);
 		uint16_t leftNibble = (_mmu.readRam(_registers.SP + 1) << 8);
 		uint8_t rightNibble = _mmu.readRam(_registers.SP);
 		_registers.SP += 2;
@@ -2345,17 +2308,12 @@ namespace gasyboy
 		return value;
 	}
 
-	bool Cpu::getInterruptStatus()
-	{
-		return _interruptEnabled;
-	}
-
 	long Cpu::step()
 	{
 		if ((_mmu.readRam(0xFF50) == 0x1 && _mmu.isInBios()))
 			_mmu.disableBios();
 
-		if (!_halted)
+		if (!_registers.getHalted())
 		{
 			fetch();
 			execute();
@@ -2365,7 +2323,7 @@ namespace gasyboy
 		{
 			if ((_mmu.readRam(0xFF0F) & 0xF) > 0)
 			{
-				_halted = false;
+				_registers.setHalted(false);
 				_registers.PC++;
 			}
 			return 4;
@@ -3470,7 +3428,7 @@ namespace gasyboy
 			_registers.PC++;
 			break;
 		case 0xE2:
-			_mmu.writeRam(0xFF00 + _registers.BC.getRigthRegister(), _registers.AF.getLeftRegister());
+			_mmu.writeRam(0xFF00 + _registers.BC.getRightRegister(), _registers.AF.getLeftRegister());
 			_cycle = 8;
 			_registers.PC++;
 			break;
@@ -3522,12 +3480,12 @@ namespace gasyboy
 			_registers.PC++;
 			break;
 		case 0xF2:
-			_registers.AF.setLeftRegister(_mmu.readRam(_registers.BC.getRigthRegister() + 0xFF00));
+			_registers.AF.setLeftRegister(_mmu.readRam(_registers.BC.getRightRegister() + 0xFF00));
 			_cycle = 8;
 			_registers.PC++;
 			break;
 		case 0xF3:
-			_interruptEnabled = false;
+			_registers.setInterruptEnabled(false);
 			_cycle = 4;
 			_registers.PC++;
 			break;
@@ -3561,7 +3519,7 @@ namespace gasyboy
 			_registers.PC += 3;
 			break;
 		case 0xFB: // TODO may be innacurate
-			_interruptEnabled = true;
+			_registers.setInterruptEnabled(true);
 			_cycle = 4;
 			_registers.PC++;
 			break;

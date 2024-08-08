@@ -1,90 +1,80 @@
 #include "gameboy.h"
-#include <ctime>
 #include <cstdlib>
-#include <fstream>
 #include "gbException.h"
+#include "logger.h"
 
 #define FPS 60
 
 namespace gasyboy
 {
-    GameBoy::GameBoy(std::string filename)
+    GameBoy::GameBoy(const std::string &filePath, const bool &bootBios)
+        : _mmu(filePath),
+          _registers(_mmu),
+          _cpu(bootBios, _mmu, _registers),
+          _interruptManager(_mmu, _registers),
+          _timer(_mmu, _interruptManager),
+          _gamepad(),
+          _cycleCounter(0)
     {
+        // Randomness
         srand(time(0));
 
-        if (filename == "")
+        // Initializing SDL App
+        try
         {
-            filename = new char[100];
-            filename = "./Roms/MBC1/PokemonRed.gb";
+            if (SDL_Init(SDL_INIT_VIDEO))
+            {
+                throw exception::GbException("Error when initializing SDL App.");
+                exit(ExitState::CRITICAL_ERROR);
+            }
         }
-
-        // initializing SDL App
-        if (SDL_Init(SDL_INIT_EVERYTHING))
+        catch (const exception::GbException &e)
         {
-            std::cout << "Error when initializing SDL App.";
-            exit(1);
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
         }
-
-        mmu = new Mmu(filename);
-        cpu = new Cpu(true, mmu);
-        gpu = new Gpu(mmu);
-        timer = new Timer(mmu);
-        interruptHanlder = new Interrupter(mmu, cpu);
-        gamepad = mmu->getGamepad();
-        cycleCounter = 0;
     }
 
     GameBoy::~GameBoy()
     {
-        cpu->~Cpu();
-        gpu->~Gpu();
-        mmu->~Mmu();
-        timer->~Timer();
-        gamepad->~Gamepad();
-        interruptHanlder->~Interrupter();
-        // destroying window && GL context
-        SDL_GL_DeleteContext(glcontext);
-        SDL_DestroyWindow(window);
+        SDL_DestroyWindow(_window);
         SDL_Quit();
     }
 
     void GameBoy::step()
     {
-        int cycle = cpu->step();
-        cycleCounter += cycle;
-        timer->updateTimer(cycle);
-        gpu->step(cycle);
-        gamepad->handleEvent();
-        interruptHanlder->handleInterrupts();
+        const int cycle = _cpu.step();
+        _cycleCounter += cycle;
+        _timer.updateTimer(cycle);
+        // gpu.step(cycle);
+        _gamepad.handleEvent();
+        _interruptManager.handleInterrupts();
     }
 
     void GameBoy::boot()
     {
         bool exit = false;
-        int fps = 0;
         int fpsCounter = 0;
-
-        fps = SDL_GetTicks();
+        uint32_t fps = SDL_GetTicks();
 
         try
         {
             while (!exit)
             {
-                cycleCounter = 0;
+                _cycleCounter = 0;
                 int firstTime = SDL_GetTicks();
 
-                while (cycleCounter <= 69905)
+                while (_cycleCounter <= 69905)
                 {
                     step();
-
-                    gpu->render();
+                    // gpu->render();
                 }
 
                 // setting main palette
-                if (gamepad->changedPalette)
+                if (_gamepad.changedPalette)
                 {
-                    gpu->changeMainPalette();
-                    gamepad->changedPalette = false;
+                    // gpu->changeMainPalette();
+                    _gamepad.changedPalette = false;
                 }
 
                 int elapsedTime = SDL_GetTicks() - firstTime;
@@ -97,14 +87,16 @@ namespace gasyboy
                     fps = SDL_GetTicks();
                     fpsCounter = 0;
                 }
-
                 else
+                {
                     fpsCounter++;
+                }
             }
         }
         catch (const exception::GbException &e)
         {
-            std::cerr << e.what() << '\n';
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
         }
     }
 }

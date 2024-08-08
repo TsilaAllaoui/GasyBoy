@@ -1,75 +1,70 @@
 #include "timer.h"
 
-Timer::Timer()
+namespace gasyboy
 {
-
-}
-
-Timer::~Timer()
-{
-	mmu->~Mmu();
-}
-
-Timer::Timer(Mmu *p_mmu)
-{
-    mmu = p_mmu;
-    divide_counter = 0;
-    timer_counter = 1024;
-}
-
-void Timer::updateTimer(int m_cycle)
-{
-	divider(m_cycle);
-	if (timer_on())
+	Timer::Timer(Mmu &mmu, InterruptManager &interruptManager)
+		: _mmu(mmu),
+		  _interruptManager(interruptManager),
+		  _divideCounter(0),
+		  _timerCounter(1024)
 	{
-		timer_counter -= m_cycle;
-		if (timer_counter <= 0)
+	}
+
+	bool Timer::isTimerOn()
+	{
+		uint8_t control = _mmu.readRam(0xFF07);
+		return (control >> 2) & 1;
+	}
+
+	void Timer::updateTimer(const int &cycle)
+	{
+		updateDivider(cycle);
+
+		if (isTimerOn())
 		{
-			setFreq();
-			uint8_t val = mmu->read_ram(0xFF05);
-			if (val == 0xFF)
+			_timerCounter -= cycle;
+
+			if (_timerCounter <= 0)
 			{
-			    mmu->write_ram(0xFF05, mmu->read_ram(0xFF06));
-				requestInterrupt(2);
+				updateFrequence();
+
+				uint8_t val = _mmu.readRam(0xFF05);
+
+				if (val == 0xFF)
+				{
+					_mmu.writeRam(0xFF05, _mmu.readRam(0xFF06));
+					_interruptManager.requestInterrupt(InterruptManager::InterruptType::Timer);
+				}
+				else
+				{
+					_mmu.writeRam(0xFF05, val + 1);
+				}
 			}
-			else
-                mmu->write_ram(0xFF05, val + 1);
 		}
 	}
-}
 
-int Timer::timer_on()
-{
-	uint8_t control = mmu->read_ram(0xFF07);
-	return (control >> 2) & 1;
-}
-
-void Timer::setFreq()
-{
-	uint8_t	freq = mmu->read_ram(0xFF07) & 0x3;
-	if (freq == 0x0)
-		timer_counter = 1024;
-	else if (freq == 0x1)
-		timer_counter = 16;
-	else if (freq == 0x2)
-		timer_counter = 64;
-	else if (freq == 0x3)
-		timer_counter = 256;
-}
-
-void Timer::divider(int m_cycle)
-{
-	divide_counter += m_cycle;
-	if (divide_counter >= 255)
+	void Timer::updateFrequence()
 	{
-		divide_counter = 0;
-		mmu->directSet(0xFF04, mmu->read_ram(0xFF04) + 1);
-	}
-}
+		uint8_t freq = _mmu.readRam(0xFF07) & 0x3;
 
-void Timer::requestInterrupt(int id)
-{
-    uint8_t req = mmu->read_ram(0xFF0F);
-    req |= (1 << id);
-    mmu->write_ram(0xFF0F, req);
+		if (freq == 0x0)
+			_timerCounter = 1024;
+		else if (freq == 0x1)
+			_timerCounter = 16;
+		else if (freq == 0x2)
+			_timerCounter = 64;
+		else if (freq == 0x3)
+			_timerCounter = 256;
+	}
+
+	void Timer::updateDivider(const int &cycle)
+	{
+		_divideCounter += cycle;
+
+		if (_divideCounter >= 255)
+		{
+			_divideCounter = 0;
+			_mmu.directSet(0xFF04, _mmu.readRam(0xFF04) + 1);
+		}
+	}
 }

@@ -5,13 +5,16 @@
 
 namespace gasyboy
 {
-    Registers::Registers()
-        : AF(0),
+    Registers::Registers(Mmu &mmu)
+        : _mmu(mmu),
+          AF(0),
           BC(0),
           DE(0),
           HL(0),
           PC(0),
-          SP(0)
+          SP(0),
+          _interruptEnabled(false),
+          _halted(false)
     {
         _registersMap = {
             {"AF", AF},
@@ -53,19 +56,19 @@ namespace gasyboy
             return BC.getLeftRegister();
             break;
         case 'C':
-            return BC.getRigthRegister();
+            return BC.getRightRegister();
             break;
         case 'D':
             return DE.getLeftRegister();
             break;
         case 'E':
-            return DE.getRigthRegister();
+            return DE.getRightRegister();
             break;
         case 'H':
             return HL.getLeftRegister();
             break;
         case 'L':
-            return HL.getRigthRegister();
+            return HL.getRightRegister();
             break;
         default:
             std::string message("Invalid register: \"");
@@ -108,19 +111,19 @@ namespace gasyboy
             BC.setLeftRegister(value);
             break;
         case 'C':
-            BC.setRigthRegister(value);
+            BC.setRightRegister(value);
             break;
         case 'D':
             DE.setLeftRegister(value);
             break;
         case 'E':
-            DE.setRigthRegister(value);
+            DE.setRightRegister(value);
             break;
         case 'H':
             HL.setLeftRegister(value);
             break;
         case 'L':
-            HL.setRigthRegister(value);
+            HL.setRightRegister(value);
             break;
         default:
             std::string message("Invalid register: \"");
@@ -129,5 +132,36 @@ namespace gasyboy
             throw exception::GbException(message);
             exit(ExitState::CRITICAL_ERROR);
         }
+    }
+
+    void Registers::pushSP(const uint16_t &address)
+    {
+        uint8_t firstByte = static_cast<uint8_t>(address >> 8);
+        uint8_t secondByte = static_cast<uint8_t>(address & 0xFF);
+
+        SP--;
+        _mmu.writeRam(SP, firstByte);
+        SP--;
+        _mmu.writeRam(SP, secondByte);
+    }
+
+    void Registers::setInterruptEnabled(const bool &value)
+    {
+        _interruptEnabled = value;
+    }
+
+    bool Registers::getInterruptEnabled()
+    {
+        return _interruptEnabled;
+    }
+
+    void Registers::setHalted(const bool &value)
+    {
+        _halted = value;
+    }
+
+    bool Registers::getHalted()
+    {
+        return _halted;
     }
 }

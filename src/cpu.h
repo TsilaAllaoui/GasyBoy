@@ -14,16 +14,10 @@ namespace gasyboy
 	{
 	private:
 		// Registers
-		Registers _registers;
+		Registers &_registers;
 
 		// MMU
 		Mmu &_mmu;
-
-		// boolean to check if cpu is halted
-		bool _halted;
-
-		// boolean to check interrupted state of the cpu
-		bool _interruptEnabled;
 
 		// the current opcode pointed by the PC
 		uint8_t _currentOpcode;
@@ -34,7 +28,7 @@ namespace gasyboy
 
 	public:
 		// contructor/destructor
-		Cpu(const bool &bootBios, Mmu &mmu);
+		Cpu(const bool &bootBios, Mmu &mmu, Registers &registers);
 		~Cpu() = default;
 
 		// a step of the cpu
@@ -46,24 +40,9 @@ namespace gasyboy
 		// fetch the current opcode
 		void fetch();
 
-		// get the interrupt status of the cpu
-		bool getInterruptStatus();
-		bool getHaltedStatus();
-
-		// set halted status
-		void setHaltedStatus(const bool &value);
-
 		// getters
-		uint16_t getPC();
 		uint16_t getRegister(const std::string &reg);
 		uint8_t getRegister(const char &reg);
-		uint16_t getSP();
-
-		// setters
-		void setPC(const uint16_t &adress);
-
-		// push the PC to SP
-		void pushSP(const uint16_t &adress);
 
 		/***********useful function**********/
 		uint16_t next2bytes(const uint16_t &adress);
