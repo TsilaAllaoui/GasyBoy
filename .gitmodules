@@ -7,6 +7,3 @@
 [submodule "externals/argparse"]
 	path = externals/argparse
 	url = https://github.com/p-ranav/argparse
-[submodule "externals/googletest"]
-	path = externals/googletest
-	url = https://github.com/google/googletest

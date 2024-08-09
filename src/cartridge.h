@@ -81,6 +81,9 @@ namespace gasyboy
         // loading ROM
         void loadRom(const std::string &filename);
 
+        // For debugging
+        void loadRom(uint8_t size, uint8_t *mem);
+
         // set MBC type
         void setMBCType(const uint8_t &value);
 

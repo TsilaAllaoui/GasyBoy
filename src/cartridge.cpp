@@ -104,6 +104,14 @@ namespace gasyboy
 		}
 	}
 
+	void Cartridge::loadRom(uint8_t size, uint8_t *mem)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			_rom[0][i] = mem[i];
+		}
+	}
+
 	void Cartridge::setMBCType(const uint8_t &value)
 	{
 		_cartridgeType = utils::uint8ToCartridgeType(value);

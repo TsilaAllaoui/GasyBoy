@@ -60,6 +60,19 @@ namespace gasyboy
         std::string _romFilePath;
 
     public:
+        // debug mode for tests
+        struct mem_access
+        {
+            int type;
+            uint16_t addr;
+            uint8_t val;
+        };
+        int *_num_mem_accesses;
+        struct mem_access *_mem_accesses;
+        bool _debugMode;
+        uint8_t *_mem;
+        uint8_t _memSize;
+
         // the current modified tile
         int _currModifiedTile;
 
@@ -70,6 +83,13 @@ namespace gasyboy
         // construcor/destructor
         Mmu();
         Mmu(const std::string &romFilePath);
+
+        // For debugging
+        Mmu(uint8_t size,
+            uint8_t *mem,
+            int *num_mem_accesses,
+            void *mem_accesses);
+
         ~Mmu() = default;
 
         // Set file path to be loaded in cartrdige class

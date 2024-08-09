@@ -41,6 +41,10 @@ namespace gasyboy
 
         void serviceInterrupt(const InterruptType &interrupt);
 
+        bool isMasterInterruptEnabled();
+
+        void setMasterInterrupt(const bool &value);
+
     private:
         std::map<InterruptType, InterruptAddress> _interruptAddressMap;
     };

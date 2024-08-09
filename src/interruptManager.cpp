@@ -54,4 +54,14 @@ namespace gasyboy
 
         _registers.PC = static_cast<uint16_t>(_interruptAddressMap[interrupt]);
     }
+
+    bool InterruptManager::isMasterInterruptEnabled()
+    {
+        return _masterInterrupt;
+    }
+
+    void InterruptManager::setMasterInterrupt(const bool &value)
+    {
+        _masterInterrupt = value;
+    }
 }

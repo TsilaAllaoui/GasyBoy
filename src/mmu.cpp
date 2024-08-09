@@ -18,6 +18,9 @@ namespace gasyboy
     {
         // setting joypad to off
         _workingRam[0xFFFF - 0xC000] = 0xFF;
+
+        // set debug mode to true
+        _debugMode = true;
     }
 
     Mmu::Mmu(const std::string &romFilePath)
@@ -33,6 +36,9 @@ namespace gasyboy
     {
         // setting joypad to off
         _workingRam[0xFFFF - 0xC000] = 0xFF;
+
+        // set debug mode to false
+        _debugMode = false;
 
         // loading rom file
         try
@@ -54,6 +60,17 @@ namespace gasyboy
         }
     }
 
+    Mmu::Mmu(uint8_t size,
+             uint8_t *mem,
+             int *num_mem_accesses,
+             void *mem_accesses) : Mmu()
+    {
+        _mem = mem;
+        _memSize = size;
+        _num_mem_accesses = num_mem_accesses;
+        _mem_accesses = static_cast<struct mem_access *>(mem_accesses);
+    }
+
     void gasyboy::Mmu::setRomFile(const std::string &filePath)
     {
         _romFilePath = filePath;
@@ -71,6 +88,14 @@ namespace gasyboy
 
     uint8_t Mmu::readRam(const uint16_t &address)
     {
+        if (_debugMode)
+        {
+            if (address < _memSize)
+                return _mem[address];
+            else
+                return 0xaa;
+        }
+
         try
         {
             if (address < 0x100)
@@ -124,6 +149,16 @@ namespace gasyboy
 
     void Mmu::writeRam(const uint16_t &address, const uint8_t &value)
     {
+        if (_debugMode)
+        {
+            struct mem_access *access = &_mem_accesses[*_num_mem_accesses];
+            (*_num_mem_accesses)++;
+            access->type = MEM_ACCESS_WRITE;
+            access->addr = address;
+            access->val = value;
+            return;
+        }
+
         // if writing to ROM, manage memory banks
         if (address < 0x8000)
         {

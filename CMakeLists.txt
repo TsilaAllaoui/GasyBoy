@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.25)
 project(gasyboy VERSION 2.0 LANGUAGES CXX)
 
 # Compiler norm to use
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # External libs directory
@@ -22,7 +22,6 @@ set(GASYBOY_HEADERS_DIR
 # Adding external libs
 add_subdirectory(${EXTERNALS_DIR}/SDL)
 add_subdirectory(${EXTERNALS_DIR}/argparse)
-add_subdirectory(${EXTERNALS_DIR}/googletest)
 
 # Add the library target
 add_library(${PROJECT_NAME}_lib ${GASYBOY_SOURCES_FILES})
