@@ -22,6 +22,7 @@ set(GASYBOY_HEADERS_DIR
 # Adding external libs
 add_subdirectory(${EXTERNALS_DIR}/SDL)
 add_subdirectory(${EXTERNALS_DIR}/argparse)
+add_subdirectory(${EXTERNALS_DIR}/gbit)
 
 # Add the library target
 add_library(${PROJECT_NAME}_lib ${GASYBOY_SOURCES_FILES})
@@ -39,7 +40,7 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC
 )
 
 # Linking other libs to project lib
-target_link_libraries(${PROJECT_NAME}_lib PRIVATE SDL2main SDL2)
+target_link_libraries(${PROJECT_NAME}_lib PRIVATE SDL2main SDL2 gbit)
 
 # Linking project lib to project executable
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)

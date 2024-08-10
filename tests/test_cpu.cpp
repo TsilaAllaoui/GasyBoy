@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#include "lib/tester.h"
+#include "tester.h"
 
 #include "mmu.h"
 #include "cpu.h"

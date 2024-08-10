@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lib/tester.h"
+#include "tester.h"
 
 extern struct tester_operations myops;
 
