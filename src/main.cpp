@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include "logger.h"
@@ -22,7 +23,7 @@ int main(int argc, char *argv[])
     try
     {
         program.parse_args(argc, argv);
-        std::string romFile = program.get<std::string>("--rom");
+        std::string romFile = std::filesystem::path(program.get<std::string>("--rom")).make_preferred().string();
         bool useBios = program.get<bool>("--usebios");
 
         auto logger = gasyboy::utils::Logger::getInstance();

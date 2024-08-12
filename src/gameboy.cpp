@@ -12,6 +12,7 @@ namespace gasyboy
           _registers(_mmu),
           _interruptManager(_mmu, _registers),
           _cpu(bootBios, _mmu, _registers, _interruptManager),
+          _gpu(_mmu),
           _timer(_mmu, _interruptManager),
           _gamepad(),
           _cycleCounter(0)
@@ -46,7 +47,7 @@ namespace gasyboy
         const int cycle = _cpu.step();
         _cycleCounter += cycle;
         _timer.updateTimer(cycle);
-        // gpu.step(cycle);
+        _gpu.step(cycle);
         _gamepad.handleEvent();
         _interruptManager.handleInterrupts();
     }
@@ -67,13 +68,13 @@ namespace gasyboy
                 while (_cycleCounter <= 69905)
                 {
                     step();
-                    // gpu->render();
+                    _gpu.render();
                 }
 
                 // setting main palette
                 if (_gamepad.changedPalette)
                 {
-                    // gpu->changeMainPalette();
+                    _gpu.changeMainPalette();
                     _gamepad.changedPalette = false;
                 }
 
