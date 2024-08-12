@@ -10,8 +10,8 @@ namespace gasyboy
     GameBoy::GameBoy(const std::string &filePath, const bool &bootBios)
         : _mmu(filePath),
           _registers(_mmu),
-          _cpu(bootBios, _mmu, _registers),
           _interruptManager(_mmu, _registers),
+          _cpu(bootBios, _mmu, _registers, _interruptManager),
           _timer(_mmu, _interruptManager),
           _gamepad(),
           _cycleCounter(0)

@@ -4,9 +4,10 @@
 namespace gasyboy
 {
 
-	Cpu::Cpu(const bool &bootBios, Mmu &mmu, Registers &registers)
+	Cpu::Cpu(const bool &bootBios, Mmu &mmu, Registers &registers, InterruptManager &interruptManager)
 		: _mmu(mmu),
 		  _registers(registers),
+		  _interruptManager(interruptManager),
 		  _currentOpcode(0),
 		  _cycle(0)
 	{
@@ -1073,11 +1074,13 @@ namespace gasyboy
 	void Cpu::DI()
 	{
 		_registers.setInterruptEnabled(false);
+		_interruptManager.setMasterInterrupt(false);
 	}
 
 	void Cpu::EI()
 	{
 		_registers.setInterruptEnabled(true);
+		_interruptManager.setMasterInterrupt(true);
 	}
 
 	void Cpu::ADD_HL_rr(const std::string &reg)
@@ -1336,10 +1339,11 @@ namespace gasyboy
 	{
 		uint8_t value = _mmu.readRam(_registers.HL.get());
 		(value & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-		_mmu.writeRam(_registers.HL.get(), (value << 1) | static_cast<uint8_t>(_registers.AF.getFlag('C')));
+		uint8_t newValue = (value << 1) | static_cast<uint8_t>(_registers.AF.getFlag('C'));
+		_mmu.writeRam(_registers.HL.get(), newValue);
 		_registers.AF.clearFlag('H');
 		_registers.AF.clearFlag('N');
-		((value << 1) | static_cast<uint8_t>(_registers.AF.getFlag('C')) == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
+		(newValue == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 	}
 
 	void Cpu::RL_16()
@@ -2242,13 +2246,14 @@ namespace gasyboy
 		}
 	}
 
-	void Cpu::RETI() // TODO Unkown behaviour (may produce bugs)
+	void Cpu::RETI() // TODO  Unknown if the IME is enabled after execution of this
 	{
 		_registers.setInterruptEnabled(true);
 		uint16_t leftNibble = (_mmu.readRam(_registers.SP + 1) << 8);
 		uint8_t rightNibble = _mmu.readRam(_registers.SP);
 		_registers.SP += 2;
 		_registers.PC = (leftNibble | rightNibble);
+		_interruptManager.setMasterInterrupt(true);
 	}
 
 	void Cpu::RST_p(const uint16_t &p)
@@ -2421,6 +2426,8 @@ namespace gasyboy
 			break;
 		case 0x10:
 			_cycle = 4;
+			_registers.setHalted(true);
+			_registers.PC++;
 			break;
 		case 0x11:
 			LD_rr_16(_registers.PC + 1, "DE");
@@ -3485,7 +3492,7 @@ namespace gasyboy
 			_registers.PC++;
 			break;
 		case 0xF3:
-			_registers.setInterruptEnabled(false);
+			DI();
 			_cycle = 4;
 			_registers.PC++;
 			break;
@@ -3518,8 +3525,8 @@ namespace gasyboy
 			_cycle = 16;
 			_registers.PC += 3;
 			break;
-		case 0xFB: // TODO may be innacurate
-			_registers.setInterruptEnabled(true);
+		case 0xFB:
+			EI();
 			_cycle = 4;
 			_registers.PC++;
 			break;

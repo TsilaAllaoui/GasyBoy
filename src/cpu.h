@@ -1,6 +1,7 @@
 #ifndef _CPU_H_
 #define _CPU_H_
 
+#include "interruptManager.h"
 #include "registers.h"
 #include "register.h"
 #include "mmu.h"
@@ -19,6 +20,9 @@ namespace gasyboy
 		// MMU
 		Mmu &_mmu;
 
+		// Interrupt Manager
+		InterruptManager &_interruptManager;
+
 		// the current opcode pointed by the PC
 		uint8_t _currentOpcode;
 		uint8_t _prevOpcode;
@@ -28,7 +32,7 @@ namespace gasyboy
 
 	public:
 		// contructor/destructor
-		Cpu(const bool &bootBios, Mmu &mmu, Registers &registers);
+		Cpu(const bool &bootBios, Mmu &mmu, Registers &registers, InterruptManager &interruptManager);
 		~Cpu() = default;
 
 		// a step of the cpu

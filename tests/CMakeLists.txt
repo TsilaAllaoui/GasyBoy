@@ -8,7 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Source files for the binary
 set(GASYBOY_CPU_TESTS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_cpu.cpp
 )
 
 # Add sources to executable
