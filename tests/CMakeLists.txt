@@ -19,3 +19,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     gbit
     gasyboy_lib
 )
+
+# Add a custom command to copy the binary after the build
+add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/../build/Debug/
+    COMMENT "Copying ${PROJECT_NAME} binary to ${CMAKE_CURRENT_SOURCE_DIR}/../build/Debug/"
+)

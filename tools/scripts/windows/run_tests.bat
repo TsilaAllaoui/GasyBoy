@@ -3,8 +3,8 @@
 setlocal
 
 REM Define the paths
-set DEBUG_PATH=..\build\tests\Debug\gasyboy_tests.exe
-set RELEASE_PATH=..\build\tests\Release\gasyboy_tests.exe
+set DEBUG_PATH=..\..\..\build\Debug\gasyboy_cpu_tester.exe
+set RELEASE_PATH=..\..\..\build\Release\gasyboy_cpu_tester.exe
 
 REM Check if Debug executable exists
 if exist "%DEBUG_PATH%" (
