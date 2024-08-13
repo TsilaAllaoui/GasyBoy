@@ -82,7 +82,7 @@ namespace gasyboy
 
         // construcor/destructor
         Mmu();
-        Mmu(const std::string &romFilePath);
+        Mmu(const std::string &romFilePath, Gamepad &gamepad);
 
         // For debugging
         Mmu(uint8_t size,
@@ -114,9 +114,6 @@ namespace gasyboy
 
         // DMA Transfert routine
         void doDmaTransfert(const uint8_t &value);
-
-        // gamepad
-        Gamepad &getGamepad();
 
         // getting immediate 16bits in low endianess
         uint16_t getNext2Bytes(const uint16_t &adress);

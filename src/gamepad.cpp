@@ -1,127 +1,126 @@
 #include "gamepad.h"
 #include "defs.h"
-// #include "SDL.h"
+#include "SDL.h"
 
 namespace gasyboy
 {
     bool Gamepad::changedPalette = false;
 
     Gamepad::Gamepad()
+        : _buttonSelected(true),
+          _directionSelected(true),
+          _currState(0)
     {
-        _buttonSelected = true;
-        _directionSelected = true;
-        _currentState = 0;
-        _directionKeys = std::vector<bool>(4, false);
-        _buttonKeys = std::vector<bool>(4, false);
+        _keys = std::vector<bool>(8, false);
     }
 
     void Gamepad::handleEvent()
     {
-        // SDL_Event event;
+        SDL_Event event;
 
-        // while (SDL_PollEvent(&event) != 0)
-        // {
-        //     if (event.type == SDL_QUIT)
-        //         exit(ExitState::MANUAL_STOP);
+        while (SDL_PollEvent(&event) != 0)
+        {
+            if (event.type == SDL_QUIT)
+                exit(0);
 
-        //     if (event.type == SDL_KEYDOWN)
-        //     {
-        //         switch (event.key.keysym.sym)
-        //         {
-        //         case SDLK_ESCAPE:
-        //             exit(ExitState::MANUAL_STOP);
-        //             break;
+            if (event.type == SDL_KEYDOWN)
+            {
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_ESCAPE:
+                    exit(0);
+                    break;
 
-        //         case SDLK_a:
-        //             _buttonKeys[Button::A] = true;
-        //             break;
+                case SDLK_a:
+                    _keys[A] = true;
+                    break;
 
-        //         case SDLK_z:
-        //             _buttonKeys[Button::B] = true;
-        //             break;
+                case SDLK_z:
+                    _keys[B] = true;
+                    break;
 
-        //         case SDLK_RETURN:
-        //             _buttonKeys[Button::SELECT] = true;
-        //             break;
+                case SDLK_RETURN:
+                    _keys[SELECT] = true;
+                    break;
 
-        //         case SDLK_SPACE:
-        //             _buttonKeys[Button::START] = true;
-        //             break;
+                case SDLK_SPACE:
+                    _keys[START] = true;
+                    break;
 
-        //         case SDLK_UP:
-        //         case SDLK_o:
-        //             _directionKeys[Direction::UP] = true;
-        //             break;
+                case SDLK_UP:
+                case SDLK_o:
+                    _keys[UP] = true;
+                    break;
 
-        //         case SDLK_DOWN:
-        //         case SDLK_l:
-        //             _directionKeys[Direction::DOWN] = true;
-        //             break;
+                case SDLK_DOWN:
+                case SDLK_l:
+                    _keys[DOWN] = true;
+                    break;
 
-        //         case SDLK_LEFT:
-        //         case SDLK_k:
-        //             _directionKeys[Direction::LEFT] = true;
-        //             break;
+                case SDLK_LEFT:
+                case SDLK_k:
+                    _keys[LEFT] = true;
+                    break;
 
-        //         case SDLK_RIGHT:
-        //         case SDLK_m:
-        //             _directionKeys[Direction::RIGHT] = true;
-        //             break;
+                case SDLK_RIGHT:
+                case SDLK_m:
+                    _keys[RIGHT] = true;
+                    break;
 
-        //         case SDLK_p:
-        //             changedPalette = true;
-        //         }
-        //     }
+                case SDLK_p:
+                    changedPalette = true;
+                }
+            }
 
-        //     if (event.type == SDL_KEYUP)
-        //     {
-        //         switch (event.key.keysym.sym)
-        //         {
-        //         case SDLK_ESCAPE:
-        //             exit(ExitState::MANUAL_STOP);
-        //             break;
+            if (event.type == SDL_KEYUP)
+            {
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_ESCAPE:
+                    exit(0);
+                    break;
 
-        //         case SDLK_a:
-        //             _buttonKeys[Button::A] = false;
-        //             break;
+                case SDLK_a:
+                    _keys[A] = false;
+                    break;
 
-        //         case SDLK_z:
-        //             _buttonKeys[Button::B] = false;
-        //             break;
+                case SDLK_z:
+                    _keys[B] = false;
+                    break;
 
-        //         case SDLK_RETURN:
-        //             _buttonKeys[Button::SELECT] = false;
-        //             break;
+                case SDLK_RETURN:
+                    _keys[SELECT] = false;
+                    break;
 
-        //         case SDLK_SPACE:
-        //             _buttonKeys[Button::START] = false;
-        //             break;
+                case SDLK_SPACE:
+                    _keys[START] = false;
+                    break;
 
-        //         case SDLK_UP:
-        //         case SDLK_o:
-        //             _directionKeys[Direction::UP] = false;
-        //             break;
+                case SDLK_UP:
+                case SDLK_o:
+                    _keys[UP] = false;
+                    break;
 
-        //         case SDLK_DOWN:
-        //         case SDLK_l:
-        //             _directionKeys[Direction::DOWN] = false;
-        //             break;
+                case SDLK_DOWN:
+                case SDLK_l:
+                    _keys[DOWN] = false;
+                    break;
 
-        //         case SDLK_LEFT:
-        //         case SDLK_k:
-        //             _directionKeys[Direction::LEFT] = false;
-        //             break;
+                case SDLK_LEFT:
+                case SDLK_k:
+                    _keys[LEFT] = false;
+                    break;
 
-        //         case SDLK_RIGHT:
-        //         case SDLK_m:
-        //             _directionKeys[Direction::RIGHT] = false;
-        //             break;
-        //         }
-        //     }
-        // }
+                case SDLK_RIGHT:
+                case SDLK_m:
+                    _keys[RIGHT] = false;
+                    break;
+                }
+            }
+        }
     }
 
-    void Gamepad::setState(const uint8_t &value)
+    void Gamepad::setState(uint8_t value)
     {
         _buttonSelected = ((value & 0x20) == 0x20);
         _directionSelected = ((value & 0x10) == 0x10);
@@ -129,24 +128,50 @@ namespace gasyboy
 
     uint8_t Gamepad::getState()
     {
-        _currentState = 0xCF;
+        _currState = 0xCF;
 
-        auto &keys = _buttonSelected ? _buttonKeys : _directionKeys;
+        if (!_buttonSelected)
+        {
+            if (_keys[A])
+                // _currState &= ~(1 << 0);
+                ;
 
-        if (keys[_buttonSelected ? Button::A : Direction::UP])
-            _currentState &= ~(1 << 0);
+            if (_keys[B])
+                // _currState &= ~(1 << 1);
+                ;
 
-        if (keys[_buttonSelected ? Button::B : Direction::DOWN])
-            _currentState &= ~(1 << 1);
+            if (_keys[SELECT])
+                // _currState &= ~(1 << 2);
+                ;
 
-        if (keys[_buttonSelected ? Button::START : Direction::LEFT])
-            _currentState &= ~(1 << 2);
+            if (_keys[START])
+                // _currState &= ~(1 << 3);
+                ;
 
-        if (keys[_buttonSelected ? Button::SELECT : Direction::RIGHT])
-            _currentState &= ~(1 << 3);
+            _currState |= 0x10;
+        }
 
-        _currentState |= 0x10;
+        else if (!_directionSelected)
+        {
+            if (_keys[RIGHT])
+                // _currState &= ~(1 << 0);
+                ;
 
-        return _currentState;
+            if (_keys[LEFT])
+                // _currState &= ~(1 << 1);
+                ;
+
+            if (_keys[UP])
+                // _currState &= ~(1 << 2);
+                ;
+
+            if (_keys[DOWN])
+                // _currState &= ~(1 << 3);
+                ;
+
+            _currState |= 0x20;
+        }
+
+        return _currState;
     }
 }

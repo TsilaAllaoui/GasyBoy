@@ -19,7 +19,7 @@ int GasyBoyCpuTestHelper::runTester(tester_flags *flags, tester_operations *myop
 void GasyBoyCpuTestHelper::resetCpu(size_t tester_instruction_mem_size,
                                     uint8_t *tester_instruction_mem)
 {
-    mmu.reset(new gasyboy::Mmu(tester_instruction_mem_size, tester_instruction_mem, &num_mem_accesses, mem_accesses));
+    mmu.reset(new gasyboy::Mmu(static_cast<uint8_t>(tester_instruction_mem_size), tester_instruction_mem, &num_mem_accesses, mem_accesses));
     registers.reset(new gasyboy::Registers(*mmu));
     im.reset(new gasyboy::InterruptManager(*mmu, *registers));
     cpu.reset(new gasyboy::Cpu(false, *mmu, *registers, *im));

@@ -7,23 +7,16 @@ namespace gasyboy
 {
     class Gamepad
     {
-    private:
         bool _buttonSelected;
         bool _directionSelected;
-        uint8_t _currentState;
-        std::vector<bool> _directionKeys;
-        std::vector<bool> _buttonKeys;
-
-        enum Button
+        uint8_t _currState;
+        std::vector<bool> _keys;
+        enum
         {
             A,
             B,
             START,
-            SELECT
-        };
-
-        enum Direction
-        {
+            SELECT,
             UP,
             DOWN,
             LEFT,
@@ -32,11 +25,10 @@ namespace gasyboy
 
     public:
         Gamepad();
-        ~Gamepad() = default;
 
         void handleEvent();
 
-        void setState(const uint8_t &value);
+        void setState(uint8_t value);
 
         uint8_t getState();
 

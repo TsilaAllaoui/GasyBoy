@@ -23,13 +23,13 @@ namespace gasyboy
         _debugMode = true;
     }
 
-    Mmu::Mmu(const std::string &romFilePath)
+    Mmu::Mmu(const std::string &romFilePath, Gamepad &gamepad)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
           _executeBios(true),
           _cartridge(),
-          _gamepad(),
+          _gamepad(gamepad),
           _currModifiedTile(-1),
           _dmaRegionWritten(false),
           _romFilePath(romFilePath)
@@ -287,11 +287,6 @@ namespace gasyboy
     std::vector<uint8_t> Mmu::getVram()
     {
         return _vRam;
-    }
-
-    Gamepad &Mmu::getGamepad()
-    {
-        return _gamepad;
     }
 
     bool Mmu::isVramWritten()

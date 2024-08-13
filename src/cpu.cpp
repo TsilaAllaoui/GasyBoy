@@ -1726,7 +1726,6 @@ namespace gasyboy
 	void Cpu::SRL_r(const char &reg)
 	{
 		uint8_t value = 0;
-		bool old7thbit;
 		switch (reg)
 		{
 		case 'A':

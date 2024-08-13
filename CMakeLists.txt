@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.20)
 
 # Project info setup
 project(gasyboy VERSION 2.0 LANGUAGES CXX)

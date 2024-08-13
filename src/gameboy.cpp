@@ -1,6 +1,5 @@
-#include "gameboy.h"
-#include <cstdlib>
 #include "gbException.h"
+#include "gameboy.h"
 #include "logger.h"
 
 #define FPS 60
@@ -8,18 +7,15 @@
 namespace gasyboy
 {
     GameBoy::GameBoy(const std::string &filePath, const bool &bootBios)
-        : _mmu(filePath),
+        : _gamepad(),
+          _mmu(filePath, _gamepad),
           _registers(_mmu),
           _interruptManager(_mmu, _registers),
           _cpu(bootBios, _mmu, _registers, _interruptManager),
           _gpu(_mmu),
           _timer(_mmu, _interruptManager),
-          _gamepad(),
           _cycleCounter(0)
     {
-        // Randomness
-        srand(time(0));
-
         // Initializing SDL App
         try
         {

@@ -7,6 +7,8 @@
 
 int main(int argc, char *argv[])
 {
+    gasyboy::GameBoy("D:/Tsila/GB/TETRIS.gb", true).boot();
+
     argparse::ArgumentParser program("gasyboy");
 
     program.add_argument("-r", "--rom")
