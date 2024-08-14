@@ -1,101 +1,174 @@
+#include "gbException.h"
 #include "register.h"
+#include "logger.h"
+#include "defs.h"
 
-Register::Register()
+namespace gasyboy
 {
-    registerValue = 0;
-}
-
-Register::~Register()
-{
-
-}
-
-void Register::set(uint16_t value)
-{
-    registerValue = value;
-}
-
-uint16_t Register::get()
-{
-    return registerValue;
-}
-
-uint8_t Register::getRigthRegister()
-{
-    return ((uint8_t)(registerValue & 0xFF));
-}
-
-uint8_t Register::getLeftRegister()
-{
-    return ((uint8_t)(registerValue >> 8));
-}
-
-void Register::setLeftRegister(uint8_t value)
-{
-    registerValue = ((value << 8) | (registerValue & 0x00FF));
-}
-
-void Register::setRigthRegister(uint8_t value)
-{
-    registerValue = ((registerValue & 0xFF00) | value);
-}
-
-void Register::show()
-{
-    std::cout << std::hex << registerValue << endl;
-}
-
-SpecialRegister::SpecialRegister() : Register()
-{
-
-}
-
-SpecialRegister::~SpecialRegister() 
-{
-
-}
-
-bool SpecialRegister::getFlag(char Reg)
-{
-    bool value;
-    switch (Reg)
+    Register::Register()
+        : _registerValue(0)
     {
-        case 'Z':  value = getRigthRegister() & (1 << 7); break;
-        case 'N':  value = getRigthRegister() & (1 << 6); break;
-        case 'H':  value = getRigthRegister() & (1 << 5); break;
-        case 'C':  value = getRigthRegister() & (1 << 4); break;
-		default: cout << "Flag error."; exit(0); break;
     }
-	return value;
-}
 
-void SpecialRegister::setFlag(char Reg)
-{
-    uint8_t bit = 0;
-    switch (Reg)
+    Register::Register(const uint8_t &value)
+        : _registerValue(value)
     {
-        case 'Z':  bit = 0x80 ; break;
-        case 'N':  bit = 0x40; break;
-        case 'H':  bit = 0x20; break;
-        case 'C':  bit = 0x10; break;
-		default: cout << "Flag error."; exit(0); break;
     }
-    bit |= getRigthRegister();
-    setRigthRegister(bit);
-}
 
-void SpecialRegister::clearFlag(char Reg)
-{
-    int bit = 0;
-    switch (Reg)
+    Register::~Register()
     {
-        case 'Z':  bit = (~0x80) ; break;
-        case 'N':  bit = (~0x40); break;
-        case 'H':  bit = (~0x20); break;
-        case 'C':  bit = (~0x10); break;
-		default: cout << "Flag error."; exit(0); break;
     }
-    bit = getRigthRegister() & bit;
-    setRigthRegister(bit);
-}
 
+    void Register::set(const uint16_t &value)
+    {
+        _registerValue = value;
+    }
+
+    uint16_t Register::get()
+    {
+        return _registerValue;
+    }
+
+    uint8_t Register::getRightRegister()
+    {
+        return static_cast<uint8_t>(_registerValue & 0xFF);
+    }
+
+    uint8_t Register::getLeftRegister()
+    {
+        return static_cast<uint8_t>(_registerValue >> 8);
+    }
+
+    void Register::setLeftRegister(const uint8_t &value)
+    {
+        _registerValue = (value << 8) | (_registerValue & 0x00FF);
+    }
+
+    void Register::setRightRegister(const uint8_t &value)
+    {
+        _registerValue = (_registerValue & 0xFF00) | value;
+    }
+
+    void Register::show()
+    {
+        std::cout << std::hex << _registerValue << endl;
+    }
+
+    SpecialRegister::SpecialRegister() : Register()
+    {
+    }
+
+    SpecialRegister::SpecialRegister(const uint8_t &value)
+        : Register(value)
+    {
+    }
+
+    SpecialRegister::~SpecialRegister()
+    {
+    }
+
+    bool SpecialRegister::getFlag(const char &reg)
+    {
+        try
+        {
+            bool value;
+            switch (reg)
+            {
+            case 'Z':
+                value = getRightRegister() & (1 << 7);
+                break;
+            case 'N':
+                value = getRightRegister() & (1 << 6);
+                break;
+            case 'H':
+                value = getRightRegister() & (1 << 5);
+                break;
+            case 'C':
+                value = getRightRegister() & (1 << 4);
+                break;
+            default:
+                std::string message("Invalid register: \"");
+                message += reg + "\"";
+                throw exception::GbException(message);
+            }
+            return value;
+        }
+        catch (const exception::GbException &e)
+        {
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
+            exit(ExitState::CRITICAL_ERROR);
+        }
+    }
+
+    void SpecialRegister::setFlag(const char &reg)
+    {
+        try
+        {
+            uint8_t bit = 0;
+            switch (reg)
+            {
+            case 'Z':
+                bit = 0x80;
+                break;
+            case 'N':
+                bit = 0x40;
+                break;
+            case 'H':
+                bit = 0x20;
+                break;
+            case 'C':
+                bit = 0x10;
+                break;
+            default:
+                std::string message("Invalid register: \"");
+                message += reg + "\"";
+                throw exception::GbException(message);
+            }
+            bit |= getRightRegister();
+            setRightRegister(bit);
+        }
+        catch (const std::exception &e)
+        {
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
+            exit(ExitState::CRITICAL_ERROR);
+        }
+    }
+
+    void SpecialRegister::clearFlag(const char &reg)
+    {
+        try
+        {
+            int bit = 0;
+            switch (reg)
+            {
+            case 'Z':
+                bit = (~0x80);
+                break;
+            case 'N':
+                bit = (~0x40);
+                break;
+            case 'H':
+                bit = (~0x20);
+                break;
+            case 'C':
+                bit = (~0x10);
+                break;
+            default:
+                std::string message("Invalid register: \"");
+                message += reg + "\"";
+                throw exception::GbException(message);
+            }
+
+            bit = getRightRegister() & bit;
+            setRightRegister(bit);
+        }
+        catch (const std::exception &e)
+        {
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
+            exit(ExitState::CRITICAL_ERROR);
+        }
+    }
+}

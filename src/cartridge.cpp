@@ -1,264 +1,350 @@
+#include <iostream>
+#include <bitset>
 #include "cartridge.h"
+#include "logger.h"
+#include "utils.h"
+#include "defs.h"
 
-Cartridge::Cartridge()
+namespace gasyboy
 {
-	//allocating banks of External RAM
-	RAMBanks = new uint8_t[0x8000];
-	std::memset(RAMBanks, 0, 0x8000);
 
-	//setting current ROM Bank && RAM Bank (ROM usually start at 1)
-	currRomBank = 1;
-	currRamBank = 0;
-	
-	//mode for MBC1
-	mode = true;
-
-	//the cartridge type
-	cartridgeType = 0;
-
-	//setting current used RTC register
-	currRTCReg = 0;
-}
-
-Cartridge::~Cartridge()
-{
-	delete[] ROM;
-}
-
-void Cartridge::loadRom(std::string file)
-{
-	std::ifstream Rom(file.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
-	if (Rom.is_open())
+	Cartridge::Cartridge()
 	{
-		// //allocating ROM
-		Rom.seekg(0x147, std::ios::beg);
-		char buffer[2];
-		Rom.read(buffer, 2);
-		setBankNumber(buffer[1]);
-		setMBCType(buffer[0]);
-		ROM = new uint8_t * [(int)banksNumber];
-		for (int i = 0; i < (int)banksNumber; i++)
-			ROM[i] = new uint8_t[0x4000];
-		for (int i = 0; i < (int)banksNumber; i++)
-			for (int j = 0; j < 0x4000; j++)
-				ROM[i][j] = 0;
+		// Allocating banks of External RAM
+		_ramBanks = std::vector<uint8_t>(0x8000, 0);
 
-		//reading file && put into ROM
-		Rom.seekg(0, std::ios::end);
-		long romSize = Rom.tellg();
-		uint8_t * buff = new uint8_t[romSize];
-		Rom.seekg(0, std::ios::beg);
-		// Rom.read((char*)buff, romSize);
-		int bank = 0, j = 0;
-		for (int i = 0; i < romSize; i++)
-		{
-			if (i % 0x4000 == 0 && j > 0)
-			{
-				bank++;
-				j = 0;
-			}
-			Rom.seekg(i, std::ios::beg);
-			char c;
-			Rom.read(&c, 1);
-			ROM[bank][j] = (uint8_t)c;
-			j++;
-		}
-		Rom.close();
+		// Setting current ROM Bank && RAM Bank (ROM usually start at 1)
+		_currRomBank = 1;
+		_currRamBank = 0;
+
+		// Mode for MBC1
+		_mode = true;
+
+		// The cartridge type
+		_cartridgeType = CartridgeType::ROM_ONLY;
+
+		// Setting current used RTC register
+		_currRTCReg = 0;
 	}
-		/*std::ofstream out("./CartHeader.txt", std::ios::out);
-		if (out.is_open())
+
+	void Cartridge::loadRom(const std::string &filePath)
+	{
+		std::ifstream rom(filePath.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
+		if (rom.is_open())
 		{
-			out << "Cartridge ROM Name:  ";
+			// Reading rom file
+			rom.seekg(0x147, std::ios::beg);
+			char buffer[2];
+			rom.read(buffer, 2);
+
+			// Setting cartridge type
+			setMBCType(buffer[0]);
+
+			// Setting bank number
+			setBankNumber(buffer[1]);
+
+			// Loading rom
+			_rom = std::vector<std::vector<uint8_t>>(_banksNumber, std::vector<uint8_t>(0x4000, 0));
+
+			rom.seekg(0, std::ios::end);
+			long romSize = rom.tellg();
+			uint8_t *buff = new uint8_t[romSize];
+			rom.seekg(0, std::ios::beg);
+
+			int bank = 0, j = 0;
+			for (int i = 0; i < romSize; i++)
+			{
+				if (i % 0x4000 == 0 && j > 0)
+				{
+					bank++;
+					j = 0;
+				}
+				rom.seekg(i, std::ios::beg);
+				char c;
+				rom.read(&c, 1);
+				_rom[bank][j] = (uint8_t)c;
+				j++;
+			}
+
+			// Log cartridge informations
+			std::stringstream cartridgeHeaderInfo;
+
+			cartridgeHeaderInfo << "Cartridge _rom Name:  ";
 			for (int i = 0x134; i < 0x143; i++)
-				out << ROM[0][i];
-			out << endl << "Manufacturer:  ";
+			{
+				cartridgeHeaderInfo << _rom[0][i];
+			}
+
+			cartridgeHeaderInfo << std::endl
+								<< "Manufacturer:  ";
+
 			for (int i = 0x13F; i < 0x142; i++)
-				out << ROM[0][i];
-			out << endl << "CGB Support:  ";
-			if (ROM[0][0x143] == 0x80)
-				out << "Yes (DMG support)" << endl;
-			else if (ROM[0][0x143] == 0xC0)
-				out << "Yes (No DMG support)" << endl;
+			{
+				cartridgeHeaderInfo << _rom[0][i];
+			}
+
+			cartridgeHeaderInfo << std::endl
+								<< "CGB Support:  ";
+
+			if (_rom[0][0x143] == 0x80)
+			{
+				cartridgeHeaderInfo << "Yes (DMG support)" << std::endl;
+			}
+			else if (_rom[0][0x143] == 0xC0)
+			{
+				cartridgeHeaderInfo << "Yes (No DMG support)" << std::endl;
+			}
 			else
-				out << "No" << endl;
-			out << "License Code:  " << ROM[0][0x144] << ROM[0][0x145] << endl;
-			out << "SGB Support:  ";
-			if (ROM[0][0x143] == 0x03)
-				out << "Yes" << endl;
-			else if (ROM[0][0x143] == 0)
-				out << "No" << endl;
-			out << "Cartridge Type:  " << hex << cartTypes[(int)ROM[0][0x147]]<< endl;
-			out << "ROM Size:  " << hex << (int)ROM[0][0x148] << endl;
-			out << "RAM Size:  " << hex << (int)ROM[0][0x149] << endl;
-			out << "Japanese:  " << ((ROM[0][0x14A] & 0x1) ? "No" : "Yes") << endl;
-			out << "Old License Code:  " << hex << (int)ROM[0][0x14B] << endl;
-			out << "Mask ROM Version:  " << hex << (int)ROM[0][0x14C] << endl;
-			out.close();
+			{
+				cartridgeHeaderInfo << "No" << std::endl;
+			}
+			cartridgeHeaderInfo << "License Code:  " << _rom[0][0x144] << _rom[0][0x145] << std::endl;
+			cartridgeHeaderInfo << "SGB Support:  ";
+
+			if (_rom[0][0x143] == 0x03)
+			{
+				cartridgeHeaderInfo << "Yes" << std::endl;
+			}
+			else if (_rom[0][0x143] == 0)
+			{
+				cartridgeHeaderInfo << "No" << std::endl;
+			}
+
+			cartridgeHeaderInfo << "Cartridge Type:  " << std::hex << (int)_rom[0][0x147] << std::endl;
+			cartridgeHeaderInfo << "_rom Size:  " << std::hex << (int)_rom[0][0x148] << std::endl;
+			cartridgeHeaderInfo << "RAM Size:  " << std::hex << (int)_rom[0][0x149] << std::endl;
+			cartridgeHeaderInfo << "Japanese:  " << ((_rom[0][0x14A] & 0x1) ? "No" : "Yes") << std::endl;
+			cartridgeHeaderInfo << "Old License Code:  " << std::hex << (int)_rom[0][0x14B] << std::endl;
+			cartridgeHeaderInfo << "Mask _rom Version:  " << std::hex << (int)_rom[0][0x14C] << std::endl;
+
+			utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, cartridgeHeaderInfo.str());
 		}
 		else
-			exit(80);
-	}*/
-	else
-	{
-		cout << "Rom not found!";
-		exit(1);
-	}
-}
-
-void Cartridge::setMBCType(uint8_t value)
-{
-	cartridgeType = (int)value;
-}
-
-void Cartridge::setBankNumber(uint8_t value)
-{
-	switch (value)
-	{
-	case 0: banksNumber = 2; break;
-	case 0x1: banksNumber = 4; break;
-	case 0x2: banksNumber = 8; break;
-	case 0x3: banksNumber = 16; break;
-	case 0x4: banksNumber = 32; break;
-	case 0x5: banksNumber = 64; break;
-	case 0x6: banksNumber = 128; break;
-	case 0x7: banksNumber = 256; break;
-	case 0x8: banksNumber = 512; break;
-	case 0x52: banksNumber = pow(72, 3); break;
-	case 0x53: banksNumber = pow(80, 3); break;
-	case 0x54: banksNumber = pow(96, 3); break;
-	}
-}
-
-uint8_t Cartridge::getCurrRomBanks()
-{
-	return currRomBank;
-}
-
-uint8_t Cartridge::getCurrRamBanks()
-{
-	return currRamBank;
-}
-
-uint8_t Cartridge::RomBankRead(uint16_t adrr)
-{
-	if (adrr >= 0 && adrr <= 0x3FFF)
-		return ROM[0][adrr];
-	else if (adrr >= 0x4000 && adrr < 0x8000)
-		return ROM[(int)currRomBank][adrr - 0x4000];
-	else exit(45);
-}
-
-uint8_t Cartridge::RamBankRead(uint16_t adrr)
-{
-	//if there is RTC
-	if (cartridgeType == 0x13)
-		return currRTCReg;
-	//else
-	else return RAMBanks[adrr - 0xA000 + currRamBank * 0x2000];
-}
-
-bool Cartridge::isRamWriteEnabled()
-{
-	return enabledRAM;
-}
-
-void Cartridge::handleRomMemory(uint16_t adrr, uint8_t value)
-{
-	//MBC1 External RAM Switch
-	if (adrr < 0x2000)
-	{
-		if (cartridgeType == 2 || cartridgeType == 3)
 		{
-			uint8_t byte = value & 0xF;
-			(byte == 0xA) ? enabledRAM = true : enabledRAM = false;
+			utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+											  "Rom: \"" + filePath + "\" not found!");
+			exit(1);
 		}
 	}
 
-	//ROM Bank
-	else if (adrr >= 0x2000 && adrr < 0x4000)
+	void Cartridge::loadRom(uint8_t size, uint8_t *mem)
 	{
-		//MBC1
-		if (cartridgeType == 1 || cartridgeType == 2 || cartridgeType == 3)
+		for (int i = 0; i < size; i++)
 		{
-			uint8_t lower5bits = value & 0x1F;
-			currRomBank &= 0xE0;
-			currRomBank |= lower5bits;
-			if (currRomBank == 0)
-				currRomBank = 1;
-		}  
-		//MBC3
-		else if (cartridgeType == 0x13)
-		{
-			//MessageBox(0, "Rom/Ram Bank Change", "Bank Handler", MB_ICONINFORMATION | MB_OK);
-			uint8_t lower7bits = value & 0x7F;
-			currRomBank &= 0x80;
-			currRomBank |= lower7bits;
-			if (currRomBank == 0)
-				currRomBank = 1;
+			_rom[0][i] = mem[i];
 		}
 	}
 
-	//MBC RAM Bank/RTC
-	else if (adrr >= 0x4000 && adrr < 0x6000)
+	void Cartridge::setMBCType(const uint8_t &value)
 	{
-		//MBC1
-		if (cartridgeType == 1 || cartridgeType == 2 || cartridgeType == 3)
+		_cartridgeType = utils::uint8ToCartridgeType(value);
+	}
+
+	void Cartridge::setBankNumber(const uint8_t &value)
+	{
+		switch (value)
 		{
-			if (!mode)
+		case 0:
+			_banksNumber = 2;
+			break;
+		case 0x1:
+			_banksNumber = 4;
+			break;
+		case 0x2:
+			_banksNumber = 8;
+			break;
+		case 0x3:
+			_banksNumber = 16;
+			break;
+		case 0x4:
+			_banksNumber = 32;
+			break;
+		case 0x5:
+			_banksNumber = 64;
+			break;
+		case 0x6:
+			_banksNumber = 128;
+			break;
+		case 0x7:
+			_banksNumber = 256;
+			break;
+		case 0x8:
+			_banksNumber = 512;
+			break;
+		case 0x52:
+			_banksNumber = pow(72, 3);
+			break;
+		case 0x53:
+			_banksNumber = pow(80, 3);
+			break;
+		case 0x54:
+			_banksNumber = pow(96, 3);
+			break;
+		}
+	}
+
+	uint8_t Cartridge::getCurrRomBanks()
+	{
+		return _currRomBank;
+	}
+
+	uint8_t Cartridge::getCurrRamBanks()
+	{
+		return _currRamBank;
+	}
+
+	uint8_t Cartridge::romBankRead(const uint16_t &adrr)
+	{
+		if (adrr >= 0 && adrr <= 0x3FFF)
+		{
+			return _rom[0][adrr];
+		}
+		else if (adrr >= 0x4000 && adrr < 0x8000)
+		{
+			return _rom[(int)_currRomBank][adrr - 0x4000];
+		}
+
+		utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+										  "Invalid rom bank read");
+		exit(ExitState::CRITICAL_ERROR);
+	}
+
+	uint8_t Cartridge::ramBankRead(const uint16_t &adrr)
+	{
+		if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
+		{
+			return _currRTCReg;
+		}
+		else
+		{
+			return _ramBanks[adrr - 0xA000 + _currRamBank * 0x2000];
+		}
+	}
+
+	bool Cartridge::isRamWriteEnabled()
+	{
+		return _enabledRAM;
+	}
+
+	void Cartridge::handleRomMemory(const uint16_t &adrr, const uint8_t &value)
+	{
+		// MBC1 External RAM Switch
+		if (adrr < 0x2000)
+		{
+			if (_cartridgeType == CartridgeType::MBC1_RAM ||
+				_cartridgeType == CartridgeType::MBC1_RAM_BATT)
 			{
-				//ROM mode: Set high bits of bank
-				currRomBank &= 0x1F;
-				uint8_t upperBits = value & 0xE0;
-				currRomBank |= value;
-				if (currRomBank == 0)
-					currRomBank = 1;
+				uint8_t byte = value & 0xF;
+				_enabledRAM = (byte == 0xA) ? true : false;
 			}
-
-			//RAM mode: Set Bank
-			else currRamBank = value & 0x3;
 		}
-		//MBC3
-		else if (cartridgeType == 0x13)
-		{
-			//for RAM banking
-			if (value >= 0 && value <= 3)
-				currRamBank = value & 0x3;
 
-			//for RTC register read/write
-			else if (value >= 8 && value <= 0xC)
+		// ROM Bank
+		else if (adrr >= 0x2000 && adrr < 0x4000)
+		{
+			// MBC1
+			if (_cartridgeType == CartridgeType::MBC1 ||
+				_cartridgeType == CartridgeType::MBC1_RAM ||
+				_cartridgeType == CartridgeType::MBC1_RAM_BATT)
 			{
-				switch (value)
+				uint8_t lower5bits = value & 0x1F;
+				_currRomBank &= 0xE0;
+				_currRomBank |= lower5bits;
+				if (_currRomBank == 0)
+					_currRomBank = 1;
+			}
+			// MBC3
+			else if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
+			{
+				uint8_t lower7bits = value & 0x7F;
+				_currRomBank &= 0x80;
+				_currRomBank |= lower7bits;
+				if (_currRomBank == 0)
+					_currRomBank = 1;
+			}
+		}
+
+		// MBC RAM Bank/RTC
+		else if (adrr >= 0x4000 && adrr < 0x6000)
+		{
+			// MBC1
+			if (_cartridgeType == CartridgeType::MBC1 ||
+				_cartridgeType == CartridgeType::MBC1_RAM ||
+				_cartridgeType == CartridgeType::MBC1_RAM_BATT)
+			{
+				if (!_mode)
 				{
-				case 0x8: currRTCReg = RTCS; break;
-				case 0x9: currRTCReg = RTCM; break;
-				case 0xA: currRTCReg = RTCH; break;
-				case 0xB: currRTCReg = RTCDL; break;
-				case 0xC: currRTCReg = RTCDH; break;
-				default:
-					break;
+					// ROM mode: Set high bits of bank
+					_currRomBank &= 0x1F;
+					uint8_t upperBits = value & 0xE0;
+					_currRomBank |= value;
+					if (_currRomBank == 0)
+						_currRomBank = 1;
+				}
+				// RAM mode: Set Bank
+				else
+				{
+					_currRamBank = value & 0x3;
+				}
+			}
+			// MBC3
+			else if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
+			{
+				// for RAM banking
+				if (value >= 0 && value <= 3)
+				{
+					_currRamBank = value & 0x3;
+				}
+
+				// for RTC register read/write
+				else if (value >= 8 && value <= 0xC)
+				{
+					switch (value)
+					{
+					case 0x8:
+						_currRTCReg = RTCS;
+						break;
+					case 0x9:
+						_currRTCReg = RTCM;
+						break;
+					case 0xA:
+						_currRTCReg = RTCH;
+						break;
+					case 0xB:
+						_currRTCReg = RTCDL;
+						break;
+					case 0xC:
+						_currRTCReg = RTCDH;
+						break;
+					default:
+						break;
+					}
 				}
 			}
 		}
+
+		// MBC1: Mode switch
+		else if (adrr >= 0x6000 && adrr < 0x8000)
+		{
+			// Only for MBC1
+			if (_cartridgeType == CartridgeType::MBC1_RAM ||
+				_cartridgeType == CartridgeType::MBC1_RAM_BATT)
+			{
+				_mode = (value & 0x1);
+			}
+			// MBC3 RTC registers
+			else if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
+			{
+				// latching RTC register
+			}
+		}
 	}
 
-	//MBC1: Mode switch
-	else if (adrr >= 0x6000 && adrr < 0x8000)
+	void Cartridge::handleRamMemory(const uint16_t &adrr, const uint8_t &value)
 	{
-		//Only for MBC1
-		if (cartridgeType == 2 || cartridgeType == 3)
+		if (_enabledRAM)
 		{
-			mode = (value & 0x1);
-		}
-		//MBC3 RTC registers
-		else if (cartridgeType == 0x13)
-		{
-			//latching RTC register
+			_ramBanks[adrr - 0xA000 + _currRamBank * 0x2000] = value;
 		}
 	}
-}
-
-void Cartridge::handleRamMemory(uint16_t adrr, uint8_t value)
-{
-	if (enabledRAM)
-		RAMBanks[adrr - 0xA000 + currRamBank * 0x2000] = value;
 }

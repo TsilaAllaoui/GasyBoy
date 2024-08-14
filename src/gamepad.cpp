@@ -1,159 +1,113 @@
 #include "gamepad.h"
+#include "defs.h"
+#include "SDL.h"
 
-bool Gamepad::changedPalette = false;
-
-Gamepad::Gamepad()
+namespace gasyboy
 {
-    buttonSelected = true;
-    directionSelected = true;
-    currState = 0;
-    
-    for( int i = 0; i < 8; i++ )
-        keys[i] = false;
-}
-
-void Gamepad::handleEvent()
-{
-    SDL_Event event;
-    
-    while( SDL_PollEvent( &event ) != 0 )
+    Gamepad::Gamepad()
+        : _buttonSelected(true),
+          _directionSelected(true),
+          _changedPalette(false),
+          _state(0xF)
     {
-        if( event.type == SDL_QUIT )
-            exit( 0 );
-            
-        if( event.type == SDL_KEYDOWN )
+    }
+
+    void Gamepad::handleEvent()
+    {
+        SDL_Event event;
+
+        while (SDL_PollEvent(&event) != 0)
         {
-            switch( event.key.keysym.sym )
+            if (event.type == SDL_QUIT)
+                exit(0);
+
+            if (event.type == SDL_KEYDOWN)
             {
+                switch (event.key.keysym.sym)
+                {
                 case SDLK_ESCAPE:
-                    exit( 0 );
+                    exit(0);
                     break;
-                    
-                case SDLK_a:
-                    keys[A] = true;
-                    break;
-                    
-                case SDLK_z:
-                    keys[B] = true;
-                    break;
-                    
-                case SDLK_RETURN:
-                    keys[SELECT] = true;
-                    break;
-                    
-                case SDLK_SPACE:
-                    keys[START] = true;
-                    break;
-                    
+
                 case SDLK_UP:
-                case SDLK_o:
-                    keys[UP] = true;
+                case SDLK_RETURN:
+                    _state.reset(Button::SELECT_OR_UP);
                     break;
-                    
+
                 case SDLK_DOWN:
-                case SDLK_l:
-                    keys[DOWN] = true;
+                case SDLK_SPACE:
+                    _state.reset(Button::START_OR_DOWN);
                     break;
-                    
-                case SDLK_LEFT:
-                case SDLK_k:
-                    keys[LEFT] = true;
-                    break;
-                    
+
                 case SDLK_RIGHT:
-                case SDLK_m:
-                    keys[RIGHT] = true;
+                case SDLK_a:
+                    _state.reset(Button::A_OR_RIGHT);
                     break;
-                    
+
+                case SDLK_LEFT:
+                case SDLK_z:
+                    _state.reset(Button::B_OR_LEFT);
+                    break;
+
                 case SDLK_p:
-                    changedPalette = true;
-                    
+                    _changedPalette = true;
+                }
             }
-        }
-        
-        if( event.type == SDL_KEYUP )
-        {
-            switch( event.key.keysym.sym )
+
+            if (event.type == SDL_KEYUP)
             {
+                switch (event.key.keysym.sym)
+                {
                 case SDLK_ESCAPE:
-                    exit( 0 );
+                    exit(0);
                     break;
-                    
-                case SDLK_a:
-                    keys[A] = false;
-                    break;
-                    
-                case SDLK_z:
-                    keys[B] = false;
-                    break;
-                    
-                case SDLK_RETURN:
-                    keys[SELECT] = false;
-                    break;
-                    
-                case SDLK_SPACE:
-                    keys[START] = false;
-                    break;
-                    
+
                 case SDLK_UP:
-                case SDLK_o:
-                    keys[UP] = false;
+                case SDLK_RETURN:
+                    _state.set(Button::SELECT_OR_UP);
                     break;
-                    
+
                 case SDLK_DOWN:
-                case SDLK_l:
-                    keys[DOWN] = false;
+                case SDLK_SPACE:
+                    _state.set(Button::START_OR_DOWN);
                     break;
-                    
-                case SDLK_LEFT:
-                case SDLK_k:
-                    keys[LEFT] = false;
-                    break;
-                    
+
                 case SDLK_RIGHT:
-                case SDLK_m:
-                    keys[RIGHT] = false;
+                case SDLK_a:
+                    _state.set(Button::A_OR_RIGHT);
                     break;
+
+                case SDLK_LEFT:
+                case SDLK_z:
+                    _state.set(Button::B_OR_LEFT);
+                    break;
+                }
             }
         }
     }
-}
 
-void Gamepad::setState( uint8_t value )
-{
-    buttonSelected = ( ( value & 0x20 ) == 0x20 );
-    directionSelected = ( ( value & 0x10 ) == 0x10 );
-}
+    void Gamepad::setState(uint8_t value)
+    {
+        _buttonSelected = ((value & 0x20) == 0x20);
+        _directionSelected = ((value & 0x10) == 0x10);
+    }
 
-uint8_t Gamepad::getState()
-{
-    currState = 0xCF;
-    
-    if( !buttonSelected )
+    uint8_t Gamepad::getState()
     {
-        if( keys[A] ) currState &= ~( 1 << 0 );
-        
-        if( keys[B] ) currState &= ~( 1 << 1 );
-        
-        if( keys[SELECT] ) currState &= ~( 1 << 2 );
-        
-        if( keys[START] ) currState &= ~( 1 << 3 );
-        
-        currState |= 0x10;
+        uint8_t value = 0xC0;
+
+        value |= static_cast<uint8_t>(_state.to_ulong());
+
+        return value;
     }
-    
-    else if( !directionSelected )
+
+    void Gamepad::setChangePalette(const bool &value)
     {
-        if( keys[RIGHT] ) currState &= ~( 1 << 0 );
-        
-        if( keys[LEFT] ) currState &= ~( 1 << 1 );
-        
-        if( keys[UP] ) currState &= ~( 1 << 2 );
-        
-        if( keys[DOWN] ) currState &= ~( 1 << 3 );
-        
-        currState |= 0x20;
+        _changedPalette = value;
     }
-    
-    return currState;
+
+    bool Gamepad::getChangePalette()
+    {
+        return _changedPalette;
+    }
 }

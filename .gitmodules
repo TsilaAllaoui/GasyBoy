@@ -4,3 +4,9 @@
 [submodule "externals/gb-test-roms"]
 	path = externals/gb-test-roms
 	url = https://github.com/retrio/gb-test-roms
+[submodule "externals/argparse"]
+	path = externals/argparse
+	url = https://github.com/p-ranav/argparse
+[submodule "externals/gbit"]
+	path = externals/gbit
+	url = https://github.com/TsilaAllaoui/gbit

@@ -1,104 +1,97 @@
+#include "gbException.h"
 #include "gameboy.h"
-#include <ctime>
-#include <cstdlib>
-#include <fstream>
-#define FPS 60
+#include "logger.h"
 
-
-GameBoy::GameBoy( std::string filename )
+namespace gasyboy
 {
-    srand( time( 0 ) );
-    
-    if( filename == "" )
+    GameBoy::GameBoy(const std::string &filePath, const bool &bootBios)
+        : _gamepad(),
+          _mmu(filePath, _gamepad),
+          _registers(_mmu),
+          _interruptManager(_mmu, _registers),
+          _cpu(bootBios, _mmu, _registers, _interruptManager),
+          _gpu(_mmu),
+          _timer(_mmu, _interruptManager),
+          _cycleCounter(0)
     {
-        filename = new char[100];
-        filename = "./Roms/MBC1/PokemonRed.gb";
-    }
-    
-    //initializing SDL App
-    if( SDL_Init( SDL_INIT_EVERYTHING ) )
-    {
-        std::cout << "Error when initializing SDL App.";
-        exit( 1 );
-    }
-    
-    mmu = new Mmu( filename );
-    cpu = new Cpu( true , mmu );
-    gpu = new Gpu( mmu );
-    timer = new Timer( mmu );
-    interruptHanlder = new Interrupter( mmu, cpu );
-    gamepad = mmu->getGamepad();
-    cycleCounter = 0;
-    
-}
-
-GameBoy::~GameBoy()
-{
-    cpu->~Cpu();
-    gpu->~Gpu();
-    mmu->~Mmu();
-    timer->~Timer();
-    gamepad->~Gamepad();
-    interruptHanlder->~Interrupter();
-    //destroying window && GL context
-    SDL_GL_DeleteContext( glcontext );
-    SDL_DestroyWindow( window );
-    SDL_Quit();
-    
-}
-
-void GameBoy::step()
-{
-    int cycle = cpu->step();
-    cycleCounter += cycle;
-    timer->updateTimer( cycle );
-    gpu->step( cycle );
-    gamepad->handleEvent();
-    interruptHanlder->handleInterrupts();
-}
-
-void GameBoy::boot()
-{
-    bool exit = false;
-    int fps = 0;
-    int fpsCounter = 0;
-    
-    fps = SDL_GetTicks();
-    
-    while( !exit )
-    {
-        cycleCounter = 0;
-        int firstTime = SDL_GetTicks();
-        
-		while (cycleCounter <= 69905)
-		{
-			step();
-
-			gpu->render();
-		}
-        
-        //setting main palette
-        if( gamepad->changedPalette )
+        // Initializing SDL App
+        try
         {
-            gpu->changeMainPalette();
-            gamepad->changedPalette = false;
+            if (SDL_Init(SDL_INIT_VIDEO))
+            {
+                throw exception::GbException("Error when initializing SDL App.");
+                exit(ExitState::CRITICAL_ERROR);
+            }
         }
-        
-        
-        
-        int elapsedTime = SDL_GetTicks() - firstTime;
-        
-        
-        if( elapsedTime < 1000 / FPS )
-            SDL_Delay( 1000 / FPS - elapsedTime );
-            
-        if( SDL_GetTicks() - fps >= 1000 )
+        catch (const exception::GbException &e)
         {
-            fps = SDL_GetTicks();
-            fpsCounter = 0;
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
         }
-        
-        else fpsCounter++;
+    }
+
+    GameBoy::~GameBoy()
+    {
+        SDL_DestroyWindow(_window);
+        SDL_Quit();
+    }
+
+    void GameBoy::step()
+    {
+        const int cycle = _cpu.step();
+        _cycleCounter += cycle;
+        _timer.updateTimer(cycle);
+        _gpu.step(cycle);
+        _gamepad.handleEvent();
+        _interruptManager.handleInterrupts();
+    }
+
+    void GameBoy::boot()
+    {
+        bool exit = false;
+        int fpsCounter = 0;
+        uint32_t fps = SDL_GetTicks();
+
+        try
+        {
+            while (!exit)
+            {
+                _cycleCounter = 0;
+                int firstTime = SDL_GetTicks();
+
+                while (_cycleCounter <= 69905)
+                {
+                    step();
+                    _gpu.render();
+                }
+
+                // setting main palette
+                if (_gamepad.getChangePalette())
+                {
+                    _gpu.changeMainPalette();
+                    _gamepad.setChangePalette(false);
+                }
+
+                int elapsedTime = SDL_GetTicks() - firstTime;
+
+                if (elapsedTime < 1000 / FPS)
+                    SDL_Delay(1000 / FPS - elapsedTime);
+
+                if (SDL_GetTicks() - fps >= 1000)
+                {
+                    fps = SDL_GetTicks();
+                    fpsCounter = 0;
+                }
+                else
+                {
+                    fpsCounter++;
+                }
+            }
+        }
+        catch (const exception::GbException &e)
+        {
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
+        }
     }
 }
-
