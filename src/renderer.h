@@ -1,10 +1,6 @@
 #include "SDL.h"
-// #include <SDL2/SDL_image.h>
 #include "SDL_timer.h"
-// #include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
-// #include <unistd.h>
-
 #include <array>
 #include <bitset>
 #include <chrono>
@@ -14,55 +10,63 @@
 #include <string>
 #include <thread>
 #include <algorithm>
-
-#include "cpu.h"
 #include "interruptManager.h"
+#include "cpu.h"
 #include "mmu.h"
 #include "ppu.h"
-// #include "status.h"
 
 namespace gasyboy
 {
     class Renderer
     {
     public:
-        SDL_Window *window;
-        SDL_Renderer *renderer;
+        SDL_Window *_window;
+        SDL_Renderer *_renderer;
 
-        SDL_Texture *viewport_texture;
+        SDL_Texture *_viewportTexture;
 
-        Cpu *cpu;
-        Ppu *ppu;
-        Registers *registers;
-        InterruptManager *interrupts;
-        Mmu *mmu;
-        // Status *status;
+        Cpu &_cpu;
+        Ppu &_ppu;
+        Registers &_registers;
+        InterruptManager &_interruptManager;
+        Mmu &_mmu;
 
         // Viewport
-        int viewport_width = 160;
-        int viewport_height = 144;
-        std::array<uint8_t, 160 * 144 * 4> viewport_pixels;
-        SDL_Rect viewport_rect = {0, 0, viewport_width, viewport_height};
+        int _viewportWidth = 160;
+        int _viewportHeight = 144;
+        std::array<uint8_t, 160 * 144 * 4> _viewportPixels;
+        SDL_Rect _viewportRect = {0, 0, _viewportWidth, _viewportHeight};
 
-        int window_height = viewport_height;
-        int window_width = viewport_width;
+        int _windowHeight = _viewportHeight;
+        int _windowWidth = _viewportWidth;
 
-        // TTF_Font *font;
+        int _framerateTime = 1000 / 60;
+        std::chrono::steady_clock::time_point _startFrame;
+        std::chrono::steady_clock::time_point _endFrame;
+        void checkFramerate();
 
-        int framerate_time = 1000 / 60;
-        std::chrono::steady_clock::time_point startFrame;
-        std::chrono::steady_clock::time_point endFrame;
-        void check_framerate();
-
-        void init_window(int window_width, int window_height);
-        void draw_viewport();
+        void initWindow(int windowWidth, int windowHeight);
+        void drawViewport();
 
     public:
-        Renderer(Cpu *cpu, Ppu *ppu, Registers *registers,
-                 InterruptManager *interrupts, Mmu *mmu);
+        Renderer(Cpu &cpu,
+                 Ppu &ppu,
+                 Registers &registers,
+                 InterruptManager &interruptManager,
+                 Mmu &mmu);
+
         void render();
+
         virtual void init();
+
         virtual void draw();
+
+        enum class ColorMode : uint8_t
+        {
+            NORMAL,
+            RETRO,
+            GREY
+        };
     };
 }
 

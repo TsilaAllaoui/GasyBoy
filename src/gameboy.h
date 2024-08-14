@@ -4,7 +4,6 @@
 #include "SDL.h"
 #include "mmu.h"
 #include "cpu.h"
-// #include "gpu.h"
 #include "ppu.h"
 #include "defs.h"
 #include "timer.h"
@@ -20,7 +19,6 @@ namespace gasyboy
         Registers _registers;
         Mmu _mmu;
         Cpu _cpu;
-        // Gpu _gpu;
         Timer _timer;
         Gamepad _gamepad;
         InterruptManager _interruptManager;
@@ -34,13 +32,23 @@ namespace gasyboy
 
     public:
         GameBoy(const std::string &filePath, const bool &bootBios);
-        ~GameBoy();
+        ~GameBoy() = default;
 
         // Start the emulator
         void boot();
 
         // Step the emulator
         void step();
+
+        enum class State
+        {
+            RUNNING,
+            STOPPED,
+            PAUSED
+        };
+
+        // State of the emulator
+        static State state;
     };
 }
 

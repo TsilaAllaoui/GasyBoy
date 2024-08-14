@@ -2,90 +2,97 @@
 
 namespace gasyboy
 {
-    Renderer::Renderer(Cpu *cpu, Ppu *gpu, Registers *registers, InterruptManager *interrupts, Mmu *mmu)
+    Renderer::Renderer(Cpu &cpu,
+                       Ppu &ppu,
+                       Registers &registers,
+                       InterruptManager &interruptManager,
+                       Mmu &mmu)
+        : _cpu(cpu),
+          _ppu(ppu),
+          _registers(registers),
+          _interruptManager(interruptManager),
+          _mmu(mmu)
     {
-        this->cpu = cpu;
-        this->ppu = gpu;
-        this->registers = registers;
-        this->mmu = mmu;
-        this->interrupts = interrupts;
-        // this->status = status;
     }
 
     void Renderer::init()
     {
-        viewport_pixels.fill(0xFF);
+        // Fill pixels to white
+        _viewportPixels.fill(0xFF);
 
-        this->init_window(this->window_width, this->window_height);
+        // Iniy SDL and _window
+        initWindow(_windowWidth, _windowHeight);
 
-        this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->viewport_width, this->viewport_height);
+        // Create viewport texture
+        _viewportTexture = SDL_CreateTexture(_renderer,
+                                             SDL_PIXELFORMAT_ARGB8888,
+                                             SDL_TEXTUREACCESS_STREAMING,
+                                             _viewportWidth,
+                                             _viewportHeight);
     }
 
-    void Renderer::init_window(int window_width, int window_height)
+    void Renderer::initWindow(int windowWidth, int windowHeight)
     {
         SDL_Init(SDL_INIT_VIDEO);
 
-        SDL_CreateWindowAndRenderer(window_width * 2, window_height * 2, 0, &this->window, &this->renderer);
-        SDL_RenderSetLogicalSize(this->renderer, window_width, window_height);
-        SDL_SetWindowResizable(this->window, SDL_TRUE);
-        SDL_SetWindowTitle(this->window, mmu->getCartridgeTitle().c_str());
-
-        // //  //Initialize SDL_ttf
-        // if (TTF_Init() == -1)
-        //     printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
-
-        // font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
+        SDL_CreateWindowAndRenderer(_windowWidth * 2, _windowHeight * 2, 0, &_window, &_renderer);
+        SDL_RenderSetLogicalSize(_renderer, _windowWidth, _windowHeight);
+        SDL_SetWindowResizable(_window, SDL_TRUE);
+        SDL_SetWindowTitle(_window, "GasyBoy");
     }
 
-    void Renderer::check_framerate()
+    void Renderer::checkFramerate()
     {
-        endFrame = std::chrono::steady_clock::now();
-        auto timeTook = std::chrono::duration_cast<std::chrono::milliseconds>(endFrame - startFrame).count();
-        if (timeTook < framerate_time)
-            std::this_thread::sleep_for(std::chrono::milliseconds(framerate_time - timeTook));
+        _endFrame = std::chrono::steady_clock::now();
+        auto timeTook = std::chrono::duration_cast<std::chrono::milliseconds>(_endFrame - _startFrame).count();
 
-        startFrame = std::chrono::steady_clock::now();
+        if (timeTook < _framerateTime)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(_framerateTime - timeTook));
+        }
+
+        _startFrame = std::chrono::steady_clock::now();
     }
 
     void Renderer::render()
     {
-        this->check_framerate();
+        // Framerate check
+        checkFramerate();
 
-        // switch (this->status->colorMode)
-        // {
-        // case NORMAL:
-        SDL_SetTextureColorMod(viewport_texture, 255, 255, 255);
-        // break;
-        // case RETRO:
-        //     SDL_SetTextureColorMod(viewport_texture, 155, 188, 15);
-        //     break;
-        // case GRAY:
-        //     SDL_SetTextureColorMod(viewport_texture, 224, 219, 205);
-        //     break;
-        // }
+        ColorMode colorMode = ColorMode::NORMAL; // TODO: Make it dynamic
 
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderClear(renderer);
-        SDL_SetRenderTarget(renderer, viewport_texture);
+        switch (colorMode)
+        {
+        case ColorMode::NORMAL:
+            SDL_SetTextureColorMod(_viewportTexture, 255, 255, 255);
+            break;
+        case ColorMode::RETRO:
+            SDL_SetTextureColorMod(_viewportTexture, 155, 188, 15);
+            break;
+        case ColorMode::GREY:
+            SDL_SetTextureColorMod(_viewportTexture, 224, 219, 205);
+            break;
+        }
 
+        SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255);
+        SDL_RenderClear(_renderer);
+        SDL_SetRenderTarget(_renderer, _viewportTexture);
+
+        // Draw on viewport
         draw();
 
-        SDL_RenderCopy(renderer, viewport_texture, NULL, &this->viewport_rect);
-        SDL_RenderPresent(renderer);
+        // Present
+        SDL_RenderCopy(_renderer, _viewportTexture, NULL, &_viewportRect);
+        SDL_RenderPresent(_renderer);
     }
 
     void Renderer::draw()
     {
-        draw_viewport();
-    }
-
-    void Renderer::draw_viewport()
-    {
         for (int i = 0; i < 144 * 160; i++)
         {
-            Colour colour = ppu->_framebuffer[i];
-            std::copy(colour.colours, colour.colours + 4, viewport_pixels.begin() + i * 4);
+            Colour colour = _ppu._framebuffer[i];
+            std::copy(colour.colours, colour.colours + 4, _viewportPixels.begin() + i * 4);
         }
-        SDL_UpdateTexture(viewport_texture, NULL, viewport_pixels.data(), this->viewport_width * 4);
+        SDL_UpdateTexture(_viewportTexture, NULL, _viewportPixels.data(), _viewportWidth * 4);
     }
 }
