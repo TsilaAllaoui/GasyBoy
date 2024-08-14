@@ -4,11 +4,13 @@
 #include "SDL.h"
 #include "mmu.h"
 #include "cpu.h"
-#include "gpu.h"
+// #include "gpu.h"
+#include "ppu.h"
 #include "defs.h"
 #include "timer.h"
-#include "interruptManager.h"
 #include "gamepad.h"
+#include "renderer.h"
+#include "interruptManager.h"
 
 namespace gasyboy
 {
@@ -18,10 +20,12 @@ namespace gasyboy
         Registers _registers;
         Mmu _mmu;
         Cpu _cpu;
-        Gpu _gpu;
+        // Gpu _gpu;
         Timer _timer;
         Gamepad _gamepad;
         InterruptManager _interruptManager;
+        Ppu _ppu;
+        Renderer _renderer;
 
         int _cycleCounter;
 
