@@ -1,28 +1,29 @@
+#include <iostream>
+#include <bitset>
 #include "cartridge.h"
 #include "logger.h"
 #include "utils.h"
-#include <iostream>
-#include <bitset>
+#include "defs.h"
 
 namespace gasyboy
 {
 
 	Cartridge::Cartridge()
 	{
-		// allocating banks of External RAM
+		// Allocating banks of External RAM
 		_ramBanks = std::vector<uint8_t>(0x8000, 0);
 
-		// setting current ROM Bank && RAM Bank (ROM usually start at 1)
+		// Setting current ROM Bank && RAM Bank (ROM usually start at 1)
 		_currRomBank = 1;
 		_currRamBank = 0;
 
-		// mode for MBC1
+		// Mode for MBC1
 		_mode = true;
 
-		// the cartridge type
+		// The cartridge type
 		_cartridgeType = CartridgeType::ROM_ONLY;
 
-		// setting current used RTC register
+		// Setting current used RTC register
 		_currRTCReg = 0;
 	}
 
@@ -31,18 +32,18 @@ namespace gasyboy
 		std::ifstream rom(filePath.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
 		if (rom.is_open())
 		{
-			// reading rom file
+			// Reading rom file
 			rom.seekg(0x147, std::ios::beg);
 			char buffer[2];
 			rom.read(buffer, 2);
 
-			// setting cartridge type
+			// Setting cartridge type
 			setMBCType(buffer[0]);
 
-			// setting bank number
+			// Setting bank number
 			setBankNumber(buffer[1]);
 
-			// loading rom
+			// Loading rom
 			_rom = std::vector<std::vector<uint8_t>>(_banksNumber, std::vector<uint8_t>(0x4000, 0));
 
 			rom.seekg(0, std::ios::end);
@@ -70,31 +71,53 @@ namespace gasyboy
 
 			cartridgeHeaderInfo << "Cartridge _rom Name:  ";
 			for (int i = 0x134; i < 0x143; i++)
+			{
 				cartridgeHeaderInfo << _rom[0][i];
+			}
+
 			cartridgeHeaderInfo << std::endl
 								<< "Manufacturer:  ";
+
 			for (int i = 0x13F; i < 0x142; i++)
+			{
 				cartridgeHeaderInfo << _rom[0][i];
+			}
+
 			cartridgeHeaderInfo << std::endl
 								<< "CGB Support:  ";
+
 			if (_rom[0][0x143] == 0x80)
+			{
 				cartridgeHeaderInfo << "Yes (DMG support)" << std::endl;
+			}
 			else if (_rom[0][0x143] == 0xC0)
+			{
 				cartridgeHeaderInfo << "Yes (No DMG support)" << std::endl;
+			}
 			else
+			{
 				cartridgeHeaderInfo << "No" << std::endl;
+			}
 			cartridgeHeaderInfo << "License Code:  " << _rom[0][0x144] << _rom[0][0x145] << std::endl;
 			cartridgeHeaderInfo << "SGB Support:  ";
+
 			if (_rom[0][0x143] == 0x03)
+			{
 				cartridgeHeaderInfo << "Yes" << std::endl;
+			}
 			else if (_rom[0][0x143] == 0)
+			{
 				cartridgeHeaderInfo << "No" << std::endl;
+			}
+
 			cartridgeHeaderInfo << "Cartridge Type:  " << std::hex << (int)_rom[0][0x147] << std::endl;
 			cartridgeHeaderInfo << "_rom Size:  " << std::hex << (int)_rom[0][0x148] << std::endl;
 			cartridgeHeaderInfo << "RAM Size:  " << std::hex << (int)_rom[0][0x149] << std::endl;
 			cartridgeHeaderInfo << "Japanese:  " << ((_rom[0][0x14A] & 0x1) ? "No" : "Yes") << std::endl;
 			cartridgeHeaderInfo << "Old License Code:  " << std::hex << (int)_rom[0][0x14B] << std::endl;
 			cartridgeHeaderInfo << "Mask _rom Version:  " << std::hex << (int)_rom[0][0x14C] << std::endl;
+
+			utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, cartridgeHeaderInfo.str());
 		}
 		else
 		{
@@ -173,21 +196,29 @@ namespace gasyboy
 	uint8_t Cartridge::romBankRead(const uint16_t &adrr)
 	{
 		if (adrr >= 0 && adrr <= 0x3FFF)
+		{
 			return _rom[0][adrr];
+		}
 		else if (adrr >= 0x4000 && adrr < 0x8000)
+		{
 			return _rom[(int)_currRomBank][adrr - 0x4000];
-		else
-			exit(45);
+		}
+
+		utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+										  "Invalid rom bank read");
+		exit(ExitState::CRITICAL_ERROR);
 	}
 
 	uint8_t Cartridge::ramBankRead(const uint16_t &adrr)
 	{
-		// if there is RTC
 		if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
+		{
 			return _currRTCReg;
-		// else
+		}
 		else
+		{
 			return _ramBanks[adrr - 0xA000 + _currRamBank * 0x2000];
+		}
 	}
 
 	bool Cartridge::isRamWriteEnabled()
@@ -250,17 +281,20 @@ namespace gasyboy
 					if (_currRomBank == 0)
 						_currRomBank = 1;
 				}
-
 				// RAM mode: Set Bank
 				else
+				{
 					_currRamBank = value & 0x3;
+				}
 			}
 			// MBC3
 			else if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
 			{
 				// for RAM banking
 				if (value >= 0 && value <= 3)
+				{
 					_currRamBank = value & 0x3;
+				}
 
 				// for RTC register read/write
 				else if (value >= 8 && value <= 0xC)
@@ -309,6 +343,8 @@ namespace gasyboy
 	void Cartridge::handleRamMemory(const uint16_t &adrr, const uint8_t &value)
 	{
 		if (_enabledRAM)
+		{
 			_ramBanks[adrr - 0xA000 + _currRamBank * 0x2000] = value;
+		}
 	}
 }
