@@ -8,6 +8,7 @@
 #include "timer.h"
 #include "interruptManager.h"
 #include "gamepad.h"
+#include "ppu.h"
 
 namespace gasyboy
 {
@@ -20,6 +21,7 @@ namespace gasyboy
         Timer _timer;
         Gamepad _gamepad;
         InterruptManager _interruptManager;
+        Ppu _ppu;
 
         int _cycleCounter;
 

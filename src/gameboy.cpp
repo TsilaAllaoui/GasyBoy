@@ -11,7 +11,8 @@ namespace gasyboy
           _interruptManager(_mmu, _registers),
           _cpu(bootBios, _mmu, _registers, _interruptManager),
           _timer(_mmu, _interruptManager),
-          _cycleCounter(0)
+          _cycleCounter(0),
+          _ppu(_mmu)
     {
     }
 
@@ -23,6 +24,7 @@ namespace gasyboy
     {
         const int cycle = _cpu.step();
         _cycleCounter += cycle;
+        _ppu.step(cycle);
         _timer.updateTimer(cycle);
         _gamepad.handleEvent();
         _interruptManager.handleInterrupts();
@@ -45,6 +47,8 @@ namespace gasyboy
                 {
                     step();
                 }
+
+                // _ppu.render();
 
                 int elapsedTime = SDL_GetTicks() - firstTime;
 
