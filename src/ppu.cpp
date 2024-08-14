@@ -22,16 +22,6 @@ namespace gasyboy
     {
         _modeClock += cycle;
 
-        if (cycle > 69800 == 0)
-        {
-            for (int i = 0; i < 160; i++)
-                for (int j = 0; j < 144; j++)
-                    _framebuffer[i * 144 + j] =
-                        {static_cast<uint8_t>(rand() % 255), static_cast<uint8_t>(rand() % 255), static_cast<uint8_t>(rand() % 255), static_cast<uint8_t>(rand() % 255)};
-            _canRender = true;
-        }
-        return;
-
         if (!_control->lcdEnable)
         {
             _mode = 0;

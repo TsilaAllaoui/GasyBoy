@@ -75,7 +75,7 @@ namespace gasyboy
                     _renderer.render();
                     _ppu._canRender = false;
                 }
-                // // setting main palette
+                // setting main palette
                 // if (_gamepad.getChangePalette())
                 // {
                 //     _gpu.changeMainPalette();

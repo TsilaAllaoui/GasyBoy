@@ -240,7 +240,10 @@ namespace gasyboy
             // OAM DMA Transfert
             else if (address == 0xFF46)
             {
-                doDmaTransfert(value);
+                // doDmaTransfert(value);
+                if (address == 0xFF46)
+                    for (uint16_t i = 0; i < 160; i++)
+                        writeRam(0xFE00 + i, readRam((value << 8) + i));
                 return;
             }
 
