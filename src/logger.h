@@ -20,6 +20,7 @@ namespace gasyboy
         public:
             ~Logger() = default;
 
+            // Type of log
             enum class LogType
             {
                 FUNCTIONAL,

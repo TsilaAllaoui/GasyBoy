@@ -7,7 +7,7 @@
 #include "mmu.h"
 #include <memory>
 
-// class of the gameboy CPU (nearly the same as the z80)
+// Class of the gameboy CPU (nearly the same as the z80)
 
 namespace gasyboy
 {
@@ -23,28 +23,28 @@ namespace gasyboy
 		// Interrupt Manager
 		InterruptManager &_interruptManager;
 
-		// the current opcode pointed by the PC
+		// The current opcode pointed by the PC
 		uint8_t _currentOpcode;
 		uint8_t _prevOpcode;
 
-		// the cycle counter of the cpu
+		// The cycle counter of the cpu
 		long _cycle;
 
 	public:
-		// contructor/destructor
+		// Contructor/destructor
 		Cpu(const bool &bootBios, Mmu &mmu, Registers &registers, InterruptManager &interruptManager);
 		~Cpu() = default;
 
-		// a step of the cpu
+		// A step of the cpu
 		long step();
 
-		// execute the next opcode pointed by the pc
+		// Execute the next opcode pointed by the pc
 		void execute();
 
-		// fetch the current opcode
+		// Fetch the current opcode
 		void fetch();
 
-		// getters
+		// Getters
 		uint16_t getRegister(const std::string &reg);
 		uint8_t getRegister(const char &reg);
 
@@ -63,36 +63,36 @@ namespace gasyboy
 
 		/*******8bits load group instructions*******/
 
-		// load a register value to another regsiter
+		// Load a register value to another regsiter
 		void LD_r_r(const char &from, const char &to);
 
-		// load a 8bit integer in a register
+		// Load a 8bit integer in a register
 		void LD_r_n(const uint8_t &from, const char &to);
 
-		// load memory value at a 16bit adress to a register
+		// Load memory value at a 16bit adress to a register
 		void LD_r_16(const uint16_t &adress, const char &to);
 
-		// the content of the register is loaded at the memory location of a 16bit adress
+		// The content of the register is loaded at the memory location of a 16bit adress
 		void LD_16_r(const uint16_t &adress, const char &from);
 
-		// an integer is loaded at the memory location of a 16bit adress
+		// An integer is loaded at the memory location of a 16bit adress
 		void LD_16_n(const uint16_t &adress, const uint8_t &value);
 
 		/*******16bits load group instructions*******/
 
-		// a 16bits integer is loaded in a 16bits register pair
+		// A 16bits integer is loaded in a 16bits register pair
 		void LD_rr_nn(const uint16_t &value, const std::string &reg);
 
-		// load the content of the nex two bytes in memory starting at an adress to the appropriate 16bits register
+		// Load the content of the nex two bytes in memory starting at an adress to the appropriate 16bits register
 		void LD_rr_16(const uint16_t &adress, const std::string &reg);
 
-		// load the content of a 16bit register at memory adress
+		// Load the content of a 16bit register at memory adress
 		void LD_16_rr(const uint16_t &adress, const std::string &reg);
 
-		// load in SP the content of HL
+		// Load in SP the content of HL
 		void LD_SP_HL();
 
-		// load HL with the sum of SP && the next immediate byte
+		// Load HL with the sum of SP && the next immediate byte
 		void LD_HL_SP_n();
 
 		// push a 16bit register content to SP
@@ -103,26 +103,26 @@ namespace gasyboy
 
 		/********8bit Arithmetic group instructions*********/
 
-		// add A && an 8bit register && store the result in A
+		// Add A && an 8bit register && store the result in A
 		void ADD_A_r(const char &reg);
 
-		// add A && an 8bit integer && store the result in A
+		// Add A && an 8bit integer && store the result in A
 		void ADD_A_n(const uint8_t &value);
 
-		// add A && an 8bit integer at an adress memory && store the result in A
+		// Add A && an 8bit integer at an adress memory && store the result in A
 		void ADD_A_16();
 
-		// add the content of the operand && the carry flag with A && store it in A
+		// Add the content of the operand && the carry flag with A && store it in A
 		void ADC_A_r(const char &reg);
 		void ADC_A_n(const uint8_t &value);
 		void ADC_A_16();
 
-		// substract the content of A && the operand && store it in A
+		// Substract the content of A && the operand && store it in A
 		void SUB_r(const char &reg);
 		void SUB_n(const uint8_t &value);
 		void SUB_16();
 
-		// substract the content of A && the operand along with carry flag && store it in A
+		// Substract the content of A && the operand along with carry flag && store it in A
 		void SBC_r(const char &reg);
 		void SBC_n(const uint8_t &value);
 		void SBC_16();
@@ -142,21 +142,21 @@ namespace gasyboy
 		void XOR_n(const uint8_t &value);
 		void XOR_16();
 
-		// compare the Accumulator && the operand
+		// Compare the Accumulator && the operand
 		void CP_r(const char &reg);
 		void CP_n(const uint8_t &reg);
 		void CP_16();
 
-		// increment a 8bit register
+		// Increment a 8bit register
 		void INC_r(const char &reg);
 
-		// increment the value at memory pointed by HL
+		// Increment the value at memory pointed by HL
 		void INC_16();
 
-		// decrement a 8bit register
+		// Decrement a 8bit register
 		void DEC_r(const char &reg);
 
-		// decrement the value at memory pointed by HL
+		// Decrement the value at memory pointed by HL
 		void DEC_16();
 
 		/********General Purpose Arithmetic && CPU Control group instructions*********/
@@ -164,44 +164,44 @@ namespace gasyboy
 		// Decimal Adjust
 		void DAA();
 
-		// the accumulator is inverted (complemented)
+		// The accumulator is inverted (complemented)
 		void CPL();
 
-		// the carry flag is inverted
+		// The carry flag is inverted
 		void CCF();
 
-		// set carry flag
+		// Set carry flag
 		void SCF();
 
-		// no operation
+		// No operation
 		void NOP();
 
 		// halting the cpu
 		void HALT();
 
-		// disable maskable interrupt of the cpu
+		// Disable maskable interrupt of the cpu
 		void DI();
 
-		// enable maskable interrupt of the cpu
+		// Enable maskable interrupt of the cpu
 		void EI();
 
 		/********16bit Arithmetic group instructions*********/
 
-		// add HL && another 16bits register
+		// Add HL && another 16bits register
 		void ADD_HL_rr(const std::string &reg);
 
 		void ADD_SP_n();
 
-		// add HL && the carryflag with another 16bits register
+		// Add HL && the carryflag with another 16bits register
 		void ADC_HL_rr(const std::string &reg);
 
-		// substract HL with the carryflag && another 16bits register
+		// Substract HL with the carryflag && another 16bits register
 		void SBC_HL_rr(const std::string &reg);
 
-		// increment a 16bit register
+		// Increment a 16bit register
 		void INC_rr(const std::string &reg);
 
-		// decrement a 168bit register
+		// Decrement a 168bit register
 		void DEC_rr(const std::string &reg);
 
 		/********Rotate && Shift group instructions*********/
@@ -221,110 +221,110 @@ namespace gasyboy
 		// Rotate left a 8bit register with carry
 		void RLC_r(const char &reg);
 
-		// rotate left a 8bit register
+		// Rotate left a 8bit register
 		void RL_r(const char &reg);
 
-		// rotate left value pointed by HL
+		// Rotate left value pointed by HL
 		void RL_16();
 
 		// Rotate left a 8bit value pointed by HL with carry
 		void RLC_16();
 
-		// rotate rigth a 8bit register with carry
+		// Rotate rigth a 8bit register with carry
 		void RRC_r(const char &reg);
 
-		// rotate rigth a 8bit register
+		// Rotate rigth a 8bit register
 		void RR_r(const char &reg);
 
-		// rotate right value pointed by HL
+		// Rotate right value pointed by HL
 		void RR_16();
 
 		// Rotate rigth a 8bit value pointed by HL with carry
 		void RRC_16();
 
-		// shift left a 8bit register
+		// Shift left a 8bit register
 		void SLA_r(const char &reg);
 
-		// shift left a value at HL
+		// Shift left a value at HL
 		void SLA_16();
 
-		// shift right a 8bit register without changing bit7
+		// Shift right a 8bit register without changing bit7
 		void SRA_r(const char &reg);
 
-		// shift right a value at HL without changing bit7
+		// Shift right a value at HL without changing bit7
 		void SRA_16();
 
-		// shift right a 8bit register && reset bit7
+		// Shift right a 8bit register && reset bit7
 		void SRL_r(const char &reg);
 
-		// shift right a value pointed by HL && reset bit7
+		// Shift right a value pointed by HL && reset bit7
 		void SRL_16();
 
-		// swap upper with lower nibbles
+		// Swap upper with lower nibbles
 		void SWAP_r(const char &reg);
 		void SWAP_16();
 
 		/***********Bit Set/Reset/Test group instructions********************/
 
-		// check if bit n is set in a 8bit register && set flags accordingly
+		// Check if bit n is set in a 8bit register && set flags accordingly
 		void BIT_b_r(const int &bit, const char &reg);
 
-		// check if bit n is set in a 8bit value pointed by HL register && set flags accordingly
+		// Check if bit n is set in a 8bit value pointed by HL register && set flags accordingly
 		void BIT_b_16(const int &bit);
 
-		// set bit n in 8bit register
+		// Set bit n in 8bit register
 		void SET_b_r(const int &b, const char &reg);
 
-		// set bit n in 8bit value pointed by HL register
+		// Set bit n in 8bit value pointed by HL register
 		void SET_b_16(const int &b);
 
-		// reset bit n in a 8bit register
+		// Reset bit n in a 8bit register
 		void RES_b_r(const int &b, const char &reg);
 
-		// reset bit n in memory pointed by HL
+		// Reset bit n in memory pointed by HL
 		void RES_b_16(const int &b);
 
 		/**********************Jump group instructions**************/
 
-		// jump to adress
+		// Jump to adress
 		void JP_16(const uint16_t &adress);
 
-		// jump with conditions
+		// Jump with conditions
 		void JP_c_16(const std::string &condition, const uint16_t &adress);
 
-		// jump relative
+		// Jump relative
 		void JR_e(const uint8_t &value);
 
-		// jump relative with set C flag condition
+		// Jump relative with set C flag condition
 		void JR_C_e(const uint8_t &value);
 
-		// jump relative with not set C flag condition
+		// Jump relative with not set C flag condition
 		void JR_NC_e(const uint8_t &value);
 
-		// jump relative with set Z flag condition
+		// Jump relative with set Z flag condition
 		void JR_Z_e(const uint8_t &value);
 
-		// jump relative with not set Z flag condition
+		// Jump relative with not set Z flag condition
 		void JR_NZ_e(const uint8_t &value);
 
-		// jump to HL
+		// Jump to HL
 		void JP_16();
 
 		/******************Call/Return Group intruction*********************/
 
-		// subroutine jump
+		// Subroutine jump
 		void CALL();
 
-		// subroutine jump with condition
+		// Subroutine jump with condition
 		void CALL_c(const std::string &condition);
 
-		// return from subroutine
+		// Return from subroutine
 		void RET();
 
-		// return from subroutine with condition
+		// Return from subroutine with condition
 		void RET_c(const std::string &condition);
 
-		// return fomr interrupt
+		// Return fomr interrupt
 		void RETI();
 
 		// RST Routines

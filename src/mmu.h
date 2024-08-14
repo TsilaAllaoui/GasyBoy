@@ -124,6 +124,7 @@ namespace gasyboy
         // set vramWritten status
         void setVramWriteStatus(const bool &value);
 
+        // unset dma written
         void unsetDMAWritten();
     };
 }

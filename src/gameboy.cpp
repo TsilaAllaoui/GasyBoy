@@ -2,8 +2,6 @@
 #include "gameboy.h"
 #include "logger.h"
 
-#define FPS 60
-
 namespace gasyboy
 {
     GameBoy::GameBoy(const std::string &filePath, const bool &bootBios)
@@ -68,10 +66,10 @@ namespace gasyboy
                 }
 
                 // setting main palette
-                if (_gamepad.changedPalette)
+                if (_gamepad.getChangePalette())
                 {
                     _gpu.changeMainPalette();
-                    _gamepad.changedPalette = false;
+                    _gamepad.setChangePalette(false);
                 }
 
                 int elapsedTime = SDL_GetTicks() - firstTime;

@@ -14,6 +14,7 @@ namespace gasyboy
 #define SPEED 3.6
 #define MEM_ACCESS_READ 0
 #define MEM_ACCESS_WRITE 1
+#define FPS 60
 
     enum ExitState
     {

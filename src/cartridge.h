@@ -15,32 +15,32 @@ namespace gasyboy
         // ROM memory
         std::vector<std::vector<uint8_t>> _rom;
 
-        // the current ROM bank
+        // The current ROM bank
         uint8_t _currRomBank;
 
         // RAM banks
         std::vector<uint8_t> _ramBanks;
 
-        // the current RAM Bank
+        // The current RAM Bank
         uint8_t _currRamBank;
 
-        // for checking if RAM is writable
+        // For checking if RAM is writable
         bool _enabledRAM;
 
         // RTC registers
         uint8_t RTCS, RTCM, RTCH, RTCDL, RTCDH;
 
-        // curren tused RTC register mapped in 0xA000-0xBFFFF
+        // Current used RTC register mapped in 0xA000-0xBFFFF
         uint8_t _currRTCReg;
 
         // MBC mode
         bool _mode;
 
-        // number of banks of the ROM
+        // Number of banks of the ROM
         int _banksNumber;
 
     public:
-        // constructor/destructor
+        // Constructor/destructor
         Cartridge();
         ~Cartridge() = default;
 
@@ -75,22 +75,22 @@ namespace gasyboy
             HuC1_RAM_BATT = 0xFF
         };
 
-        // cartridge type
+        // Cartridge type
         CartridgeType _cartridgeType;
 
-        // loading ROM
+        // Loading ROM
         void loadRom(const std::string &filename);
 
         // For debugging
         void loadRom(uint8_t size, uint8_t *mem);
 
-        // set MBC type
+        // Set MBC type
         void setMBCType(const uint8_t &value);
 
-        // set rom banks number
+        // Set rom banks number
         void setBankNumber(const uint8_t &value);
 
-        // getters && setters
+        // Getters && setters
         uint8_t getCurrRomBanks();
         uint8_t getCurrRamBanks();
         bool isRamWriteEnabled();
@@ -101,7 +101,7 @@ namespace gasyboy
         // RAM Bank reading
         uint8_t ramBankRead(const uint16_t &adrr);
 
-        // to handle all bank changes
+        // To handle all bank changes
         void handleRomMemory(const uint16_t &adrr, const uint8_t &value);
         void handleRamMemory(const uint16_t &adrr, const uint8_t &value);
     };
