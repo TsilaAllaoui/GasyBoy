@@ -133,20 +133,16 @@ namespace gasyboy
         if (!_buttonSelected)
         {
             if (_keys[A])
-                // _currState &= ~(1 << 0);
-                ;
+                _currState &= ~(1 << 0);
 
             if (_keys[B])
-                // _currState &= ~(1 << 1);
-                ;
+                _currState &= ~(1 << 1);
 
             if (_keys[SELECT])
-                // _currState &= ~(1 << 2);
-                ;
+                _currState &= ~(1 << 2);
 
             if (_keys[START])
-                // _currState &= ~(1 << 3);
-                ;
+                _currState &= ~(1 << 3);
 
             _currState |= 0x10;
         }
@@ -154,20 +150,16 @@ namespace gasyboy
         else if (!_directionSelected)
         {
             if (_keys[RIGHT])
-                // _currState &= ~(1 << 0);
-                ;
+                _currState &= ~(1 << 0);
 
             if (_keys[LEFT])
-                // _currState &= ~(1 << 1);
-                ;
+                _currState &= ~(1 << 1);
 
             if (_keys[UP])
-                // _currState &= ~(1 << 2);
-                ;
+                _currState &= ~(1 << 2);
 
             if (_keys[DOWN])
-                // _currState &= ~(1 << 3);
-                ;
+                _currState &= ~(1 << 3);
 
             _currState |= 0x20;
         }

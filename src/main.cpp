@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-    gasyboy::GameBoy("D:/Tsila/GB/TETRIS.gb", true).boot();
+    gasyboy::GameBoy("c:/Users/trasoloallaoui/C++/Tetris.gb", true).boot();
 
     argparse::ArgumentParser program("gasyboy");
 

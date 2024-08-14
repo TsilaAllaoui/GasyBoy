@@ -45,7 +45,7 @@ namespace gasyboy
         bool _executeBios;
 
         // context of the gamepad
-        Gamepad _gamepad;
+        Gamepad &_gamepad;
 
         // the actual cartridge
         Cartridge _cartridge;
@@ -81,14 +81,14 @@ namespace gasyboy
         bool _oamDataIn;
 
         // construcor/destructor
-        Mmu();
         Mmu(const std::string &romFilePath, Gamepad &gamepad);
 
         // For debugging
         Mmu(uint8_t size,
             uint8_t *mem,
             int *num_mem_accesses,
-            void *mem_accesses);
+            void *mem_accesses,
+            Gamepad &gamepad);
 
         ~Mmu() = default;
 

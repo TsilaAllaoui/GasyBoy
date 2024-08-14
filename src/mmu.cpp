@@ -5,24 +5,6 @@
 
 namespace gasyboy
 {
-    Mmu::Mmu()
-        : _vRam(std::vector<uint8_t>(0x2000, 0)),
-          _extRam(std::vector<uint8_t>(0x2000, 0)),
-          _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(true),
-          _cartridge(),
-          _gamepad(),
-          _currModifiedTile(-1),
-          _dmaRegionWritten(false),
-          _romFilePath("")
-    {
-        // setting joypad to off
-        _workingRam[0xFFFF - 0xC000] = 0xFF;
-
-        // set debug mode to true
-        _debugMode = true;
-    }
-
     Mmu::Mmu(const std::string &romFilePath, Gamepad &gamepad)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
@@ -63,7 +45,17 @@ namespace gasyboy
     Mmu::Mmu(uint8_t size,
              uint8_t *mem,
              int *num_mem_accesses,
-             void *mem_accesses) : Mmu()
+             void *mem_accesses,
+             Gamepad &gamepad)
+        : _vRam(std::vector<uint8_t>(0x2000, 0)),
+          _extRam(std::vector<uint8_t>(0x2000, 0)),
+          _workingRam(std::vector<uint8_t>(0x4000, 0)),
+          _executeBios(true),
+          _gamepad(gamepad),
+          _cartridge(),
+          _currModifiedTile(-1),
+          _dmaRegionWritten(false),
+          _romFilePath("")
     {
         _mem = mem;
         _memSize = size;

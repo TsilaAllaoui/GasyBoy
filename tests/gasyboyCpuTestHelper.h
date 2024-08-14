@@ -1,6 +1,7 @@
 #include <string.h>
 #include <memory>
 #include "interruptManager.h"
+#include "gamepad.h"
 #include "tester.h"
 #include "mmu.h"
 #include "cpu.h"
@@ -12,6 +13,7 @@ public:
     static std::shared_ptr<gasyboy::Registers> registers;
     static std::shared_ptr<gasyboy::Cpu> cpu;
     static std::shared_ptr<gasyboy::InterruptManager> im;
+    static std::shared_ptr<gasyboy::Gamepad> gamepad;
 
     GasyBoyCpuTestHelper() = default;
     ~GasyBoyCpuTestHelper() = default;
