@@ -165,27 +165,27 @@ namespace gasyboy
         // if writing to _vRam
         else if (address >= 0x8000 && address < 0xA000)
         {
+            // for notifying gpu that _vRam was modified && need t
+            if (address <= 0x97FF)
+            {
+                int MSB;
+
+                if (((address & 0xF000)) == 0x8000)
+                    MSB = 0;
+                else
+                    MSB = 1;
+
+                int multiplier = ((address - 0x8000) & 0xF00) >> 8;
+                int index = ((address - 0x8000) & 0xF0) >> 4;
+                _currModifiedTile = (index + multiplier * 16 + 256 * MSB);
+            }
+
+            _vRam[address - 0x8000] = value;
             if (address >= 0x8000 && address < 0x9800)
             {
                 updateTile(address, value);
                 return;
             }
-            // // for notifying gpu that _vRam was modified && need t
-            // if (address <= 0x97FF)
-            // {
-            //     int MSB;
-
-            //     if (((address & 0xF000)) == 0x8000)
-            //         MSB = 0;
-            //     else
-            //         MSB = 1;
-
-            //     int multiplier = ((address - 0x8000) & 0xF00) >> 8;
-            //     int index = ((address - 0x8000) & 0xF0) >> 4;
-            //     _currModifiedTile = (index + multiplier * 16 + 256 * MSB);
-            // }
-
-            // _vRam[address - 0x8000] = value;
         }
 
         // writing to _extRam
@@ -348,7 +348,8 @@ namespace gasyboy
         {
             bitIndex = 1 << (7 - x);
 
-            tiles[tile].pixels[y][x] = ((readRam(address) & bitIndex) ? 1 : 0) + ((readRam(address + 1) & bitIndex) ? 2 : 0);
+            tiles[tile].pixels[y][x] =
+                ((readRam(address) & bitIndex) ? 1 : 0) + ((readRam(address + 1) & bitIndex) ? 2 : 0);
         }
     }
 

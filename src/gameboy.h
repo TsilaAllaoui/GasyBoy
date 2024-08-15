@@ -23,7 +23,7 @@ namespace gasyboy
         Gamepad _gamepad;
         InterruptManager _interruptManager;
         Ppu _ppu;
-        Renderer _renderer;
+        DebugRenderer *_renderer;
 
         int _cycleCounter;
 

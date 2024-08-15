@@ -15,11 +15,12 @@ namespace gasyboy
           _cpu(bootBios, _mmu, _registers, _interruptManager),
           _timer(_mmu, _interruptManager),
           _cycleCounter(0),
-          _ppu(_registers, _interruptManager, _mmu),
-          _renderer(_cpu, _ppu, _registers, _interruptManager, _mmu)
+          _ppu(_registers, _interruptManager, _mmu)
+    //   _renderer(_cpu, _ppu, _registers, _interruptManager, _mmu)
     {
+        _renderer = new DebugRenderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
         // Init renderer
-        _renderer.init();
+        _renderer->init();
     }
 
     void GameBoy::step()
@@ -47,7 +48,7 @@ namespace gasyboy
 
                 if (_ppu._canRender)
                 {
-                    _renderer.render();
+                    _renderer->render();
                     _ppu._canRender = false;
                 }
             }
