@@ -1,9 +1,6 @@
 [submodule "externals/SDL"]
 	path = externals/SDL
 	url = https://github.com/libsdl-org/SDL
-[submodule "externals/gb-test-roms"]
-	path = externals/gb-test-roms
-	url = https://github.com/retrio/gb-test-roms
 [submodule "externals/argparse"]
 	path = externals/argparse
 	url = https://github.com/p-ranav/argparse

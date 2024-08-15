@@ -24,7 +24,8 @@ namespace gasyboy
             VBlank = 0,  // V-Blank Type
             LCDStat = 1, // LCD Status Type
             Timer = 2,   // Timer Type
-            Serial = 4   // Serial Type
+            Serial = 3,  // Serial Type
+            Joypad = 4   // Joypad Type
         };
 
         enum class InterruptAddress

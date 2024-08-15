@@ -181,6 +181,11 @@ namespace gasyboy
             }
 
             _vRam[address - 0x8000] = value;
+            if (address >= 0x8000 && address < 0x9800)
+            {
+                updateTile(address, value);
+                return;
+            }
         }
 
         // writing to _extRam
@@ -191,10 +196,16 @@ namespace gasyboy
         else if (address >= 0xC000 && address <= 0xFFFF)
         {
             // writing to _workingRam
-            if (address >= 0xE000 && address <= 0xFE00)
+            if (address >= 0xE000 && address < 0xFE00)
             {
                 _workingRam[address - 0xC000] = value;
                 _workingRam[address - 0x2000 - 0xC000] = value;
+            }
+
+            else if (address >= 0xFE00 && address <= 0xFE9F)
+            {
+                updateSprite(address, value);
+                return;
             }
 
             // for unsupported write in _workingRam
@@ -229,7 +240,26 @@ namespace gasyboy
             // OAM DMA Transfert
             else if (address == 0xFF46)
             {
-                doDmaTransfert(value);
+                // doDmaTransfert(value);
+                if (address == 0xFF46)
+                    for (uint16_t i = 0; i < 160; i++)
+                        writeRam(0xFE00 + i, readRam((value << 8) + i));
+                return;
+            }
+
+            else if (address == 0xff47)
+            {
+                updatePalette(palette_BGP, value);
+                return;
+            }
+            else if (address == 0xff48)
+            {
+                updatePalette(palette_OBP0, value);
+                return;
+            }
+            else if (address == 0xff49)
+            {
+                updatePalette(palette_OBP1, value);
                 return;
             }
 
@@ -294,5 +324,64 @@ namespace gasyboy
     void Mmu::unsetDMAWritten()
     {
         _dmaRegionWritten = false;
+    }
+
+    std::string Mmu::getCartridgeTitle()
+    {
+        return "TODO: get title"; // TODO
+    }
+
+    void *Mmu::ramCellptr(const uint16_t &pos)
+    {
+        return &_workingRam[pos - 0xC000];
+    }
+
+    void Mmu::updateTile(uint16_t laddress, uint8_t value)
+    {
+        uint16_t address = laddress & 0xFFFE;
+
+        uint16_t tile = (address >> 4) & 511;
+        uint16_t y = (address >> 1) & 7;
+
+        uint8_t bitIndex;
+        for (uint8_t x = 0; x < 8; x++)
+        {
+            bitIndex = 1 << (7 - x);
+
+            tiles[tile].pixels[y][x] =
+                ((readRam(address) & bitIndex) ? 1 : 0) + ((readRam(address + 1) & bitIndex) ? 2 : 0);
+        }
+    }
+
+    void Mmu::updateSprite(uint16_t laddress, uint8_t value)
+    {
+        uint16_t address = laddress - 0xFE00;
+        Sprite *sprite = &sprites[address >> 2];
+        sprite->ready = false;
+        switch (address & 3)
+        {
+        case 0:
+            sprite->y = value - 16;
+            break;
+        case 1:
+            sprite->x = value - 8;
+            break;
+        case 2:
+            sprite->tile = value;
+            break;
+        case 3:
+            sprite->options.value = value;
+            sprite->colourPalette = (sprite->options.paletteNumber) ? palette_OBP1 : palette_OBP0;
+            sprite->ready = true;
+            break;
+        }
+    }
+
+    void Mmu::updatePalette(Colour *palette, uint8_t value)
+    {
+        palette[0] = palette_colours[value & 0x3];
+        palette[1] = palette_colours[(value >> 2) & 0x3];
+        palette[2] = palette_colours[(value >> 4) & 0x3];
+        palette[3] = palette_colours[(value >> 6) & 0x3];
     }
 }

@@ -3,7 +3,7 @@
 
 namespace gasyboy
 {
-#define MAXCYCLE 70224
+#define MAXCYCLE 69905
 #define SCALE 2
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
