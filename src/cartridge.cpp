@@ -69,10 +69,10 @@ namespace gasyboy
 			// Log cartridge informations
 			std::stringstream cartridgeHeaderInfo;
 
-			cartridgeHeaderInfo << "Cartridge _rom Name:  ";
+			cartridgeHeaderInfo << "ROM Name:  ";
 			for (int i = 0x134; i < 0x143; i++)
 			{
-				cartridgeHeaderInfo << _rom[0][i];
+				cartridgeHeaderInfo << static_cast<char>(_rom[0][i]);
 			}
 
 			cartridgeHeaderInfo << std::endl
@@ -80,7 +80,7 @@ namespace gasyboy
 
 			for (int i = 0x13F; i < 0x142; i++)
 			{
-				cartridgeHeaderInfo << _rom[0][i];
+				cartridgeHeaderInfo << static_cast<char>(_rom[0][i]);
 			}
 
 			cartridgeHeaderInfo << std::endl
@@ -98,7 +98,9 @@ namespace gasyboy
 			{
 				cartridgeHeaderInfo << "No" << std::endl;
 			}
+
 			cartridgeHeaderInfo << "License Code:  " << _rom[0][0x144] << _rom[0][0x145] << std::endl;
+
 			cartridgeHeaderInfo << "SGB Support:  ";
 
 			if (_rom[0][0x143] == 0x03)
@@ -110,20 +112,20 @@ namespace gasyboy
 				cartridgeHeaderInfo << "No" << std::endl;
 			}
 
-			cartridgeHeaderInfo << "Cartridge Type:  " << std::hex << (int)_rom[0][0x147] << std::endl;
-			cartridgeHeaderInfo << "_rom Size:  " << std::hex << (int)_rom[0][0x148] << std::endl;
-			cartridgeHeaderInfo << "RAM Size:  " << std::hex << (int)_rom[0][0x149] << std::endl;
-			cartridgeHeaderInfo << "Japanese:  " << ((_rom[0][0x14A] & 0x1) ? "No" : "Yes") << std::endl;
-			cartridgeHeaderInfo << "Old License Code:  " << std::hex << (int)_rom[0][0x14B] << std::endl;
-			cartridgeHeaderInfo << "Mask _rom Version:  " << std::hex << (int)_rom[0][0x14C] << std::endl;
+			cartridgeHeaderInfo << "Cartridge Type:  " << static_cast<uint8_t>(_rom[0][0x147]) << std::endl;
+			cartridgeHeaderInfo << "Rom Size:  " << 32 * static_cast<uint8_t>(_rom[0][0x148]) << "KiB" << std::endl;
+			cartridgeHeaderInfo << "RAM Size:  " << static_cast<uint8_t>(_rom[0][0x149]) << std::endl;
+			cartridgeHeaderInfo << "Japanese Cartridge:  " << ((_rom[0][0x14A] & 0x1) ? "No" : "Yes") << std::endl;
+			cartridgeHeaderInfo << "Old License Code:  " << static_cast<uint8_t>(_rom[0][0x14B]) << std::endl;
+			cartridgeHeaderInfo << "Mask Rom Version:  " << static_cast<uint8_t>(_rom[0][0x14C]) << std::endl;
 
-			utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, cartridgeHeaderInfo.str());
+			utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "\n" + cartridgeHeaderInfo.str());
 		}
 		else
 		{
 			utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
 											  "Rom: \"" + filePath + "\" not found!");
-			exit(1);
+			exit(ExitState::CRITICAL_ERROR);
 		}
 	}
 
@@ -346,5 +348,10 @@ namespace gasyboy
 		{
 			_ramBanks[adrr - 0xA000 + _currRamBank * 0x2000] = value;
 		}
+	}
+
+	std::string Cartridge::getGameName()
+	{
+		return _romName;
 	}
 }

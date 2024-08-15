@@ -39,6 +39,9 @@ namespace gasyboy
         // Number of banks of the ROM
         int _banksNumber;
 
+        // The name of the current game in the cartridge
+        std::string _romName;
+
     public:
         // Constructor/destructor
         Cartridge();
@@ -104,6 +107,9 @@ namespace gasyboy
         // To handle all bank changes
         void handleRomMemory(const uint16_t &adrr, const uint8_t &value);
         void handleRamMemory(const uint16_t &adrr, const uint8_t &value);
+
+        // Get game name
+        std::string getGameName();
     };
 }
 
