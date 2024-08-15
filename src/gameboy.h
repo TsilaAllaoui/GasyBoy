@@ -23,7 +23,7 @@ namespace gasyboy
         Gamepad _gamepad;
         InterruptManager _interruptManager;
         Ppu _ppu;
-        DebugRenderer *_renderer;
+        Renderer *_renderer;
 
         int _cycleCounter;
 
@@ -31,8 +31,8 @@ namespace gasyboy
         SDL_Rect _tile_map_pos, _bg_map_pos;
 
     public:
-        GameBoy(const std::string &filePath, const bool &bootBios);
-        ~GameBoy() = default;
+        GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
+        ~GameBoy();
 
         // Start the emulator
         void boot();

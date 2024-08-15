@@ -7,7 +7,7 @@ namespace gasyboy
     // Set emulator state
     GameBoy::State GameBoy::state = State::RUNNING;
 
-    GameBoy::GameBoy(const std::string &filePath, const bool &bootBios)
+    GameBoy::GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode)
         : _gamepad(),
           _mmu(filePath, _gamepad),
           _registers(_mmu),
@@ -18,9 +18,18 @@ namespace gasyboy
           _ppu(_registers, _interruptManager, _mmu)
     //   _renderer(_cpu, _ppu, _registers, _interruptManager, _mmu)
     {
-        _renderer = new DebugRenderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
+        if (debugMode)
+            _renderer = new DebugRenderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
+        else
+            _renderer = new Renderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
         // Init renderer
         _renderer->init();
+    }
+
+    GameBoy::~GameBoy()
+    {
+        if (_renderer)
+            delete _renderer;
     }
 
     void GameBoy::step()
