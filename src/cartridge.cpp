@@ -1,5 +1,6 @@
 #include <iostream>
 #include <bitset>
+#include <cmath>
 #include "cartridge.h"
 #include "logger.h"
 #include "utils.h"
@@ -47,12 +48,11 @@ namespace gasyboy
 			_rom = std::vector<std::vector<uint8_t>>(_banksNumber, std::vector<uint8_t>(0x4000, 0));
 
 			rom.seekg(0, std::ios::end);
-			long romSize = rom.tellg();
-			uint8_t *buff = new uint8_t[romSize];
+			std::streampos romSize = rom.tellg();
 			rom.seekg(0, std::ios::beg);
 
 			int bank = 0, j = 0;
-			for (int i = 0; i < romSize; i++)
+			for (int i = 0; i < static_cast<int>(romSize); i++)
 			{
 				if (i % 0x4000 == 0 && j > 0)
 				{
@@ -174,13 +174,13 @@ namespace gasyboy
 			_banksNumber = 512;
 			break;
 		case 0x52:
-			_banksNumber = pow(72, 3);
+			_banksNumber = static_cast<int>(std::pow(72, 3));
 			break;
 		case 0x53:
-			_banksNumber = pow(80, 3);
+			_banksNumber = static_cast<int>(std::pow(80, 3));
 			break;
 		case 0x54:
-			_banksNumber = pow(96, 3);
+			_banksNumber = static_cast<int>(std::pow(96, 3));
 			break;
 		}
 	}
@@ -278,7 +278,6 @@ namespace gasyboy
 				{
 					// ROM mode: Set high bits of bank
 					_currRomBank &= 0x1F;
-					uint8_t upperBits = value & 0xE0;
 					_currRomBank |= value;
 					if (_currRomBank == 0)
 						_currRomBank = 1;
