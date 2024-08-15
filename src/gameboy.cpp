@@ -16,12 +16,12 @@ namespace gasyboy
           _timer(_mmu, _interruptManager),
           _cycleCounter(0),
           _ppu(_registers, _interruptManager, _mmu)
-    //   _renderer(_cpu, _ppu, _registers, _interruptManager, _mmu)
     {
         if (debugMode)
             _renderer = new DebugRenderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
         else
             _renderer = new Renderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
+
         // Init renderer
         _renderer->init();
     }

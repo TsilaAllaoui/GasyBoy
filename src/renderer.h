@@ -48,6 +48,7 @@ namespace gasyboy
         void initWindow(int windowWidth, int windowHeight);
 
     public:
+        Renderer() = default;
         Renderer(Cpu &cpu,
                  Ppu &ppu,
                  Registers &registers,
