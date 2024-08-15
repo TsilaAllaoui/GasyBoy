@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
                         "\n\t - Debug Mode: " +
                         (debugMode ? "true" : "false"));
 
-        gasyboy::GameBoy(romFile, skipBios, debugMode).boot();
+        gasyboy::GameBoy(romFile, !skipBios, debugMode).boot();
     }
     catch (const std::runtime_error &err)
     {
