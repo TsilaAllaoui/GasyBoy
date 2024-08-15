@@ -12,7 +12,7 @@ namespace gasyboy
         bool _directionSelected;
 
         // The current button state
-        std::bitset<4> _state;
+        std::bitset<8> _state;
 
         // To change palette color
         bool _changedPalette;
@@ -37,10 +37,14 @@ namespace gasyboy
         // Enum for the type of button
         enum Button
         {
-            A_OR_RIGHT = 0,
-            B_OR_LEFT = 1,
-            SELECT_OR_UP = 2,
-            START_OR_DOWN = 3
+            A = 0,
+            B = 1,
+            SELECT = 2,
+            START = 3,
+            RIGHT = 4,
+            LEFT = 5,
+            UP = 6,
+            DOWN = 7
         };
     };
 }

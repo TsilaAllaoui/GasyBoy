@@ -1,5 +1,4 @@
 #include "ppu.h"
-#include <stdlib.h>
 
 namespace gasyboy
 {
@@ -14,8 +13,6 @@ namespace gasyboy
         _scrollY = (uint8_t *)_mmu.ramCellptr(0xff42);
         _scrollX = (uint8_t *)_mmu.ramCellptr(0xff43);
         _scanline = (uint8_t *)_mmu.ramCellptr(0xff44);
-
-        std::srand(time(NULL));
     }
 
     void Ppu::step(const int &cycle)
@@ -125,31 +122,30 @@ namespace gasyboy
         if (_control->bgDisplaySelect)
             address += 0x400;
 
-        address += ((*_scrollY + *_scanline) / 8 * 32) % (32 * 32);
+        // Calculate starting position within the tile map
+        uint16_t startRowAddress = address + ((*_scrollY + *_scanline) / 8) * 32;
+        uint16_t endRowAddress = startRowAddress + 32; // End of the current row in the tile map
+        address = startRowAddress + (*_scrollX >> 3);  // Adjust for horizontal scrolling
 
-        uint16_t startRowAddress = address;
-        uint16_t endRowAddress = address + 32;
-        address += (*_scrollX >> 3);
+        int x = *_scrollX & 7;                       // Initial pixel offset within the tile
+        int y = (*_scanline + *_scrollY) & 7;        // Vertical pixel position within the tile
+        int pixelOffset = *_scanline * SCREEN_WIDTH; // Start position in the framebuffer
 
-        int x = *_scrollX & 7;
-        int y = (*_scanline + *_scrollY) & 7;
-        int pixelOffset = *_scanline * 160;
-
-        int pixel = 0;
+        int pixel = 0; // Screen pixel position
         for (int i = 0; i < 21; i++)
         {
             uint16_t tile_address = address + i;
             if (tile_address >= endRowAddress)
-                tile_address = (startRowAddress + tile_address % endRowAddress);
+                tile_address = startRowAddress + (tile_address % 32);
 
             int tile = _mmu.readRam(tile_address);
             if (!_control->bgWindowDataSelect && tile < 128)
                 tile += 256;
 
-            for (; x < 8; x++)
+            for (; x < 8 && pixel < 160; x++)
             {
-                if (pixel >= 160)
-                    break;
+                if (pixelOffset >= SCREEN_WIDTH * SCREEN_HEIGHT)
+                    return; // Prevent out-of-bounds access
 
                 int colour = _mmu.tiles[tile].pixels[y][x];
                 _framebuffer[pixelOffset++] = _mmu.palette_BGP[colour];
@@ -157,7 +153,7 @@ namespace gasyboy
                     rowPixels[pixel] = true;
                 pixel++;
             }
-            x = 0;
+            x = 0; // Reset horizontal position for the next tile
         }
     }
 
@@ -208,6 +204,7 @@ namespace gasyboy
         bool visible_sprites[40];
         int sprite_row_count = 0;
 
+        // Determine which sprites are visible on the current scanline
         for (int i = 39; i >= 0; i--)
         {
             auto sprite = _mmu.sprites[i];
@@ -224,9 +221,10 @@ namespace gasyboy
                 continue;
             }
 
-            visible_sprites[i] = sprite_row_count++ <= 10;
+            visible_sprites[i] = sprite_row_count++ < 10; // Limit to 10 sprites per scanline
         }
 
+        // Render the visible sprites
         for (int i = 39; i >= 0; i--)
         {
             if (!visible_sprites[i])
@@ -237,36 +235,40 @@ namespace gasyboy
             if ((sprite.x < -7) || (sprite.x >= 160))
                 continue;
 
-            // Flip vertically
+            // Calculate the y-position of the sprite line to draw
             int pixel_y = *_scanline - sprite.y;
-            pixel_y = sprite.options.yFlip ? (7 + 8 * _control->spriteSize) - pixel_y : pixel_y;
+            pixel_y = sprite.options.yFlip ? (sprite_height - 1) - pixel_y : pixel_y;
 
+            // Render the sprite line
             for (int x = 0; x < 8; x++)
             {
                 int tile_num = sprite.tile & (_control->spriteSize ? 0xFE : 0xFF);
-                int colour = 0;
 
                 int x_temp = sprite.x + x;
                 if (x_temp < 0 || x_temp >= 160)
                     continue;
 
-                int pixelOffset = *_scanline * 160 + x_temp;
+                int pixelOffset = *_scanline * SCREEN_WIDTH + x_temp;
 
                 // Flip horizontally
                 uint8_t pixel_x = sprite.options.xFlip ? 7 - x : x;
 
+                // Determine the color from the appropriate tile and pixel
+                int colour = 0;
                 if (_control->spriteSize && (pixel_y >= 8))
                     colour = _mmu.tiles[tile_num + 1].pixels[pixel_y - 8][pixel_x];
                 else
                     colour = _mmu.tiles[tile_num].pixels[pixel_y][pixel_x];
 
-                // Black is transparent
+                // Skip transparent pixels
                 if (!colour)
                     continue;
 
+                // Render the pixel if it has higher priority or the background pixel is transparent
                 if (!rowPixels[x_temp] || !sprite.options.renderPriority)
                     _framebuffer[pixelOffset] = sprite.colourPalette[colour];
             }
         }
     }
+
 }

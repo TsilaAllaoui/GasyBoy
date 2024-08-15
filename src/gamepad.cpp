@@ -8,7 +8,7 @@ namespace gasyboy
         : _buttonSelected(true),
           _directionSelected(true),
           _changedPalette(false),
-          _state(0xF)
+          _state(0xFF)
     {
     }
 
@@ -30,23 +30,31 @@ namespace gasyboy
                     break;
 
                 case SDLK_UP:
+                    _state.reset(Button::UP);
+                    break;
                 case SDLK_RETURN:
-                    _state.reset(Button::SELECT_OR_UP);
+                    _state.reset(Button::SELECT);
                     break;
 
                 case SDLK_DOWN:
+                    _state.reset(Button::DOWN);
+                    break;
                 case SDLK_SPACE:
-                    _state.reset(Button::START_OR_DOWN);
+                    _state.reset(Button::START);
                     break;
 
                 case SDLK_RIGHT:
+                    _state.reset(Button::RIGHT);
+                    break;
                 case SDLK_a:
-                    _state.reset(Button::A_OR_RIGHT);
+                    _state.reset(Button::A);
                     break;
 
                 case SDLK_LEFT:
+                    _state.reset(Button::LEFT);
+                    break;
                 case SDLK_z:
-                    _state.reset(Button::B_OR_LEFT);
+                    _state.reset(Button::B);
                     break;
 
                 case SDLK_p:
@@ -63,23 +71,31 @@ namespace gasyboy
                     break;
 
                 case SDLK_UP:
+                    _state.set(Button::UP);
+                    break;
                 case SDLK_RETURN:
-                    _state.set(Button::SELECT_OR_UP);
+                    _state.set(Button::SELECT);
                     break;
 
                 case SDLK_DOWN:
+                    _state.set(Button::DOWN);
+                    break;
                 case SDLK_SPACE:
-                    _state.set(Button::START_OR_DOWN);
+                    _state.set(Button::START);
                     break;
 
                 case SDLK_RIGHT:
+                    _state.set(Button::RIGHT);
+                    break;
                 case SDLK_a:
-                    _state.set(Button::A_OR_RIGHT);
+                    _state.set(Button::A);
                     break;
 
                 case SDLK_LEFT:
+                    _state.set(Button::LEFT);
+                    break;
                 case SDLK_z:
-                    _state.set(Button::B_OR_LEFT);
+                    _state.set(Button::B);
                     break;
                 }
             }
@@ -94,11 +110,7 @@ namespace gasyboy
 
     uint8_t Gamepad::getState()
     {
-        uint8_t value = 0xC0;
-
-        value |= static_cast<uint8_t>(_state.to_ulong());
-
-        return value;
+        return _buttonSelected ? static_cast<uint8_t>(_state.to_ulong()) >> 4 : (static_cast<uint8_t>(_state.to_ulong()) << 4) >> 4;
     }
 
     void Gamepad::setChangePalette(const bool &value)
