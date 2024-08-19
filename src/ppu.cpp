@@ -201,27 +201,24 @@ namespace gasyboy
     {
         int sprite_height = _control->spriteSize ? 16 : 8;
 
-        bool visible_sprites[40];
+        bool visible_sprites[40] = {false};
         int sprite_row_count = 0;
 
         // Determine which sprites are visible on the current scanline
-        for (int i = 39; i >= 0; i--)
+        for (int i = 0; i < 40; i++)
         {
-            auto sprite = _mmu.sprites[i];
+            auto &sprite = _mmu.sprites[i];
 
-            if (!sprite.ready)
+            // Check if the sprite is on the current scanline
+            if ((*_scanline >= sprite.y) && (*_scanline < (sprite.y + sprite_height)))
             {
-                visible_sprites[i] = false;
-                continue;
+                visible_sprites[i] = true;
+                sprite_row_count++;
             }
 
-            if ((sprite.y > *_scanline) || ((sprite.y + sprite_height) <= *_scanline))
-            {
-                visible_sprites[i] = false;
-                continue;
-            }
-
-            visible_sprites[i] = sprite_row_count++ < 10; // Limit to 10 sprites per scanline
+            // Limit to 10 sprites per scanline
+            if (sprite_row_count >= 10)
+                break;
         }
 
         // Render the visible sprites
@@ -230,14 +227,16 @@ namespace gasyboy
             if (!visible_sprites[i])
                 continue;
 
-            auto sprite = _mmu.sprites[i];
+            auto &sprite = _mmu.sprites[i];
 
-            if ((sprite.x < -7) || (sprite.x >= 160))
+            // Skip sprites that are completely off-screen horizontally
+            if (sprite.x >= 160 || sprite.x < -7)
                 continue;
 
             // Calculate the y-position of the sprite line to draw
             int pixel_y = *_scanline - sprite.y;
-            pixel_y = sprite.options.yFlip ? (sprite_height - 1) - pixel_y : pixel_y;
+            if (sprite.options.yFlip)
+                pixel_y = (sprite_height - 1) - pixel_y;
 
             // Render the sprite line
             for (int x = 0; x < 8; x++)
@@ -248,20 +247,23 @@ namespace gasyboy
                 if (x_temp < 0 || x_temp >= 160)
                     continue;
 
+                // Calculate pixelOffset and ensure it's within the valid range
                 int pixelOffset = *_scanline * SCREEN_WIDTH + x_temp;
+                if (pixelOffset < 0 || pixelOffset >= SCREEN_WIDTH * SCREEN_HEIGHT)
+                    continue;
 
                 // Flip horizontally
-                uint8_t pixel_x = sprite.options.xFlip ? 7 - x : x;
+                int pixel_x = sprite.options.xFlip ? 7 - x : x;
 
                 // Determine the color from the appropriate tile and pixel
                 int colour = 0;
-                if (_control->spriteSize && (pixel_y >= 8))
+                if (_control->spriteSize && pixel_y >= 8)
                     colour = _mmu.tiles[tile_num + 1].pixels[pixel_y - 8][pixel_x];
                 else
                     colour = _mmu.tiles[tile_num].pixels[pixel_y][pixel_x];
 
                 // Skip transparent pixels
-                if (!colour)
+                if (colour == 0)
                     continue;
 
                 // Render the pixel if it has higher priority or the background pixel is transparent
