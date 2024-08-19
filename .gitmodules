@@ -7,3 +7,6 @@
 [submodule "externals/gbit"]
 	path = externals/gbit
 	url = https://github.com/TsilaAllaoui/gbit
+[submodule "externals/imgui"]
+	path = externals/imgui
+	url = https://github.com/ocornut/imgui
