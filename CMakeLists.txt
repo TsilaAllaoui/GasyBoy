@@ -14,7 +14,7 @@ set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 file(GLOB IMGUI_SRC
     "${EXTERNALS_DIR}/imgui/*.cpp"
     "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdl2.cpp"
-    # "${EXTERNALS_DIR}/imgui/backends/imgui_impl_opengl3.cpp"
+    "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdlrenderer2.cpp"
 )
 
 # Add all source files in src/ excluding main.cpp
@@ -32,7 +32,7 @@ add_subdirectory(${EXTERNALS_DIR}/argparse)
 add_subdirectory(${EXTERNALS_DIR}/gbit)
 
 # Add the library target
-add_library(${PROJECT_NAME}_lib ${GASYBOY_SOURCES_FILES})
+add_library(${PROJECT_NAME}_lib ${GASYBOY_SOURCES_FILES} ${IMGUI_SRC})
 
 # Creating executable
 add_executable(${PROJECT_NAME} src/main.cpp)
