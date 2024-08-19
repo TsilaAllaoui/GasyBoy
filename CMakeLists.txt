@@ -10,6 +10,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # External libs directory
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
+# Imgui source files
+file(GLOB IMGUI_SRC
+    "${EXTERNALS_DIR}/imgui/*.cpp"
+    "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdl2.cpp"
+    # "${EXTERNALS_DIR}/imgui/backends/imgui_impl_opengl3.cpp"
+)
+
 # Add all source files in src/ excluding main.cpp
 file(GLOB_RECURSE GASYBOY_SOURCES_FILES "src/*.cpp")
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
@@ -37,6 +44,8 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC ${GASYBOY_HEADERS_DIR})
 target_include_directories(${PROJECT_NAME}_lib PUBLIC
     ${EXTERNALS_DIR}/SDL/include
     ${EXTERNALS_DIR}/argparse/include/argparse
+    ${EXTERNALS_DIR}/imgui
+    ${EXTERNALS_DIR}/imgui/backends
 )
 
 # Linking other libs to project lib
