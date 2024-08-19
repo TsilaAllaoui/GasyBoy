@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "gamepad.h"
 #include "renderer.h"
+#include "debugger.h"
 #include "interruptManager.h"
 
 namespace gasyboy
@@ -29,6 +30,10 @@ namespace gasyboy
 
         SDL_Window *_window;
         SDL_Rect _tile_map_pos, _bg_map_pos;
+
+        Debugger _debugger;
+
+        bool _debugMode;
 
     public:
         GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
