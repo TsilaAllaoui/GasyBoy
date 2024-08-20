@@ -16,14 +16,11 @@ namespace gasyboy
           _cpu(bootBios, _mmu, _registers, _interruptManager),
           _timer(_mmu, _interruptManager),
           _cycleCounter(0),
-          _ppu(_registers, _interruptManager, _mmu)
+          _ppu(_registers, _interruptManager, _mmu),
+          _debugger(_registers)
     {
-        if (debugMode)
-            _renderer = new DebugRenderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
-        else
-            _renderer = new Renderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
-
         // Init renderer
+        _renderer = new Renderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
         _renderer->init();
     }
 
@@ -50,22 +47,24 @@ namespace gasyboy
             bool demo = true;
             while (state != State::STOPPED)
             {
-
-                _cycleCounter = 0;
-
-                while (_cycleCounter <= MAXCYCLE)
+                if (state == State::RUNNING)
                 {
-                    step();
-                }
+                    _cycleCounter = 0;
 
-                if (_ppu._canRender)
-                {
-                    _renderer->render();
-                    _ppu._canRender = false;
-
-                    if (_debugMode)
+                    while (_cycleCounter <= MAXCYCLE)
                     {
-                        _debugger.render();
+                        step();
+                    }
+
+                    if (_ppu._canRender)
+                    {
+                        _renderer->render();
+                        _ppu._canRender = false;
+
+                        if (_debugMode)
+                        {
+                            _debugger.render();
+                        }
                     }
                 }
             }

@@ -18,7 +18,7 @@ file(GLOB IMGUI_SRC
 )
 
 # Add all source files in src/ excluding main.cpp
-file(GLOB_RECURSE GASYBOY_SOURCES_FILES "src/*.cpp")
+file(GLOB_RECURSE GASYBOY_SOURCES_FILES src/*.cpp)
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
 
 # Add include directory

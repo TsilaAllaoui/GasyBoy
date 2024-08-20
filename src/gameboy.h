@@ -9,15 +9,13 @@
 #include "timer.h"
 #include "gamepad.h"
 #include "renderer.h"
-#include "debugger.h"
 #include "interruptManager.h"
+#include "debugger.h"
 
 namespace gasyboy
 {
     class GameBoy
     {
-    private:
-        Registers _registers;
         Mmu _mmu;
         Cpu _cpu;
         Timer _timer;
@@ -31,13 +29,14 @@ namespace gasyboy
         SDL_Window *_window;
         SDL_Rect _tile_map_pos, _bg_map_pos;
 
-        Debugger _debugger;
-
         bool _debugMode;
+        Debugger _debugger;
 
     public:
         GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
         ~GameBoy();
+
+        Registers _registers;
 
         // Start the emulator
         void boot();
