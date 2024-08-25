@@ -41,12 +41,16 @@ add_executable(${PROJECT_NAME} src/main.cpp)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${GASYBOY_HEADERS_DIR})
 
 # Adding libs includes to project lib
-target_include_directories(${PROJECT_NAME}_lib PUBLIC
-    ${EXTERNALS_DIR}/SDL/include
-    ${EXTERNALS_DIR}/argparse/include/argparse
-    ${EXTERNALS_DIR}/imgui
-    ${EXTERNALS_DIR}/imgui/backends
-)
+if (USE_EMSCRIPTEN_SDL2)
+    target_include_directories(${PROJECT_NAME}_lib PUBLIC ${EXTERNALS_DIR}/imgui ${EXTERNALS_DIR}/imgui/backends)
+else()
+    target_include_directories(${PROJECT_NAME}_lib PUBLIC
+        ${EXTERNALS_DIR}/SDL/include
+        ${EXTERNALS_DIR}/argparse/include/argparse
+        ${EXTERNALS_DIR}/imgui
+        ${EXTERNALS_DIR}/imgui/backends
+    )
+endif()
 
 # Linking other libs to project lib
 target_link_libraries(${PROJECT_NAME}_lib PRIVATE SDL2main SDL2 gbit)

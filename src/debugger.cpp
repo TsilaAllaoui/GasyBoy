@@ -1,7 +1,7 @@
 #include "debugger.h"
-#include "imgui.h"
-#include "backends/imgui_impl_sdl2.h"
-#include "backends/imgui_impl_sdlrenderer2.h"
+// #include "imgui.h"
+// #include "backends/imgui_impl_sdl2.h"
+// #include "backends/imgui_impl_sdlrenderer2.h"
 
 namespace gasyboy
 {
@@ -73,71 +73,71 @@ namespace gasyboy
         : _registers(registers)
     {
 
-        // Setup Dear ImGui context
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO &io = ImGui::GetIO();
+        // // Setup Dear ImGui context
+        // IMGUI_CHECKVERSION();
+        // ImGui::CreateContext();
+        // ImGuiIO &io = ImGui::GetIO();
 
-        // Setup Platform/Renderer backends
-        SDL_CreateWindowAndRenderer(DEBUGGER_SCREEN_WIDTH,
-                                    DEBUGGER_SCREEN_HEIGHT,
-                                    0,
-                                    &_imguiWindow,
-                                    &_imguiRenderer);
-        SDL_SetWindowTitle(_imguiWindow, "Debugger");
+        // // Setup Platform/Renderer backends
+        // SDL_CreateWindowAndRenderer(DEBUGGER_SCREEN_WIDTH,
+        //                             DEBUGGER_SCREEN_HEIGHT,
+        //                             0,
+        //                             &_imguiWindow,
+        //                             &_imguiRenderer);
+        // SDL_SetWindowTitle(_imguiWindow, "Debugger");
 
-        ImGui_ImplSDL2_InitForSDLRenderer(_imguiWindow, _imguiRenderer);
-        ImGui_ImplSDLRenderer2_Init(_imguiRenderer);
+        // ImGui_ImplSDL2_InitForSDLRenderer(_imguiWindow, _imguiRenderer);
+        // ImGui_ImplSDLRenderer2_Init(_imguiRenderer);
     }
 
     Debugger::~Debugger()
     {
-        // Shutdown ImGui
-        ImGui_ImplSDLRenderer2_Shutdown();
-        ImGui_ImplSDL2_Shutdown();
-        ImGui::DestroyContext();
+        // // Shutdown ImGui
+        // ImGui_ImplSDLRenderer2_Shutdown();
+        // ImGui_ImplSDL2_Shutdown();
+        // ImGui::DestroyContext();
     }
 
     void Debugger::render()
     {
-        // Start ImGui frame
-        ImGui_ImplSDL2_NewFrame();
-        ImGui_ImplSDLRenderer2_NewFrame();
-        ImGui::NewFrame();
+        // // Start ImGui frame
+        // ImGui_ImplSDL2_NewFrame();
+        // ImGui_ImplSDLRenderer2_NewFrame();
+        // ImGui::NewFrame();
 
-        ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImVec2(REGISTERS_WINDOW_WIDTH, REGISTERS_WINDOW_HEIGHT));
+        // ImGui::SetNextWindowPos(ImVec2(0, 0));
+        // ImGui::SetNextWindowSize(ImVec2(REGISTERS_WINDOW_WIDTH, REGISTERS_WINDOW_HEIGHT));
 
-        ImGui::Begin("Registers", nullptr, ImGuiWindowFlags_NoMove);
+        // ImGui::Begin("Registers", nullptr, ImGuiWindowFlags_NoMove);
 
-        // Show CPU registers (Assume _gameboy has access to the registers)
-        ImGui::Text("Registers:");
-        ImGui::Text("AF: %04X", _registers.AF.get());
-        ImGui::Text("BC: %04X", _registers.BC.get());
-        ImGui::Text("DE: %04X", _registers.DE.get());
-        ImGui::Text("HL: %04X", _registers.HL.get());
-        ImGui::Text("SP: %04X", _registers.SP);
-        ImGui::Text("PC: %04X", _registers.PC);
+        // // Show CPU registers (Assume _gameboy has access to the registers)
+        // ImGui::Text("Registers:");
+        // ImGui::Text("AF: %04X", _registers.AF.get());
+        // ImGui::Text("BC: %04X", _registers.BC.get());
+        // ImGui::Text("DE: %04X", _registers.DE.get());
+        // ImGui::Text("HL: %04X", _registers.HL.get());
+        // ImGui::Text("SP: %04X", _registers.SP);
+        // ImGui::Text("PC: %04X", _registers.PC);
 
-        // First button
-        if (ImGui::Button("Pause", ImVec2(75, 0)))
-        {
-            // Button 1 action
-        }
+        // // First button
+        // if (ImGui::Button("Pause", ImVec2(75, 0)))
+        // {
+        //     // Button 1 action
+        // }
 
-        // Second button
-        ImGui::SameLine();
-        if (ImGui::Button("Run", ImVec2(75, 0)))
-        {
-            // Button 2 action
-        }
+        // // Second button
+        // ImGui::SameLine();
+        // if (ImGui::Button("Run", ImVec2(75, 0)))
+        // {
+        //     // Button 2 action
+        // }
 
-        ImGui::End();
+        // ImGui::End();
 
-        // Render ImGui and emulator display
-        ImGui::Render();
-        SDL_RenderClear(_imguiRenderer);
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), _imguiRenderer);
-        SDL_RenderPresent(_imguiRenderer);
+        // // Render ImGui and emulator display
+        // ImGui::Render();
+        // SDL_RenderClear(_imguiRenderer);
+        // ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), _imguiRenderer);
+        // SDL_RenderPresent(_imguiRenderer);
     }
 }

@@ -1,4 +1,4 @@
-#include "imgui_impl_sdl2.h"
+// #include "imgui_impl_sdl2.h"
 #include "gamepad.h"
 #include "defs.h"
 #include "SDL.h"
@@ -19,7 +19,7 @@ namespace gasyboy
 
         while (SDL_PollEvent(&event) != 0)
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
+            // ImGui_ImplSDL2_ProcessEvent(&event);
 
             if (event.type == SDL_QUIT)
                 exit(0);

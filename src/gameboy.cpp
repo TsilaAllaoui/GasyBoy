@@ -61,10 +61,10 @@ namespace gasyboy
                         _renderer->render();
                         _ppu._canRender = false;
 
-                        if (_debugMode)
-                        {
-                            _debugger.render();
-                        }
+                        // if (_debugMode)
+                        // {
+                        //     _debugger.render();
+                        // }
                     }
                 }
             }

@@ -7,10 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-    gasyboy::GameBoy("c:/Users/trasoloallaoui/C++/Tetris.gb", false, true).boot();
-    return 0;
-
-    /*argparse::ArgumentParser program("gasyboy");
+    argparse::ArgumentParser program("gasyboy");
 
     program.add_argument("-r", "--rom")
         .help("Path to the ROM file")
@@ -55,5 +52,5 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    return 0;*/
+    return 0;
 }
