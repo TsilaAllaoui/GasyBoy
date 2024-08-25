@@ -27,12 +27,11 @@ set(GASYBOY_HEADERS_DIR
 )
 
 # Adding external libs
-add_subdirectory(${EXTERNALS_DIR}/SDL)
 add_subdirectory(${EXTERNALS_DIR}/argparse)
 add_subdirectory(${EXTERNALS_DIR}/gbit)
 
 # Add the library target
-add_library(${PROJECT_NAME}_lib ${GASYBOY_SOURCES_FILES} ${IMGUI_SRC})
+add_library(${PROJECT_NAME}_lib ${GASYBOY_SOURCES_FILES})# ${IMGUI_SRC})
 
 # Creating executable
 add_executable(${PROJECT_NAME} src/main.cpp)
@@ -42,24 +41,16 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC ${GASYBOY_HEADERS_DIR})
 
 # Adding libs includes to project lib
 if (USE_EMSCRIPTEN_SDL2)
-    set(SDL2_DIR ${EXTERNALS_DIR}/SDL2/build_wasm)
-
-    # Add SDL2 include directories
-    target_include_directories(${PROJECT_NAME}_lib PUBLIC
-        ${SDL2_DIR}/include
-    )
-
-    # Link the SDL2 library compiled for WebAssembly
-    target_link_libraries(${PROJECT_NAME}_lib PRIVATE
-        ${SDL2_DIR}/libSDL2.a
-    )
+    # Emscripten SDL setup
+    set(SDL2_FLAGS "-sUSE_SDL=2")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SDL2_FLAGS}")
 else()
     # Non-Emscripten (native) build
     target_include_directories(${PROJECT_NAME}_lib PUBLIC
-        ${EXTERNALS_DIR}/SDL/include
+        ${EXTERNALS_DIR}/SDL/include/SDL2
         ${EXTERNALS_DIR}/argparse/include/argparse
-        ${EXTERNALS_DIR}/imgui
-        ${EXTERNALS_DIR}/imgui/backends
+        # ${EXTERNALS_DIR}/imgui
+        # ${EXTERNALS_DIR}/imgui/backends
     )
 
     target_link_libraries(${PROJECT_NAME}_lib PRIVATE SDL2main SDL2 gbit)
@@ -73,3 +64,12 @@ enable_testing()
 
 # Add the tests subdirectory
 add_subdirectory(tests)
+
+
+em++ -o gasyboy.html \
+    src/*.cpp \
+    -Iexternals/argparse/include/argparse \
+    -s USE_SDL=2 \
+    -s WASM=1
+
+    em++ -o gasyboy.html     src/*.cpp     -Iexternals/argparse/include/argparse     -s USE_SDL=2     -s WASM=1     -s STACK_SIZE=128KB     -s ALLOW_MEMORY_GROWTH=1
