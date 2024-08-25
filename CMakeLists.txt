@@ -42,18 +42,28 @@ target_include_directories(${PROJECT_NAME}_lib PUBLIC ${GASYBOY_HEADERS_DIR})
 
 # Adding libs includes to project lib
 if (USE_EMSCRIPTEN_SDL2)
-    target_include_directories(${PROJECT_NAME}_lib PUBLIC ${EXTERNALS_DIR}/imgui ${EXTERNALS_DIR}/imgui/backends)
+    set(SDL2_DIR ${EXTERNALS_DIR}/SDL2/build_wasm)
+
+    # Add SDL2 include directories
+    target_include_directories(${PROJECT_NAME}_lib PUBLIC
+        ${SDL2_DIR}/include
+    )
+
+    # Link the SDL2 library compiled for WebAssembly
+    target_link_libraries(${PROJECT_NAME}_lib PRIVATE
+        ${SDL2_DIR}/libSDL2.a
+    )
 else()
+    # Non-Emscripten (native) build
     target_include_directories(${PROJECT_NAME}_lib PUBLIC
         ${EXTERNALS_DIR}/SDL/include
         ${EXTERNALS_DIR}/argparse/include/argparse
         ${EXTERNALS_DIR}/imgui
         ${EXTERNALS_DIR}/imgui/backends
     )
-endif()
 
-# Linking other libs to project lib
-target_link_libraries(${PROJECT_NAME}_lib PRIVATE SDL2main SDL2 gbit)
+    target_link_libraries(${PROJECT_NAME}_lib PRIVATE SDL2main SDL2 gbit)
+endif()
 
 # Linking project lib to project executable
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
