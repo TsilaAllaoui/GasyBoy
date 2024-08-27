@@ -5,37 +5,13 @@
 #include "argparse.hpp"
 #include "gameboy.h"
 #include <fstream>
-#include <emscripten.h>
-#include <emscripten/emscripten.h>
 
 int main(int argc, char *argv[])
 {
-    // Mount the filesystem to a specific directory to avoid conflicts
-    EM_ASM({
-        if (!FS.analyzePath('/mnt').exists)
-        {
-            FS.mkdir('/mnt');
-            FS.mount(FS.filesystems.WORKERFS, {root : '.'}, '/mnt');
-        }
-    });
-
-    // Access the file using the new path
-    std::ifstream file("/mnt/TETRIS.gb");
-    if (file.is_open())
-    {
-        std::cout << "Successfully opened TETRIS.gb" << std::endl;
-        // Read and process the file as needed
-    }
-    else
-    {
-        std::cerr << "Failed to open TETRIS.gb" << std::endl;
-    }
-
-    // auto logger = gasyboy::utils::Logger::getInstance();
-    // logger->log(gasyboy::utils::Logger::LogType::FUNCTIONAL, "Starting...");
-    // gasyboy::GameBoy("TETRIS.gb", true).boot();
-    // logger->log(gasyboy::utils::Logger::LogType::FUNCTIONAL, "Stopping...");
-    /*argparse::ArgumentParser program("gasyboy");
+#ifdef __EMSCRIPTEN__
+    gasyboy::GameBoy("/TETRIS.gb", false).boot();
+#else
+    argparse::ArgumentParser program("gasyboy");
 
     program.add_argument("-r", "--rom")
         .help("Path to the ROM file")
@@ -78,7 +54,8 @@ int main(int argc, char *argv[])
                   << "\t-s | --skip_bios : skip BIOS on boot (default: false)\n"
                   << "\t-d | --debug : boot in debug mode (default: false)\n";
         return 1;
-    }*/
+    }
+#endif
 
     return 0;
 }

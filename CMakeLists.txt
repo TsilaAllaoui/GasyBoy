@@ -4,18 +4,10 @@ cmake_minimum_required(VERSION 3.20)
 project(gasyboy VERSION 2.0 LANGUAGES CXX)
 
 # Compiler norm to use
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD 17)
 
 # External libs directory
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
-
-# Imgui source files
-file(GLOB IMGUI_SRC
-    "${EXTERNALS_DIR}/imgui/*.cpp"
-    "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdl2.cpp"
-    "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdlrenderer2.cpp"
-)
 
 # Add all source files in src/ excluding main.cpp
 file(GLOB_RECURSE GASYBOY_SOURCES_FILES src/*.cpp)
@@ -26,18 +18,11 @@ set(GASYBOY_HEADERS_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-# Adding external libs
-add_subdirectory(${EXTERNALS_DIR}/argparse)
-add_subdirectory(${EXTERNALS_DIR}/gbit)
-
-# Add the library target
-add_library(${PROJECT_NAME}_lib ${GASYBOY_SOURCES_FILES})# ${IMGUI_SRC})
-
 # Creating executable
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} ${GASYBOY_SOURCES_FILES})
 
-# Adding project include to project lib and expose it
-target_include_directories(${PROJECT_NAME}_lib PUBLIC ${GASYBOY_HEADERS_DIR})
+# Add headers to executable
+target_include_directories(${PROJECT_NAME} PRIVATE ${GASYBOY_HEADERS_DIR})
 
 # Adding libs includes to project lib
 if (USE_EMSCRIPTEN_SDL2)
@@ -46,30 +31,33 @@ if (USE_EMSCRIPTEN_SDL2)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SDL2_FLAGS}")
 else()
     # Non-Emscripten (native) build
-    target_include_directories(${PROJECT_NAME}_lib PUBLIC
-        ${EXTERNALS_DIR}/SDL/include/SDL2
+    add_subdirectory(externals/SDL)
+
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        ${EXTERNALS_DIR}/SDL/include
         ${EXTERNALS_DIR}/argparse/include/argparse
-        # ${EXTERNALS_DIR}/imgui
-        # ${EXTERNALS_DIR}/imgui/backends
     )
 
-    target_link_libraries(${PROJECT_NAME}_lib PRIVATE SDL2main SDL2 gbit)
+    target_link_libraries(${PROJECT_NAME} PRIVATE SDL2main SDL2)
 endif()
 
-# Linking project lib to project executable
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
+if (WIN32)
+    # If on win32 env, Copy SDL2.dll to the build folder after the executable is built
+    add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/externals/SDL/$<CONFIG>/$<IF:$<CONFIG:Debug>,SDL2d.dll,SDL2.dll>"
+        "${CMAKE_BINARY_DIR}/$<CONFIG>/$<IF:$<CONFIG:Debug>,SDL2d.dll,SDL2.dll>"
+    COMMENT "Copying SDL2 DLL to the build folder"
+)
 
-# Enable testing
-enable_testing()
-
-# Add the tests subdirectory
-add_subdirectory(tests)
+endif()
 
 
-em++ -o gasyboy.html \
-    src/*.cpp \
-    -Iexternals/argparse/include/argparse \
-    -s USE_SDL=2 \
-    -s WASM=1
+# em++ -o gasyboy.html \
+#     src/*.cpp \
+#     -Iexternals/argparse/include/argparse \
+#     -s USE_SDL=2 \
+#     -s WASM=1
 
-    em++ -o gasyboy.html     src/*.cpp     -Iexternals/argparse/include/argparse     -s USE_SDL=2     -s WASM=1     -s STACK_SIZE=128KB     -s ALLOW_MEMORY_GROWTH=1
+#     em++ -o gasyboy.html     src/*.cpp     -Iexternals/argparse/include/argparse     -s USE_SDL=2     -s WASM=1     -s STACK_SIZE=128KB     -s ALLOW_MEMORY_GROWTH=1
