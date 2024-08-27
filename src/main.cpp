@@ -18,17 +18,19 @@ void main_loop()
         gb->loop();
     }
 }
-
-#endif
-
 int main(int argc, char *argv[])
 {
 
-#ifdef __EMSCRIPTEN__
     gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", false);
 
     emscripten_set_main_loop(main_loop, 0, true);
+
+    return 0;
+}
 #else
+
+int main(int argc, char *argv[])
+{
     argparse::ArgumentParser program("gasyboy");
 
     program.add_argument("-r", "--rom")
@@ -74,7 +76,8 @@ int main(int argc, char *argv[])
                   << "\t-d | --debug : boot in debug mode (default: false)\n";
         return 1;
     }
-#endif
 
     return 0;
 }
+
+#endif
