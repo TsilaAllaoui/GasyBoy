@@ -47,26 +47,7 @@ namespace gasyboy
             bool demo = true;
             while (state != State::STOPPED)
             {
-                if (state == State::RUNNING)
-                {
-                    _cycleCounter = 0;
-
-                    while (_cycleCounter <= MAXCYCLE)
-                    {
-                        step();
-                    }
-
-                    if (_ppu._canRender)
-                    {
-                        _renderer->render();
-                        _ppu._canRender = false;
-
-                        // if (_debugMode)
-                        // {
-                        //     _debugger.render();
-                        // }
-                    }
-                }
+                loop();
             }
         }
         catch (const exception::GbException &e)
@@ -74,5 +55,43 @@ namespace gasyboy
             utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
                                               e.what());
         }
+    }
+
+    // Method to check if renderer needs updating (for Emscripten)
+    bool GameBoy::rendererNeedsUpdate() const
+    {
+        return _ppu._canRender;
+    }
+
+    void GameBoy::render()
+    {
+        if (_renderer)
+        {
+            _renderer->render();
+        }
+    }
+
+    void GameBoy::loop()
+    {
+        // if (state == State::RUNNING)
+        // {
+        _cycleCounter = 0;
+
+        while (_cycleCounter <= MAXCYCLE)
+        {
+            step();
+        }
+
+        if (_ppu._canRender)
+        {
+            _renderer->render();
+            _ppu._canRender = false;
+
+            // if (_debugMode)
+            // {
+            //     _debugger.render();
+            // }
+        }
+        // }
     }
 }

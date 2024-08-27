@@ -1,7 +1,11 @@
 #ifndef _DEBUGGER_H_
 #define _DEBUGGER_H_
 
+#ifdef __EMSCRIPTEN__
+#include <SDL2/SDL.h>
+#else
 #include "SDL.h"
+#endif
 #include "registers.h"
 
 #define DEBUGGER_SCREEN_WIDTH 480

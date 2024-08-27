@@ -2,13 +2,10 @@
 // #include "imgui.h"
 // #include "backends/imgui_impl_sdl2.h"
 // #include "backends/imgui_impl_sdlrenderer2.h"
+#include <vector>
 
 namespace gasyboy
 {
-
-#include <SDL.h>
-#include <vector>
-
     // Function to create a Gameboy icon as an SDL_Surface
     SDL_Surface *createGameboyIcon(int width, int height)
     {

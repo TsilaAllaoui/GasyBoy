@@ -1,7 +1,11 @@
 #ifndef _GAMEBOY_H_
 #define _GAMEBOY_H_
 
+#ifdef __EMSCRIPTEN__
+#include <SDL2/SDL.h>
+#else
 #include "SDL.h"
+#endif
 #include "mmu.h"
 #include "cpu.h"
 #include "ppu.h"
@@ -44,6 +48,8 @@ namespace gasyboy
         // Step the emulator
         void step();
 
+        void loop();
+
         enum class State
         {
             RUNNING,
@@ -53,6 +59,9 @@ namespace gasyboy
 
         // State of the emulator
         static State state;
+
+        bool rendererNeedsUpdate() const;
+        void render();
     };
 }
 
