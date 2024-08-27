@@ -3,3 +3,4 @@
 build/
 roms/
 build_wasm/
+*.gb

@@ -14,10 +14,8 @@ namespace gasyboy
         Registers &_registers;
 
     public:
-        InterruptManager() = default;
+        InterruptManager() = delete;
         InterruptManager(Mmu &mmu, Registers &registers);
-
-        ~InterruptManager() = default;
 
         enum class InterruptType
         {

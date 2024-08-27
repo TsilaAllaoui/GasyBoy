@@ -6,6 +6,7 @@
 #else
 #include "SDL.h"
 #endif
+
 #include "mmu.h"
 #include "cpu.h"
 #include "ppu.h"
@@ -14,7 +15,6 @@
 #include "gamepad.h"
 #include "renderer.h"
 #include "interruptManager.h"
-#include "debugger.h"
 
 namespace gasyboy
 {
@@ -34,7 +34,6 @@ namespace gasyboy
         SDL_Rect _tile_map_pos, _bg_map_pos;
 
         bool _debugMode;
-        Debugger _debugger;
 
     public:
         GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
@@ -48,8 +47,6 @@ namespace gasyboy
         // Step the emulator
         void step();
 
-        void loop();
-
         enum class State
         {
             RUNNING,
@@ -60,8 +57,8 @@ namespace gasyboy
         // State of the emulator
         static State state;
 
-        bool rendererNeedsUpdate() const;
-        void render();
+        // Used for the main loop
+        void loop();
     };
 }
 

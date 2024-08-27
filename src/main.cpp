@@ -5,43 +5,29 @@
 #include "argparse.hpp"
 #include "gameboy.h"
 #include <fstream>
+
+std::unique_ptr<gasyboy::GameBoy> gb;
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
-#include <fstream>
-#endif
 
-// Global GameBoy instance
-gasyboy::GameBoy *gameBoyInstance = nullptr;
-
-// Function to initialize GameBoy instance
-void initializeGameBoy(const std::string &filePath, bool bootBios, bool debugMode)
+void main_loop()
 {
-    gameBoyInstance = new gasyboy::GameBoy(filePath, bootBios, debugMode);
-}
-
-// Function to clean up GameBoy instance
-void cleanupGameBoy()
-{
-    delete gameBoyInstance;
-    gameBoyInstance = nullptr;
-}
-
-// Wrapper function for Emscripten's main loop
-void gameLoop()
-{
-    if (gameBoyInstance)
+    if (gb)
     {
-        gameBoyInstance->loop();
+        gb->loop();
     }
 }
 
+#endif
+
 int main(int argc, char *argv[])
 {
+
 #ifdef __EMSCRIPTEN__
-    // Initialize GameBoy with default parameters for Emscripten build
-    initializeGameBoy("/TETRIS.gb", false, false);
-    // Set Emscripten's main loop
-    emscripten_set_main_loop(gameLoop, 0, true);
+    gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", false);
+
+    emscripten_set_main_loop(main_loop, 0, true);
 #else
     argparse::ArgumentParser program("gasyboy");
 
@@ -76,7 +62,8 @@ int main(int argc, char *argv[])
                         "\n\t - Debug Mode: " +
                         (debugMode ? "true" : "false"));
 
-        gasyboy::GameBoy(romFile, !skipBios, debugMode).boot();
+        gb = std::make_unique<gasyboy::GameBoy>(romFile, !skipBios, debugMode);
+        gb->boot();
     }
     catch (const std::runtime_error &err)
     {
@@ -88,9 +75,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 #endif
-
-    // Clean up (this line may not be reached in Emscripten builds)
-    cleanupGameBoy();
 
     return 0;
 }

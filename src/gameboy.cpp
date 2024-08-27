@@ -16,8 +16,7 @@ namespace gasyboy
           _cpu(bootBios, _mmu, _registers, _interruptManager),
           _timer(_mmu, _interruptManager),
           _cycleCounter(0),
-          _ppu(_registers, _interruptManager, _mmu),
-          _debugger(_registers)
+          _ppu(_registers, _interruptManager, _mmu)
     {
         // Init renderer
         _renderer = new Renderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
@@ -57,24 +56,8 @@ namespace gasyboy
         }
     }
 
-    // Method to check if renderer needs updating (for Emscripten)
-    bool GameBoy::rendererNeedsUpdate() const
-    {
-        return _ppu._canRender;
-    }
-
-    void GameBoy::render()
-    {
-        if (_renderer)
-        {
-            _renderer->render();
-        }
-    }
-
     void GameBoy::loop()
     {
-        // if (state == State::RUNNING)
-        // {
         _cycleCounter = 0;
 
         while (_cycleCounter <= MAXCYCLE)
@@ -86,12 +69,6 @@ namespace gasyboy
         {
             _renderer->render();
             _ppu._canRender = false;
-
-            // if (_debugMode)
-            // {
-            //     _debugger.render();
-            // }
         }
-        // }
     }
 }
