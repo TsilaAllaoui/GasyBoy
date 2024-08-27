@@ -11,22 +11,37 @@ std::unique_ptr<gasyboy::GameBoy> gb;
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 
+extern "C"
+{
+    EMSCRIPTEN_KEEPALIVE int load_file(uint8_t *buffer, size_t size)
+    {
+        std::cout << "Loading rom file...\n";
+        gb = std::make_unique<gasyboy::GameBoy>(buffer, size, true);
+        std::cout << "Rom file loaded successfully...\n";
+        return 1;
+    }
+}
+
 void main_loop()
 {
     if (gb)
     {
+        std::cout << "Gb loop started!\n";
         gb->loop();
     }
+    else
+    {
+        std::cout << "Gb not ready!\n";
+    }
 }
-int main(int argc, char *argv[])
+
+int main()
 {
-
-    gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", false);
-
     emscripten_set_main_loop(main_loop, 0, true);
 
     return 0;
 }
+
 #else
 
 int main(int argc, char *argv[])

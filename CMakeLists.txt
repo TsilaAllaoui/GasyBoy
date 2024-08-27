@@ -29,7 +29,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${EXTERNALS_DIR}/argparse/inc
 if (USE_EMSCRIPTEN_SDL2 OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
     # Emscripten SDL setup
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    set(SDL2_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap','ccall']")
+    set(SDL2_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_main,_load_file,_malloc,_free -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -sNO_DISABLE_EXCEPTION_CATCHING")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SDL2_FLAGS}")
 
     target_link_libraries(${PROJECT_NAME} PRIVATE SDL2)
@@ -79,5 +79,25 @@ if (WIN32)
             "${CMAKE_BINARY_DIR}/externals/SDL/$<CONFIG>/$<IF:$<CONFIG:Debug>,SDL2d.dll,SDL2.dll>"
             "${CMAKE_BINARY_DIR}/$<CONFIG>/$<IF:$<CONFIG:Debug>,SDL2d.dll,SDL2.dll>"
         COMMENT "Copying SDL2 DLL to the build folder"
+    )
+elseif (USE_EMSCRIPTEN_SDL2 OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+    # If on wasm env, Copy generated wasm and js to wasm folder
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.js" 
+        "${CMAKE_CURRENT_SOURCE_DIR}/wasm/${PROJECT_NAME}.js" 
+
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.wasm"
+        "${CMAKE_CURRENT_SOURCE_DIR}/wasm/${PROJECT_NAME}.wasm" 
+        
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.data"
+        "${CMAKE_CURRENT_SOURCE_DIR}/wasm/${PROJECT_NAME}.data"
+
+        COMMENT "Copying wasm generated files to wasm folder"
     )
 endif()

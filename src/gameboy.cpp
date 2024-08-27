@@ -23,6 +23,19 @@ namespace gasyboy
         _renderer->init();
     }
 
+    GameBoy::GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode)
+        : _debugMode(debugMode),
+          _gamepad(),
+          _mmu(bytes, romSize, _gamepad),
+          _registers(_mmu),
+          _interruptManager(_mmu, _registers),
+          _cpu(bootBios, _mmu, _registers, _interruptManager),
+          _timer(_mmu, _interruptManager),
+          _cycleCounter(0),
+          _ppu(_registers, _interruptManager, _mmu)
+    {
+    }
+
     GameBoy::~GameBoy()
     {
         if (_renderer)

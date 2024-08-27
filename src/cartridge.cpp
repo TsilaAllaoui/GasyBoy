@@ -129,6 +129,91 @@ namespace gasyboy
 		}
 	}
 
+	void Cartridge::loadRomFromByteArray(const std::vector<uint8_t> &byteArray)
+	{
+		if (byteArray.size() < 0x150) // Ensure the array is large enough to contain the header information
+		{
+			utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL, "Byte array is too small!");
+			exit(ExitState::CRITICAL_ERROR);
+		}
+
+		// Setting cartridge type
+		setMBCType(byteArray[0x147]);
+
+		// Setting bank number
+		setBankNumber(byteArray[0x148]);
+
+		// Loading rom
+		_rom = std::vector<std::vector<uint8_t>>(_banksNumber, std::vector<uint8_t>(0x4000, 0));
+
+		int bank = 0, j = 0;
+		for (size_t i = 0; i < byteArray.size(); i++)
+		{
+			if (i % 0x4000 == 0 && j > 0)
+			{
+				bank++;
+				j = 0;
+			}
+			_rom[bank][j] = byteArray[i];
+			j++;
+		}
+
+		// Log cartridge information
+		std::stringstream cartridgeHeaderInfo;
+
+		cartridgeHeaderInfo << "ROM Name:  ";
+		for (int i = 0x134; i < 0x143; i++)
+		{
+			cartridgeHeaderInfo << static_cast<char>(_rom[0][i]);
+		}
+
+		cartridgeHeaderInfo << std::endl
+							<< "Manufacturer:  ";
+
+		for (int i = 0x13F; i < 0x142; i++)
+		{
+			cartridgeHeaderInfo << static_cast<char>(_rom[0][i]);
+		}
+
+		cartridgeHeaderInfo << std::endl
+							<< "CGB Support:  ";
+
+		if (_rom[0][0x143] == 0x80)
+		{
+			cartridgeHeaderInfo << "Yes (DMG support)" << std::endl;
+		}
+		else if (_rom[0][0x143] == 0xC0)
+		{
+			cartridgeHeaderInfo << "Yes (No DMG support)" << std::endl;
+		}
+		else
+		{
+			cartridgeHeaderInfo << "No" << std::endl;
+		}
+
+		cartridgeHeaderInfo << "License Code:  " << _rom[0][0x144] << _rom[0][0x145] << std::endl;
+
+		cartridgeHeaderInfo << "SGB Support:  ";
+
+		if (_rom[0][0x143] == 0x03)
+		{
+			cartridgeHeaderInfo << "Yes" << std::endl;
+		}
+		else if (_rom[0][0x143] == 0)
+		{
+			cartridgeHeaderInfo << "No" << std::endl;
+		}
+
+		cartridgeHeaderInfo << "Cartridge Type:  " << static_cast<uint8_t>(_rom[0][0x147]) << std::endl;
+		cartridgeHeaderInfo << "Rom Size:  " << 32 * static_cast<uint8_t>(_rom[0][0x148]) << "KiB" << std::endl;
+		cartridgeHeaderInfo << "RAM Size:  " << static_cast<uint8_t>(_rom[0][0x149]) << std::endl;
+		cartridgeHeaderInfo << "Japanese Cartridge:  " << ((_rom[0][0x14A] & 0x1) ? "No" : "Yes") << std::endl;
+		cartridgeHeaderInfo << "Old License Code:  " << static_cast<uint8_t>(_rom[0][0x14B]) << std::endl;
+		cartridgeHeaderInfo << "Mask Rom Version:  " << static_cast<uint8_t>(_rom[0][0x14C]) << std::endl;
+
+		utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "\n" + cartridgeHeaderInfo.str());
+	}
+
 	void Cartridge::loadRom(uint8_t size, uint8_t *mem)
 	{
 		for (int i = 0; i < size; i++)

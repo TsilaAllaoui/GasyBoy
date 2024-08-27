@@ -110,6 +110,8 @@ namespace gasyboy
 
         // Get game name
         std::string getGameName();
+
+        void loadRomFromByteArray(const std::vector<uint8_t> &byteArray);
     };
 }
 

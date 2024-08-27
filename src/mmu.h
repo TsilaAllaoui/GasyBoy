@@ -95,6 +95,8 @@ namespace gasyboy
         // construcor/destructor
         Mmu(const std::string &romFilePath, Gamepad &gamepad);
 
+        Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad);
+
         // For debugging
         Mmu(uint8_t size,
             uint8_t *mem,

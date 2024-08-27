@@ -37,6 +37,7 @@ namespace gasyboy
 
     public:
         GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
+        GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode = false);
         ~GameBoy();
 
         Registers _registers;

@@ -42,6 +42,39 @@ namespace gasyboy
         }
     }
 
+    Mmu::Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad)
+        : _vRam(std::vector<uint8_t>(0x2000, 0)),
+          _extRam(std::vector<uint8_t>(0x2000, 0)),
+          _workingRam(std::vector<uint8_t>(0x4000, 0)),
+          _executeBios(true),
+          _cartridge(),
+          _gamepad(gamepad),
+          _currModifiedTile(-1),
+          _dmaRegionWritten(false)
+    {
+        // setting joypad to off
+        _workingRam[0xFFFF - 0xC000] = 0xFF;
+
+        // set debug mode to false
+        _debugMode = false;
+
+        // loading rom file
+        try
+        {
+            std::vector<uint8_t> bytes(romSize, 0);
+
+            _cartridge.loadRomFromByteArray(bytes);
+            utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
+                                              "Rom file : \"" +
+                                                  _romFilePath + "\" loaded successfully");
+        }
+        catch (const exception::GbException &e)
+        {
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
+        }
+    }
+
     Mmu::Mmu(uint8_t size,
              uint8_t *mem,
              int *num_mem_accesses,
