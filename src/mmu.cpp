@@ -191,6 +191,9 @@ namespace gasyboy
         {
             if (_cartridge._cartridgeType == Cartridge::CartridgeType::ROM_ONLY)
             {
+                std::stringstream ss;
+                ss << "Memory write violition at address: " << std::hex << (int)address << " . Trying to write value: " << std::hex << (int)value;
+                utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
                 return;
             }
 
@@ -200,26 +203,10 @@ namespace gasyboy
         // if writing to _vRam
         else if (address >= 0x8000 && address < 0xA000)
         {
-            // for notifying gpu that _vRam was modified && need t
-            if (address <= 0x97FF)
-            {
-                int MSB;
-
-                if (((address & 0xF000)) == 0x8000)
-                    MSB = 0;
-                else
-                    MSB = 1;
-
-                int multiplier = ((address - 0x8000) & 0xF00) >> 8;
-                int index = ((address - 0x8000) & 0xF0) >> 4;
-                _currModifiedTile = (index + multiplier * 16 + 256 * MSB);
-            }
-
             _vRam[address - 0x8000] = value;
             if (address >= 0x8000 && address < 0x9800)
             {
                 updateTile(address, value);
-                return;
             }
         }
 
@@ -240,18 +227,24 @@ namespace gasyboy
             else if (address >= 0xFE00 && address <= 0xFE9F)
             {
                 updateSprite(address, value);
-                return;
             }
 
             // for unsupported write in _workingRam
             else if (address >= 0xFEA0 && address <= 0xFEFF)
+            {
+                std::stringstream ss;
+                ss << "Memory write violition at address: " << std::hex << (int)address << " . Trying to write value: " << std::hex << (int)value;
+                utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
                 return;
+            }
 
             // I/O && HighRAM Region
 
             // Joypad register
             else if (address == 0xFF00)
+            {
                 _gamepad.setState(value);
+            }
 
             // for Serail IN/OUT
             else if (address == 0xFF02) // only for Blargg Test roms debugging, TODO: implement serial transfert protocol
@@ -266,46 +259,69 @@ namespace gasyboy
 
             // writing to DIV register reset its counter
             else if (address == 0xFF04)
+            {
                 _workingRam[address - 0xC000] = 0;
+                utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+                                                  "DIV counter reset");
+            }
 
             // writing to LY register reset it
             else if (address == 0xFF44)
+            {
                 _workingRam[address - 0xC000] = 0;
+                utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+                                                  "LY register reset");
+            }
 
             // OAM DMA Transfert
             else if (address == 0xFF46)
             {
-                // doDmaTransfert(value);
-                if (address == 0xFF46)
-                    for (uint16_t i = 0; i < 160; i++)
-                        writeRam(0xFE00 + i, readRam((value << 8) + i));
-                return;
+                for (uint16_t i = 0; i < 160; i++)
+                {
+                    writeRam(0xFE00 + i, readRam((value << 8) + i));
+                }
             }
 
             else if (address == 0xff47)
             {
                 updatePalette(palette_BGP, value);
-                return;
+                std::stringstream ss;
+                ss << "Palette 0xFF47 update to : " << std::hex << (int)value;
+                utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+                                                  ss.str());
             }
             else if (address == 0xff48)
             {
                 updatePalette(palette_OBP0, value);
-                return;
+                std::stringstream ss;
+                ss << "Palette 0xFF48 update to : " << std::hex << (int)value;
+                utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+                                                  ss.str());
             }
             else if (address == 0xff49)
             {
                 updatePalette(palette_OBP1, value);
-                return;
+                std::stringstream ss;
+                ss << "Palette 0xFF49 update to : " << std::hex << (int)value;
+                utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+                                                  ss.str());
             }
 
             // other write
             else
+            {
                 _workingRam[address - 0xC000] = value;
+            }
         }
 
         // for unsupported writes
         else
-            exit(78);
+        {
+            std::stringstream ss;
+            ss << "Memory write violition at address: " << std::hex << (int)address << " . Trying to write: " << std::hex << (int)value;
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              ss.str());
+        }
     }
 
     uint8_t Mmu::getPaletteColor(const uint8_t &index)
