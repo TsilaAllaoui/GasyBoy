@@ -66,62 +66,11 @@ namespace gasyboy
 				j++;
 			}
 
+			// Get cartridge header infos
+			getCartridgeHeaderInfos();
+
 			// Log cartridge informations
-			std::stringstream cartridgeHeaderInfo;
-
-			for (int i = 0x134; i < 0x143; i++)
-			{
-				uint8_t byte = static_cast<char>(_rom[0][i]);
-				if (byte != 0)
-				{
-					_cartridgeHeader.name += byte;
-				}
-
-				if (i >= 0x13F && i < 0x143 && byte != 0)
-				{
-					_cartridgeHeader.manufacturer += byte;
-				}
-			}
-
-			uint8_t cgbSupportByte = _rom[0][0x143];
-			_cartridgeHeader.cgbSupport =
-				cgbSupportByte == 0xC0 ? "Yes (No DMG support)" : (cgbSupportByte == 0x80 ? "Yes (DMG support)" : "No");
-
-			_cartridgeHeader.sgbSupport = _rom[0][0x143] == 0x03 ? "Yes" : "No";
-
-			uint8_t oldLicenseeCodeByte = _rom[0][0x14B];
-			if (oldLicenseeCodeByte == 0x33)
-			{
-				std::string newLicenseeStr;
-				newLicenseeStr.push_back(static_cast<char>(_rom[0][0x144]));
-				newLicenseeStr.push_back(static_cast<char>(_rom[0][0x145]));
-
-				auto code = newLicenseeCodes.find(newLicenseeStr);
-				_cartridgeHeader.licenseeCode = code == newLicenseeCodes.end() ? "Unknown" : code->second;
-			}
-			else
-			{
-				auto code = oldLicenseeCodes.find(oldLicenseeCodeByte);
-				_cartridgeHeader.licenseeCode = code == oldLicenseeCodes.end() ? "Unknown" : code->second;
-			}
-
-			_cartridgeHeader.cartridgeType = cartridgeTypeStr(_rom[0][0x147]);
-			_cartridgeHeader.romSize = romSizeStr(_rom[0][0x148]);
-			_cartridgeHeader.ramSize = ramSizeStr(_rom[0][0x149]);
-			_cartridgeHeader.isJapaneseCartridge = (_rom[0][0x14A] & 0x1);
-			_cartridgeHeader.maskRomVersion = _rom[0][0x14C];
-
-			cartridgeHeaderInfo << "ROM Name:        	 " << _cartridgeHeader.name << std::endl;
-			cartridgeHeaderInfo << "Manufacturer:    	 " << (_cartridgeHeader.manufacturer.empty() ? "N/A" : _cartridgeHeader.manufacturer) << std::endl;
-			cartridgeHeaderInfo << "CGB Support:      	 " << _cartridgeHeader.cgbSupport << std::endl;
-			cartridgeHeaderInfo << "SGB Support:      	 " << (_cartridgeHeader.sgbSupport ? "Yes" : "No") << std::endl;
-			cartridgeHeaderInfo << "Cartridge Type:  	 " << _cartridgeHeader.cartridgeType << std::endl;
-			cartridgeHeaderInfo << "Rom Size:        	 " << _cartridgeHeader.romSize << std::endl;
-			cartridgeHeaderInfo << "RAM Size:        	 " << _cartridgeHeader.ramSize << std::endl;
-			cartridgeHeaderInfo << "Japanese Cartridge:  " << (_cartridgeHeader.isJapaneseCartridge ? "No" : "Yes") << std::endl;
-			cartridgeHeaderInfo << "Mask Rom Version:    " << std::hex << static_cast<int>(_cartridgeHeader.maskRomVersion) << std::endl;
-
-			utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "\n" + cartridgeHeaderInfo.str());
+			logCartridgeHeaderInfos();
 		}
 		else
 		{
@@ -160,60 +109,11 @@ namespace gasyboy
 			j++;
 		}
 
+		// Get cartridge header infos
+		getCartridgeHeaderInfos();
+
 		// Log cartridge information
-		std::stringstream cartridgeHeaderInfo;
-
-		cartridgeHeaderInfo << "ROM Name:  ";
-		for (int i = 0x134; i < 0x143; i++)
-		{
-			cartridgeHeaderInfo << static_cast<char>(_rom[0][i]);
-		}
-
-		cartridgeHeaderInfo << std::endl
-							<< "Manufacturer:  ";
-
-		for (int i = 0x13F; i < 0x142; i++)
-		{
-			cartridgeHeaderInfo << static_cast<char>(_rom[0][i]);
-		}
-
-		cartridgeHeaderInfo << std::endl
-							<< "CGB Support:  ";
-
-		if (_rom[0][0x143] == 0x80)
-		{
-			cartridgeHeaderInfo << "Yes (DMG support)" << std::endl;
-		}
-		else if (_rom[0][0x143] == 0xC0)
-		{
-			cartridgeHeaderInfo << "Yes (No DMG support)" << std::endl;
-		}
-		else
-		{
-			cartridgeHeaderInfo << "No" << std::endl;
-		}
-
-		cartridgeHeaderInfo << "License Code:  " << _rom[0][0x144] << _rom[0][0x145] << std::endl;
-
-		cartridgeHeaderInfo << "SGB Support:  ";
-
-		if (_rom[0][0x143] == 0x03)
-		{
-			cartridgeHeaderInfo << "Yes" << std::endl;
-		}
-		else if (_rom[0][0x143] == 0)
-		{
-			cartridgeHeaderInfo << "No" << std::endl;
-		}
-
-		cartridgeHeaderInfo << "Cartridge Type:  " << cartridgeTypeStr(_rom[0][0x147]) << std::endl;
-		cartridgeHeaderInfo << "Rom Size:  " << 32 * static_cast<uint8_t>(_rom[0][0x148]) << "KiB" << std::endl;
-		cartridgeHeaderInfo << "RAM Size:  " << ramSizeStr(_rom[0][0x149]) << std::endl;
-		cartridgeHeaderInfo << "Japanese Cartridge:  " << ((_rom[0][0x14A] & 0x1) ? "No" : "Yes") << std::endl;
-		cartridgeHeaderInfo << "Old License Code:  " << static_cast<uint8_t>(_rom[0][0x14B]) << std::endl;
-		cartridgeHeaderInfo << "Mask Rom Version:  " << static_cast<uint8_t>(_rom[0][0x14C]) << std::endl;
-
-		utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "\n" + cartridgeHeaderInfo.str());
+		logCartridgeHeaderInfos();
 	}
 
 	std::string Cartridge::cartridgeTypeStr(const uint8_t &byte)
@@ -323,6 +223,68 @@ namespace gasyboy
 		default:
 			return "Unknown";
 		}
+	}
+
+	void Cartridge::getCartridgeHeaderInfos()
+	{
+		for (int i = 0x134; i < 0x143; i++)
+		{
+			uint8_t byte = static_cast<char>(_rom[0][i]);
+			if (byte != 0)
+			{
+				_cartridgeHeader.name += byte;
+			}
+
+			if (i >= 0x13F && i < 0x143 && byte != 0)
+			{
+				_cartridgeHeader.manufacturer += byte;
+			}
+		}
+
+		uint8_t cgbSupportByte = _rom[0][0x143];
+		_cartridgeHeader.cgbSupport =
+			cgbSupportByte == 0xC0 ? "Yes (No DMG support)" : (cgbSupportByte == 0x80 ? "Yes (DMG support)" : "No");
+
+		_cartridgeHeader.sgbSupport = _rom[0][0x143] == 0x03 ? "Yes" : "No";
+
+		uint8_t oldLicenseeCodeByte = _rom[0][0x14B];
+		if (oldLicenseeCodeByte == 0x33)
+		{
+			std::string newLicenseeStr;
+			newLicenseeStr.push_back(static_cast<char>(_rom[0][0x144]));
+			newLicenseeStr.push_back(static_cast<char>(_rom[0][0x145]));
+
+			auto code = newLicenseeCodes.find(newLicenseeStr);
+			_cartridgeHeader.licenseeCode = code == newLicenseeCodes.end() ? "Unknown" : code->second;
+		}
+		else
+		{
+			auto code = oldLicenseeCodes.find(oldLicenseeCodeByte);
+			_cartridgeHeader.licenseeCode = code == oldLicenseeCodes.end() ? "Unknown" : code->second;
+		}
+
+		_cartridgeHeader.cartridgeType = cartridgeTypeStr(_rom[0][0x147]);
+		_cartridgeHeader.romSize = romSizeStr(_rom[0][0x148]);
+		_cartridgeHeader.ramSize = ramSizeStr(_rom[0][0x149]);
+		_cartridgeHeader.isJapaneseCartridge = (_rom[0][0x14A] & 0x1);
+		_cartridgeHeader.maskRomVersion = _rom[0][0x14C];
+	}
+
+	void Cartridge::logCartridgeHeaderInfos()
+	{
+		std::stringstream cartridgeHeaderInfo;
+
+		cartridgeHeaderInfo << "ROM Name:        	 " << _cartridgeHeader.name << std::endl;
+		cartridgeHeaderInfo << "Manufacturer:    	 " << (_cartridgeHeader.manufacturer.empty() ? "N/A" : _cartridgeHeader.manufacturer) << std::endl;
+		cartridgeHeaderInfo << "CGB Support:      	 " << _cartridgeHeader.cgbSupport << std::endl;
+		cartridgeHeaderInfo << "SGB Support:      	 " << (_cartridgeHeader.sgbSupport ? "Yes" : "No") << std::endl;
+		cartridgeHeaderInfo << "Cartridge Type:  	 " << _cartridgeHeader.cartridgeType << std::endl;
+		cartridgeHeaderInfo << "Rom Size:        	 " << _cartridgeHeader.romSize << std::endl;
+		cartridgeHeaderInfo << "RAM Size:        	 " << _cartridgeHeader.ramSize << std::endl;
+		cartridgeHeaderInfo << "Japanese Cartridge:  " << (_cartridgeHeader.isJapaneseCartridge ? "No" : "Yes") << std::endl;
+		cartridgeHeaderInfo << "Mask Rom Version:    " << std::hex << static_cast<int>(_cartridgeHeader.maskRomVersion) << std::endl;
+
+		utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "\n" + cartridgeHeaderInfo.str());
 	}
 
 	void Cartridge::loadRom(uint8_t size, uint8_t *mem)

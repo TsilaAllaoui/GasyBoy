@@ -354,6 +354,12 @@ namespace gasyboy
 
         // Ram size string from byte
         std::string ramSizeStr(const uint8_t &byte);
+
+        // Get cartridge header infos
+        void getCartridgeHeaderInfos();
+
+        // Log cartridge header infos
+        void logCartridgeHeaderInfos();
     };
 }
 
