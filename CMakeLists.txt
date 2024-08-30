@@ -28,9 +28,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${EXTERNALS_DIR}/argparse/inc
 # Adding libs includes to project lib
 if (USE_EMSCRIPTEN_SDL2 OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
     # Emscripten SDL setup
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    # set(SDL2_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_main,_load_file,_malloc,_free -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -sNO_DISABLE_EXCEPTION_CATCHING")
-    # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SDL2_FLAGS}")
+    # set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
     target_link_libraries(${PROJECT_NAME} PRIVATE SDL2)
 
@@ -60,7 +58,7 @@ if (USE_EMSCRIPTEN_SDL2 OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYS
 
     set_target_properties(${PROJECT_NAME} PROPERTIES
         COMPILE_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1"
-        LINK_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 ${PRELOAD_FLAGS} -w"
+        LINK_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 ${PRELOAD_FLAGS} -sEXPORTED_FUNCTIONS=_main,_load_file,_malloc,_free -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -w"
     )
 else()
     # Non-Emscripten (native) build

@@ -61,9 +61,11 @@ namespace gasyboy
         // loading rom file
         try
         {
-            std::vector<uint8_t> bytes(romSize, 0);
+            std::vector<uint8_t> bytesArray(romSize, 0);
 
-            _cartridge.loadRomFromByteArray(bytes);
+            std::copy(bytes, bytes + romSize, bytesArray.begin());
+
+            _cartridge.loadRomFromByteArray(bytesArray);
             utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
                                               "Rom file : \"" +
                                                   _romFilePath + "\" loaded successfully");

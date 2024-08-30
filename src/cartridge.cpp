@@ -94,6 +94,8 @@ namespace gasyboy
 		// Setting bank number
 		setBankNumber(byteArray[0x148]);
 
+		std::cout << "Bank number: " << _banksNumber << std::endl;
+
 		// Loading rom
 		_rom = std::vector<std::vector<uint8_t>>(_banksNumber, std::vector<uint8_t>(0x4000, 0));
 

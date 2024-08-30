@@ -34,6 +34,9 @@ namespace gasyboy
           _cycleCounter(0),
           _ppu(_registers, _interruptManager, _mmu)
     {
+        // Init renderer
+        _renderer = new Renderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
+        _renderer->init();
     }
 
     GameBoy::~GameBoy()
