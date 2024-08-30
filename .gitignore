@@ -4,3 +4,6 @@ build/
 roms/
 build_wasm/
 *.gb
+*.js
+*.data
+*.wasm
