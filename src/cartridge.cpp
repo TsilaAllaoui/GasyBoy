@@ -414,6 +414,12 @@ namespace gasyboy
 				_currRomBank |= lower5bits;
 				if (_currRomBank == 0)
 					_currRomBank = 1;
+				else if (_currRomBank == 0x20)
+					_currRomBank = 0x21;
+				else if (_currRomBank == 0x40)
+					_currRomBank = 0x41;
+				else if (_currRomBank == 0x60)
+					_currRomBank = 0x61;
 			}
 			// MBC3
 			else if (_cartridgeType == CartridgeType::MBC3_RAM_BATT)
@@ -438,9 +444,15 @@ namespace gasyboy
 				{
 					// ROM mode: Set high bits of bank
 					_currRomBank &= 0x1F;
-					_currRomBank |= value;
+					_currRomBank |= ((value & 3) << 5);
 					if (_currRomBank == 0)
 						_currRomBank = 1;
+					else if (_currRomBank == 0x20)
+						_currRomBank = 0x21;
+					else if (_currRomBank == 0x40)
+						_currRomBank = 0x41;
+					else if (_currRomBank == 0x60)
+						_currRomBank = 0x61;
 				}
 				// RAM mode: Set Bank
 				else

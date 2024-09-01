@@ -285,26 +285,26 @@ namespace gasyboy
             else if (address == 0xff47)
             {
                 updatePalette(palette_BGP, value);
-                std::stringstream ss;
+                /*std::stringstream ss;
                 ss << "Palette 0xFF47 update to : " << std::hex << (int)value;
                 utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
-                                                  ss.str());
+                                                  ss.str());*/
             }
             else if (address == 0xff48)
             {
                 updatePalette(palette_OBP0, value);
-                std::stringstream ss;
+                /*std::stringstream ss;
                 ss << "Palette 0xFF48 update to : " << std::hex << (int)value;
                 utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
-                                                  ss.str());
+                                                  ss.str());*/
             }
             else if (address == 0xff49)
             {
                 updatePalette(palette_OBP1, value);
-                std::stringstream ss;
+                /*std::stringstream ss;
                 ss << "Palette 0xFF49 update to : " << std::hex << (int)value;
                 utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
-                                                  ss.str());
+                                                  ss.str());*/
             }
 
             // other write
