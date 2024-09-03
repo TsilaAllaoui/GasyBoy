@@ -303,13 +303,13 @@ namespace gasyboy
 			_ramBanksCount = 1;
 			break;
 		case 0x3:
-			_romBanksCount = 4;
+			_ramBanksCount = 4;
 			break;
 		case 0x4:
-			_romBanksCount = 16;
+			_ramBanksCount = 16;
 			break;
 		case 0x5:
-			_romBanksCount = 8;
+			_ramBanksCount = 8;
 			break;
 		default:
 			std::stringstream ssLog;
@@ -335,6 +335,13 @@ namespace gasyboy
 				utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
 												  ssLog.str());
 				exit(ExitState::CRITICAL_ERROR);
+			}
+			else
+			{
+				std::stringstream ssLog;
+				ssLog << "Reading MBC with rom bank index: " << _currentRomBank << " at address \"" << std::hex << (int)adrr << "\"... " << std::endl;
+				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+												  ssLog.str());
 			}
 
 			return _romBanks[_currentRomBank][adrr - 0x4000];
@@ -391,15 +398,14 @@ namespace gasyboy
 				_cartridgeType == CartridgeType::MBC1_RAM ||
 				_cartridgeType == CartridgeType::MBC1_RAM_BATT)
 			{
+				std::stringstream ssLog;
+				ssLog << "Writing \"0x" << std::hex << (int)value << "\" at address \"" << std::hex << (int)adrr << "\" to MBC...  Changing lower 5 bits to: " << (value & 0x1F) << std::endl;
+				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+												  ssLog.str());
 				_currentRomBank = (value & 0x1F);
 				if (value == 0 || value == 0x20 || value == 0x40 || value == 0x60)
 				{
 					_currentRomBank += 1;
-				}
-
-				if (_currentRomBank == 64 || _currentRomBank > _romBanksCount)
-				{
-					int a = 0;
 				}
 			}
 			// MBC3
@@ -423,12 +429,20 @@ namespace gasyboy
 			{
 				if (!_mbc1Mode)
 				{
-					// ROM mode: Set high bits of bank
-					// _currentRomBank &= 0x1F;
-					_currentRomBank = ((value & 3) << 5);
-					if (value == 0 || value == 0x20 || value == 0x40 || value == 0x60)
+					std::stringstream ssLog;
+					ssLog << "Writing \"0x" << std::hex << (int)value << "\" at address \"0x" << std::hex << (int)adrr << "\" to MBC...  Changing upper bits (5-6) to: " << std::hex << (int)(value & 0x3) << std::endl;
+					utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+													  ssLog.str());
+					_currentRomBank &= 0x1F;
+					_currentRomBank |= ((value & 3) << 5);
+					if (_currentRomBank == 0 || _currentRomBank == 0x10 || _currentRomBank == 0x20 || _currentRomBank == 0x40 || _currentRomBank == 0x60)
 					{
 						_currentRomBank += 1;
+					}
+
+					if (_currentRomBank > _romBanksCount)
+					{
+						_currentRomBank &= 0x1F;
 					}
 				}
 				// RAM mode: Set Bank
