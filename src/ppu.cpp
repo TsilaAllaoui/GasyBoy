@@ -159,41 +159,70 @@ namespace gasyboy
 
     void Ppu::renderScanLineWindow()
     {
+        // Check if window is enabled
         if (!_control->windowEnable)
         {
             return;
         }
 
-        if (_mmu.readRam(0xFF4A) > *_scanline)
+        // Get the window Y position from 0xFF4A register
+        uint8_t windowY = _mmu.readRam(0xFF4A);
+
+        // If the current scanline is above the window's Y position, do nothing
+        if (windowY > *_scanline)
         {
             return;
         }
 
+        // Determine the tile map address for the window
         uint16_t address = 0x9800;
         if (_control->windowDisplaySelect)
-            address += 0x400;
-
-        address += ((*_scanline - _mmu.readRam(0xFF4A)) / 8) * 32;
-        int y = (*_scanline - _mmu.readRam(0xFF4A)) & 7;
-        int x = 0;
-
-        int pixelOffset = *_scanline * 160;
-        pixelOffset += _mmu.readRam(0xFF4B) - 7;
-        for (uint16_t tile_address = address; tile_address < address + 20; tile_address++)
         {
+            address += 0x400;
+        }
+
+        // Calculate the starting address of the current window row
+        uint8_t windowX = _mmu.readRam(0xFF4B) - 7;  // Get the window X position from 0xFF4B register
+        int y = (*_scanline - windowY) & 7;          // Vertical pixel position within the tile
+        int pixelOffset = *_scanline * SCREEN_WIDTH; // Start position in the framebuffer
+
+        // Calculate the starting tile map address
+        address += ((*_scanline - windowY) / 8) * 32;
+
+        // Iterate through each tile in the current scanline of the window
+        for (int tileX = 0; tileX < 21; tileX++)
+        {
+            // Read the tile index from VRAM
+            uint16_t tile_address = address + tileX;
             int tile = _mmu.readRam(tile_address);
 
+            // Adjust for tile index based on data select mode
             if (!_control->bgWindowDataSelect && tile < 128)
-                tile += 256;
-
-            for (; x < 8; x++)
             {
-                if (pixelOffset > sizeof(_framebuffer))
-                    continue;
-                int colour = _mmu.tiles[tile].pixels[y][x];
-                _framebuffer[pixelOffset++] = _mmu.palette_BGP[colour];
+                tile += 256;
             }
-            x = 0;
+
+            // Iterate through each pixel in the tile
+            for (int x = 0; x < 8; x++)
+            {
+                int windowPixelX = windowX + tileX * 8 + x;
+                if (windowPixelX < 0 || windowPixelX >= SCREEN_WIDTH)
+                {
+                    continue; // Skip if pixel is outside the screen bounds
+                }
+
+                // Calculate the color of the pixel
+                int colour = _mmu.tiles[tile].pixels[y][x];
+
+                // Ensure pixelOffset is within bounds of the framebuffer
+                if (pixelOffset + windowPixelX >= SCREEN_WIDTH * SCREEN_HEIGHT)
+                {
+                    return; // Prevent out-of-bounds access
+                }
+
+                // Write the color to the framebuffer
+                _framebuffer[pixelOffset + windowPixelX] = _mmu.palette_BGP[colour];
+            }
         }
     }
 

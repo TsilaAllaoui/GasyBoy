@@ -174,16 +174,6 @@ namespace gasyboy
 
     void Mmu::writeRam(const uint16_t &address, const uint8_t &value)
     {
-        if (_debugMode)
-        {
-            struct mem_access *access = &_mem_accesses[*_num_mem_accesses];
-            (*_num_mem_accesses)++;
-            access->type = MEM_ACCESS_WRITE;
-            access->addr = address;
-            access->val = value;
-            return;
-        }
-
         // if writing to ROM, manage memory banks
         if (address < 0x8000)
         {
@@ -192,7 +182,7 @@ namespace gasyboy
                 return;
             }
 
-            _cartridge.handleRomMemory(address, value);
+            _cartridge.mbcRomWrite(address, value);
         }
 
         // if writing to _vRam
@@ -223,7 +213,7 @@ namespace gasyboy
 
         // writing to _extRam
         else if (address >= 0xA000 && address < 0xC000)
-            _cartridge.handleRamMemory(address, value);
+            _cartridge.mbcRamWrite(address, value);
 
         // writing to _workingRam && HighRAM
         else if (address >= 0xC000 && address <= 0xFFFF)

@@ -13,34 +13,34 @@ namespace gasyboy
     {
     private:
         // ROM memory
-        std::vector<std::vector<uint8_t>> _rom;
+        std::vector<std::vector<uint8_t>> _romBanks;
 
         // The current ROM bank
-        uint8_t _currRomBank;
+        uint8_t _currentRomBank;
 
         // RAM banks
-        std::vector<uint8_t> _ramBanks;
+        std::vector<std::vector<uint8_t>> _ramBanks;
 
         // The current RAM Bank
-        uint8_t _currRamBank;
+        uint8_t _currentRamBank;
 
         // For checking if RAM is writable
-        bool _enabledRAM;
+        bool _isRamWriteEnabled;
 
         // RTC registers
         uint8_t RTCS, RTCM, RTCH, RTCDL, RTCDH;
 
         // Current used RTC register mapped in 0xA000-0xBFFFF
-        uint8_t _currRTCReg;
+        uint8_t _currentRtcReg;
 
         // MBC mode
-        bool _mode;
+        bool _mbc1Mode;
 
         // Number of banks of the ROM
-        int _banksNumber;
+        int _romBanksCount;
 
-        // The name of the current game in the cartridge
-        std::string _romName;
+        // Number of banks of the ext RAM
+        int _ramBanksCount;
 
     public:
         // Constructor/destructor
@@ -91,12 +91,10 @@ namespace gasyboy
         void setMBCType(const uint8_t &value);
 
         // Set rom banks number
-        void setBankNumber(const uint8_t &value);
+        void setRomBankNumber(const uint8_t &value);
 
-        // Getters && setters
-        uint8_t getCurrRomBanks();
-        uint8_t getCurrRamBanks();
-        bool isRamWriteEnabled();
+        // Set rom banks number
+        void setRamBankNumber(const uint8_t &value);
 
         // ROM Bank reading
         uint8_t romBankRead(const uint16_t &adrr);
@@ -105,12 +103,10 @@ namespace gasyboy
         uint8_t ramBankRead(const uint16_t &adrr);
 
         // To handle all bank changes
-        void handleRomMemory(const uint16_t &adrr, const uint8_t &value);
-        void handleRamMemory(const uint16_t &adrr, const uint8_t &value);
+        void mbcRomWrite(const uint16_t &adrr, const uint8_t &value);
+        void mbcRamWrite(const uint16_t &adrr, const uint8_t &value);
 
-        // Get game name
-        std::string getGameName();
-
+        // To load rom from byte array
         void loadRomFromByteArray(const std::vector<uint8_t> &byteArray);
     };
 }

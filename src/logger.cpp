@@ -31,7 +31,13 @@ namespace gasyboy
         {
             std::stringstream currentLog;
             currentLog << _logTypeMap[type] << message << std::endl;
-            type == LogType::SERIAL_DEBUG ? _serialDebugLog : _log << currentLog.str();
+            if (type == LogType::SERIAL_DEBUG)
+            {
+                _log << _serialDebugLog.str();
+                currentLog << _serialDebugLog.str();
+            }
+
+            _log << currentLog.str();
             std::cout << currentLog.str();
         }
 

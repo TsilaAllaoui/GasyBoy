@@ -26,17 +26,14 @@ void main_loop()
 {
     if (gb)
     {
-        std::cout << "Gb loop started!\n";
         gb->loop();
-    }
-    else
-    {
-        std::cout << "Gb not ready!\n";
     }
 }
 
 int main()
 {
+    gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", true);
+
     emscripten_set_main_loop(main_loop, 0, true);
 
     return 0;
@@ -46,6 +43,8 @@ int main()
 
 int main(int argc, char *argv[])
 {
+    gasyboy::GameBoy("C:/Users/trasoloallaoui/C++/test/GasyBoy/build/Debug/Zelda.gb", true, true).boot();
+    return 0;
     argparse::ArgumentParser program("gasyboy");
 
     program.add_argument("-r", "--rom")
