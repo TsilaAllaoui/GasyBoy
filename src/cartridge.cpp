@@ -150,6 +150,7 @@ namespace gasyboy
 	{
 		if (_isRamWriteEnabled && addr >= 0xA000 && addr < 0xC000)
 		{
+			_currentRamBank %= _ramBanksCount;
 			return _ramBanks[_currentRamBank][addr - 0xA000]; // Return data from the current RAM bank (0xA000 - 0xBFFF)
 		}
 		return 0xFF; // Default value if RAM is not accessible or address is out of range
@@ -168,12 +169,14 @@ namespace gasyboy
 			}
 			else if (addr >= 0x2000 && addr < 0x4000)
 			{
-				// Set ROM bank number
+				// Set ROM bank number (lower 5 bits)
 				_currentRomBank = value & 0x1F;
 				if (_currentRomBank == 0)
 				{
 					_currentRomBank = 1;
 				}
+				// Ensure the bank number does not exceed the maximum number of banks
+				_currentRomBank %= _romBanksCount;
 			}
 			else if (addr >= 0x4000 && addr < 0x6000)
 			{
@@ -184,8 +187,8 @@ namespace gasyboy
 				}
 				else
 				{
-					_currentRomBank |= (value & 0x03) << 5;
-					_currentRomBank &= 0x1F;
+					_currentRomBank = (_currentRomBank & 0x1F) | ((value & 0x03) << 5);
+					_currentRomBank %= _romBanksCount;
 					if (_currentRomBank == 0)
 					{
 						_currentRomBank = 1;
@@ -204,6 +207,7 @@ namespace gasyboy
 	{
 		if (_isRamWriteEnabled && addr >= 0xA000 && addr < 0xC000)
 		{
+			_currentRamBank %= _ramBanksCount;
 			_ramBanks[_currentRamBank][addr - 0xA000] = value;
 		}
 	}
