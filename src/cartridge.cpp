@@ -68,21 +68,7 @@ namespace gasyboy
 
 	void Cartridge::setMBCType(const uint8_t &value)
 	{
-		_cartridgeType = static_cast<CartridgeType>(value);
-
-		// Set up MBC specific settings if needed
-		switch (_cartridgeType)
-		{
-		case CartridgeType::MBC1:
-		case CartridgeType::MBC1_RAM:
-		case CartridgeType::MBC1_RAM_BATT:
-			_mbc1Mode = true;
-			break;
-		// Add additional MBC setups as necessary
-		default:
-			_mbc1Mode = false;
-			break;
-		}
+		_cartridgeType = utils::uint8ToCartridgeType(value);
 	}
 
 	void Cartridge::setRomBankNumber(const uint8_t &value)
@@ -171,7 +157,9 @@ namespace gasyboy
 
 	void Cartridge::mbcRomWrite(const uint16_t &addr, const uint8_t &value)
 	{
-		if (_mbc1Mode)
+		if (_cartridgeType == CartridgeType::MBC1 ||
+			_cartridgeType == CartridgeType::MBC1_RAM ||
+			_cartridgeType == CartridgeType::MBC1_RAM_BATT)
 		{
 			if (addr < 0x2000)
 			{
@@ -189,26 +177,27 @@ namespace gasyboy
 			}
 			else if (addr >= 0x4000 && addr < 0x6000)
 			{
+				// Set RAM bank number or upper bits of ROM bank number
 				if (_mbc1Mode)
 				{
-					// Set RAM bank number or upper bits of ROM bank number
-					if (_mbc1Mode)
+					_currentRamBank = value & 0x03;
+				}
+				else
+				{
+					_currentRomBank |= (value & 0x03) << 5;
+					_currentRomBank &= 0x1F;
+					if (_currentRomBank == 0)
 					{
-						_currentRamBank = value & 0x03;
-					}
-					else
-					{
-						_currentRomBank |= (value & 0x03) << 5;
+						_currentRomBank = 1;
 					}
 				}
 			}
 			else if (addr >= 0x6000 && addr < 0x8000)
 			{
 				// Set MBC1 mode
-				_mbc1Mode = (value & 0x01) != 0;
+				_mbc1Mode = (value & 0x01);
 			}
 		}
-		// Additional MBC types can be implemented here
 	}
 
 	void Cartridge::mbcRamWrite(const uint16_t &addr, const uint8_t &value)
