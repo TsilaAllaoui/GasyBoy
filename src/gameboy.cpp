@@ -59,6 +59,11 @@ namespace gasyboy
         _ppu.step(cycle);
     }
 
+    void GameBoy::stop()
+    {
+        state = State::STOPPED;
+    }
+
     void GameBoy::boot()
     {
         try

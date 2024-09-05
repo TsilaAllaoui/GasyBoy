@@ -48,6 +48,9 @@ namespace gasyboy
         // Step the emulator
         void step();
 
+        // Stop the emulator
+        void stop();
+
         enum class State
         {
             RUNNING,

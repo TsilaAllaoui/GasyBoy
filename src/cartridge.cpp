@@ -171,10 +171,9 @@ namespace gasyboy
 			}
 			else if (addr >= 0x4000 && addr < 0x6000)
 			{
-				// Set RAM bank number or upper bits of ROM bank number
 				if (_bankingMode == BankingMode::MODE_1)
 				{
-					_currentRamBank = value & 0x03; // Allow changing RAM bank in MODE_1
+					_currentRamBank = value & 0x03;
 				}
 				else if (_bankingMode == BankingMode::MODE_0)
 				{
@@ -200,9 +199,15 @@ namespace gasyboy
 		{
 			if (_currentRamBank < _ramBanksCount)
 			{
-				_currentRamBank &= 0x03;
+				return _ramBanks[_currentRamBank][addr - 0xA000];
 			}
-			return _ramBanks[_currentRamBank][addr - 0xA000];
+			else
+			{
+				std::stringstream ss;
+				ss << "Read Warning: Invalid Ram bank acces: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
+				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
+				return _ramBanks[_currentRamBank % _ramBanksCount][addr - 0xA000]; // Wrap around ram banks if overflow
+			}
 		}
 		return 0xFF;
 	}
@@ -213,9 +218,15 @@ namespace gasyboy
 		{
 			if (_currentRamBank < _ramBanksCount)
 			{
-				_currentRamBank &= 0x03;
+				_ramBanks[_currentRamBank][addr - 0xA000] = value;
 			}
-			_ramBanks[_currentRamBank][addr - 0xA000] = value;
+			else
+			{
+				std::stringstream ss;
+				ss << "Write Warning: Invalid Ram bank acces: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
+				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
+				_ramBanks[_currentRamBank % _ramBanksCount][addr - 0xA000] = value; // Wrap around ram banks if overflow
+			}
 		}
 	}
 }
