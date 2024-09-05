@@ -25,7 +25,7 @@ namespace gasyboy
         uint8_t _currentRamBank;
 
         // For checking if RAM is writable
-        bool _isRamWriteEnabled;
+        bool _isRamEnabled;
 
         // RTC registers
         uint8_t RTCS, RTCM, RTCH, RTCDL, RTCDH;
@@ -33,8 +33,15 @@ namespace gasyboy
         // Current used RTC register mapped in 0xA000-0xBFFFF
         uint8_t _currentRtcReg;
 
+        // ROM/RAM Banking mode
+        enum class BankingMode
+        {
+            MODE_0,
+            MODE_1
+        };
+
         // MBC mode
-        bool _mbc1Mode;
+        BankingMode _bankingMode;
 
         // Number of banks of the ROM
         int _romBanksCount;

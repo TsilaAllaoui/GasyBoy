@@ -5,11 +5,11 @@
 
 namespace gasyboy
 {
-    Mmu::Mmu(const std::string &romFilePath, Gamepad &gamepad)
+    Mmu::Mmu(const std::string &romFilePath, Gamepad &gamepad, const bool &bootBios)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(true),
+          _executeBios(bootBios),
           _cartridge(),
           _gamepad(gamepad),
           _currModifiedTile(-1),
@@ -18,9 +18,6 @@ namespace gasyboy
     {
         // setting joypad to off
         _workingRam[0xFFFF - 0xC000] = 0xFF;
-
-        // set debug mode to false
-        _debugMode = false;
 
         // loading rom file
         try
@@ -54,9 +51,6 @@ namespace gasyboy
     {
         // setting joypad to off
         _workingRam[0xFFFF - 0xC000] = 0xFF;
-
-        // set debug mode to false
-        _debugMode = false;
 
         // loading rom file
         try
@@ -113,14 +107,6 @@ namespace gasyboy
 
     uint8_t Mmu::readRam(const uint16_t &address)
     {
-        if (_debugMode)
-        {
-            if (address < _memSize)
-                return _mem[address];
-            else
-                return 0xaa;
-        }
-
         try
         {
             if (address < 0x100)

@@ -12,9 +12,9 @@ namespace gasyboy
 	Cartridge::Cartridge()
 		: _currentRomBank(1), // Default ROM bank starts at 1 (0 is always mapped)
 		  _currentRamBank(0),
-		  _isRamWriteEnabled(false),
+		  _isRamEnabled(false),
 		  _currentRtcReg(0),
-		  _mbc1Mode(false),
+		  _bankingMode(BankingMode::MODE_0),
 		  _romBanksCount(0),
 		  _ramBanksCount(0),
 		  _cartridgeType(CartridgeType::ROM_ONLY)
@@ -130,30 +130,21 @@ namespace gasyboy
 			break;
 		}
 
-		_ramBanks.resize(_ramBanksCount, std::vector<uint8_t>(0x2000, 0)); // Each RAM bank is 8KB
+		_ramBanks.resize(_ramBanksCount, std::vector<uint8_t>(0x2000, 0));
 	}
 
 	uint8_t Cartridge::romBankRead(const uint16_t &addr)
 	{
 		if (addr < 0x4000)
 		{
-			return _romBanks[0][addr]; // Return data from the first ROM bank (0x0000 - 0x3FFF)
+			return _romBanks[0][addr];
 		}
 		else if (addr >= 0x4000 && addr < 0x8000)
 		{
-			return _romBanks[_currentRomBank][addr - 0x4000]; // Return data from the current ROM bank (0x4000 - 0x7FFF)
+			_currentRomBank %= _romBanksCount;
+			return _romBanks[_currentRomBank][addr - 0x4000];
 		}
-		return 0xFF; // Default value if address is out of range
-	}
-
-	uint8_t Cartridge::ramBankRead(const uint16_t &addr)
-	{
-		if (_isRamWriteEnabled && addr >= 0xA000 && addr < 0xC000)
-		{
-			_currentRamBank %= _ramBanksCount;
-			return _ramBanks[_currentRamBank][addr - 0xA000]; // Return data from the current RAM bank (0xA000 - 0xBFFF)
-		}
-		return 0xFF; // Default value if RAM is not accessible or address is out of range
+		return 0xFF;
 	}
 
 	void Cartridge::mbcRomWrite(const uint16_t &addr, const uint8_t &value)
@@ -162,10 +153,10 @@ namespace gasyboy
 			_cartridgeType == CartridgeType::MBC1_RAM ||
 			_cartridgeType == CartridgeType::MBC1_RAM_BATT)
 		{
-			if (addr < 0x2000)
+			if (addr >= 0 && addr < 0x2000)
 			{
 				// Enable/disable RAM writing
-				_isRamWriteEnabled = (value & 0x0F) == 0x0A;
+				_isRamEnabled = (value & 0x0F) == 0x0A;
 			}
 			else if (addr >= 0x2000 && addr < 0x4000)
 			{
@@ -181,14 +172,14 @@ namespace gasyboy
 			else if (addr >= 0x4000 && addr < 0x6000)
 			{
 				// Set RAM bank number or upper bits of ROM bank number
-				if (_mbc1Mode)
+				if (_bankingMode == BankingMode::MODE_1)
 				{
-					_currentRamBank = value & 0x03;
+					_currentRamBank = value & 0x03; // Allow changing RAM bank in MODE_1
 				}
-				else
+				else if (_bankingMode == BankingMode::MODE_0)
 				{
+					_currentRamBank = 0;
 					_currentRomBank = (_currentRomBank & 0x1F) | ((value & 0x03) << 5);
-					_currentRomBank %= _romBanksCount;
 					if (_currentRomBank == 0)
 					{
 						_currentRomBank = 1;
@@ -198,16 +189,32 @@ namespace gasyboy
 			else if (addr >= 0x6000 && addr < 0x8000)
 			{
 				// Set MBC1 mode
-				_mbc1Mode = (value & 0x01);
+				_bankingMode = (value & 0x01) == 0 ? BankingMode::MODE_0 : BankingMode::MODE_1;
 			}
 		}
 	}
 
+	uint8_t Cartridge::ramBankRead(const uint16_t &addr)
+	{
+		if (_isRamEnabled && addr >= 0xA000 && addr < 0xC000)
+		{
+			if (_currentRamBank < _ramBanksCount)
+			{
+				_currentRamBank &= 0x03;
+			}
+			return _ramBanks[_currentRamBank][addr - 0xA000];
+		}
+		return 0xFF;
+	}
+
 	void Cartridge::mbcRamWrite(const uint16_t &addr, const uint8_t &value)
 	{
-		if (_isRamWriteEnabled && addr >= 0xA000 && addr < 0xC000)
+		if (_isRamEnabled && addr >= 0xA000 && addr < 0xC000)
 		{
-			_currentRamBank %= _ramBanksCount;
+			if (_currentRamBank < _ramBanksCount)
+			{
+				_currentRamBank &= 0x03;
+			}
 			_ramBanks[_currentRamBank][addr - 0xA000] = value;
 		}
 	}
