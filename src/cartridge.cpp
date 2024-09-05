@@ -141,9 +141,22 @@ namespace gasyboy
 		}
 		else if (addr >= 0x4000 && addr < 0x8000)
 		{
-			_currentRomBank %= _romBanksCount;
-			return _romBanks[_currentRomBank][addr - 0x4000];
+			if (_currentRomBank < _romBanksCount)
+			{
+				return _romBanks[_currentRomBank][addr - 0x4000];
+			}
+			else
+			{
+				std::stringstream ss;
+				ss << "Read Warning: Invalid Rom bank acces: " << std::hex << (int)_currentRomBank << ", max Rom banks number is: " << std::hex << (int)_romBanksCount;
+				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
+				return _romBanks[_currentRomBank % _romBanksCount][addr - 0x4000]; // Wrap around rom banks if overflow
+			}
 		}
+
+		std::stringstream ss;
+		ss << "Read Warning: Invalid Rom read at address: 0x" << std::hex << (int)addr;
+		utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 		return 0xFF;
 	}
 
@@ -166,8 +179,18 @@ namespace gasyboy
 				{
 					_currentRomBank = 1;
 				}
-				// Ensure the bank number does not exceed the maximum number of banks
-				_currentRomBank %= _romBanksCount;
+				else if (_currentRomBank == 0x20)
+				{
+					_currentRomBank = 0x21;
+				}
+				else if (_currentRomBank == 0x40)
+				{
+					_currentRomBank = 0x41;
+				}
+				else if (_currentRomBank == 0x60)
+				{
+					_currentRomBank = 0x61;
+				}
 			}
 			else if (addr >= 0x4000 && addr < 0x6000)
 			{
@@ -179,10 +202,6 @@ namespace gasyboy
 				{
 					_currentRamBank = 0;
 					_currentRomBank = (_currentRomBank & 0x1F) | ((value & 0x03) << 5);
-					if (_currentRomBank == 0)
-					{
-						_currentRomBank = 1;
-					}
 				}
 			}
 			else if (addr >= 0x6000 && addr < 0x8000)
