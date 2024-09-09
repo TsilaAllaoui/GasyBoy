@@ -81,7 +81,7 @@ namespace gasyboy
         };
         int *_num_mem_accesses;
         struct mem_access *_mem_accesses;
-        bool _debugMode;
+
         uint8_t *_mem;
         uint8_t _memSize;
 
@@ -93,7 +93,9 @@ namespace gasyboy
         bool _oamDataIn;
 
         // construcor/destructor
-        Mmu(const std::string &romFilePath, Gamepad &gamepad);
+        Mmu(const std::string &romFilePath, Gamepad &gamepad, const bool &bootBios = true);
+
+        Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad);
 
         // For debugging
         Mmu(uint8_t size,

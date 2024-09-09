@@ -5,11 +5,11 @@
 
 namespace gasyboy
 {
-    Mmu::Mmu(const std::string &romFilePath, Gamepad &gamepad)
+    Mmu::Mmu(const std::string &romFilePath, Gamepad &gamepad, const bool &bootBios)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(true),
+          _executeBios(bootBios),
           _cartridge(),
           _gamepad(gamepad),
           _currModifiedTile(-1),
@@ -18,9 +18,6 @@ namespace gasyboy
     {
         // setting joypad to off
         _workingRam[0xFFFF - 0xC000] = 0xFF;
-
-        // set debug mode to false
-        _debugMode = false;
 
         // loading rom file
         try
@@ -31,6 +28,36 @@ namespace gasyboy
             }
 
             _cartridge.loadRom(_romFilePath);
+            utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
+                                              "Rom file : \"" +
+                                                  _romFilePath + "\" loaded successfully");
+        }
+        catch (const exception::GbException &e)
+        {
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
+        }
+    }
+
+    Mmu::Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad)
+        : _vRam(std::vector<uint8_t>(0x2000, 0)),
+          _extRam(std::vector<uint8_t>(0x2000, 0)),
+          _workingRam(std::vector<uint8_t>(0x4000, 0)),
+          _executeBios(true),
+          _cartridge(),
+          _gamepad(gamepad),
+          _currModifiedTile(-1),
+          _dmaRegionWritten(false)
+    {
+        // setting joypad to off
+        _workingRam[0xFFFF - 0xC000] = 0xFF;
+
+        // loading rom file
+        try
+        {
+            std::vector<uint8_t> bytes(romSize, 0);
+
+            _cartridge.loadRomFromByteArray(bytes);
             utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
                                               "Rom file : \"" +
                                                   _romFilePath + "\" loaded successfully");
@@ -80,14 +107,6 @@ namespace gasyboy
 
     uint8_t Mmu::readRam(const uint16_t &address)
     {
-        if (_debugMode)
-        {
-            if (address < _memSize)
-                return _mem[address];
-            else
-                return 0xaa;
-        }
-
         try
         {
             if (address < 0x100)
@@ -141,16 +160,6 @@ namespace gasyboy
 
     void Mmu::writeRam(const uint16_t &address, const uint8_t &value)
     {
-        if (_debugMode)
-        {
-            struct mem_access *access = &_mem_accesses[*_num_mem_accesses];
-            (*_num_mem_accesses)++;
-            access->type = MEM_ACCESS_WRITE;
-            access->addr = address;
-            access->val = value;
-            return;
-        }
-
         // if writing to ROM, manage memory banks
         if (address < 0x8000)
         {
@@ -159,7 +168,7 @@ namespace gasyboy
                 return;
             }
 
-            _cartridge.handleRomMemory(address, value);
+            _cartridge.mbcRomWrite(address, value);
         }
 
         // if writing to _vRam
@@ -190,7 +199,7 @@ namespace gasyboy
 
         // writing to _extRam
         else if (address >= 0xA000 && address < 0xC000)
-            _cartridge.handleRamMemory(address, value);
+            _cartridge.mbcRamWrite(address, value);
 
         // writing to _workingRam && HighRAM
         else if (address >= 0xC000 && address <= 0xFFFF)

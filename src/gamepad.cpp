@@ -1,6 +1,11 @@
+// #include "imgui_impl_sdl2.h"
 #include "gamepad.h"
 #include "defs.h"
+#ifdef __EMSCRIPTEN__
+#include <SDL2/SDL.h>
+#else
 #include "SDL.h"
+#endif
 
 namespace gasyboy
 {
@@ -18,6 +23,8 @@ namespace gasyboy
 
         while (SDL_PollEvent(&event) != 0)
         {
+            // ImGui_ImplSDL2_ProcessEvent(&event);
+
             if (event.type == SDL_QUIT)
                 exit(0);
 

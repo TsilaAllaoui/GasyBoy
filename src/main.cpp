@@ -4,9 +4,47 @@
 #include "logger.h"
 #include "argparse.hpp"
 #include "gameboy.h"
+#include <fstream>
+
+std::unique_ptr<gasyboy::GameBoy> gb;
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+extern "C"
+{
+    EMSCRIPTEN_KEEPALIVE int load_file(uint8_t *buffer, size_t size)
+    {
+        std::cout << "Loading rom file...\n";
+        gb = std::make_unique<gasyboy::GameBoy>(buffer, size, true);
+        std::cout << "Rom file loaded successfully...\n";
+        return 1;
+    }
+}
+
+void main_loop()
+{
+    if (gb)
+    {
+        gb->loop();
+    }
+}
+
+int main()
+{
+    gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", true);
+
+    emscripten_set_main_loop(main_loop, 0, true);
+
+    return 0;
+}
+
+#else
 
 int main(int argc, char *argv[])
 {
+    gasyboy::GameBoy("C:/Users/trasoloallaoui/C++/test/GasyBoy/build/Debug/Zelda.gb", true, true).boot();
+    return 0;
     argparse::ArgumentParser program("gasyboy");
 
     program.add_argument("-r", "--rom")
@@ -40,7 +78,8 @@ int main(int argc, char *argv[])
                         "\n\t - Debug Mode: " +
                         (debugMode ? "true" : "false"));
 
-        gasyboy::GameBoy(romFile, !skipBios, debugMode).boot();
+        gb = std::make_unique<gasyboy::GameBoy>(romFile, !skipBios, debugMode);
+        gb->boot();
     }
     catch (const std::runtime_error &err)
     {
@@ -54,3 +93,5 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+#endif

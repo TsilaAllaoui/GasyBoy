@@ -1,7 +1,12 @@
 #ifndef _GAMEBOY_H_
 #define _GAMEBOY_H_
 
+#ifdef __EMSCRIPTEN__
+#include <SDL2/SDL.h>
+#else
 #include "SDL.h"
+#endif
+
 #include "mmu.h"
 #include "cpu.h"
 #include "ppu.h"
@@ -15,8 +20,6 @@ namespace gasyboy
 {
     class GameBoy
     {
-    private:
-        Registers _registers;
         Mmu _mmu;
         Cpu _cpu;
         Timer _timer;
@@ -30,15 +33,23 @@ namespace gasyboy
         SDL_Window *_window;
         SDL_Rect _tile_map_pos, _bg_map_pos;
 
+        bool _debugMode;
+
     public:
         GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
+        GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode = false);
         ~GameBoy();
+
+        Registers _registers;
 
         // Start the emulator
         void boot();
 
         // Step the emulator
         void step();
+
+        // Stop the emulator
+        void stop();
 
         enum class State
         {
@@ -49,6 +60,9 @@ namespace gasyboy
 
         // State of the emulator
         static State state;
+
+        // Used for the main loop
+        void loop();
     };
 }
 

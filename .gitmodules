@@ -4,6 +4,3 @@
 [submodule "externals/argparse"]
 	path = externals/argparse
 	url = https://github.com/p-ranav/argparse
-[submodule "externals/gbit"]
-	path = externals/gbit
-	url = https://github.com/TsilaAllaoui/gbit

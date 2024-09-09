@@ -1,5 +1,11 @@
+#ifdef __EMSCRIPTEN__
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_timer.h>
+#else
 #include "SDL.h"
 #include "SDL_timer.h"
+#endif
+
 #include <stdlib.h>
 #include <array>
 #include <bitset>
@@ -48,7 +54,7 @@ namespace gasyboy
         void initWindow(int windowWidth, int windowHeight);
 
     public:
-        Renderer() = default;
+        Renderer() = delete;
         Renderer(Cpu &cpu,
                  Ppu &ppu,
                  Registers &registers,
