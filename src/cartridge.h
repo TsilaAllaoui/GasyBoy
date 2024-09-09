@@ -9,30 +9,60 @@
 
 namespace gasyboy
 {
-    class Cartridge
+    class IRamSupport
     {
-    private:
+    public:
+        // RAM banks
+        std::vector<std::vector<uint8_t>> _ramBanks;
+
+        // For checking if RAM is writable
+        bool _isRamEnabled;
+
+        // Number of banks of the ext RAM
+        int _ramBanksCount;
+
+        // The current RAM Bank
+        uint8_t _currentRamBank;
+
+        // Set ram banks number
+        virtual void setRamBankNumber(const uint8_t &value);
+
+        // RAM Bank reading/writing
+        virtual uint8_t ramBankRead(const uint16_t &adrr) = 0;
+        virtual void mbcRamWrite(const uint16_t &adrr, const uint8_t &value) = 0;
+    };
+
+    class IMBC
+    {
+    public:
         // ROM memory
         std::vector<std::vector<uint8_t>> _romBanks;
 
         // The current ROM bank
         uint8_t _currentRomBank;
 
-        // RAM banks
-        std::vector<std::vector<uint8_t>> _ramBanks;
+        // Number of banks of the ROM
+        int _romBanksCount;
 
-        // The current RAM Bank
-        uint8_t _currentRamBank;
+        // ROM Bank reading
+        virtual uint8_t romBankRead(const uint16_t &adrr) = 0;
 
-        // For checking if RAM is writable
-        bool _isRamEnabled;
+        // To handle all bank changes
+        virtual void mbcRomWrite(const uint16_t &adrr, const uint8_t &value) = 0;
+    };
 
-        // RTC registers
-        uint8_t RTCS, RTCM, RTCH, RTCDL, RTCDH;
+    class MBC0 : public IMBC
+    {
+    public:
+        // ROM Bank reading
+        virtual uint8_t romBankRead(const uint16_t &adrr) override;
 
-        // Current used RTC register mapped in 0xA000-0xBFFFF
-        uint8_t _currentRtcReg;
+        // To handle all bank changes
+        virtual void mbcRomWrite(const uint16_t &adrr, const uint8_t &value) override;
+    };
 
+    class MBC1 : public IMBC, public IRamSupport
+    {
         // ROM/RAM Banking mode
         enum class BankingMode
         {
@@ -43,11 +73,22 @@ namespace gasyboy
         // MBC mode
         BankingMode _bankingMode;
 
-        // Number of banks of the ROM
-        int _romBanksCount;
+    public:
+        // ROM Bank reading
+        virtual uint8_t romBankRead(const uint16_t &adrr) override;
 
-        // Number of banks of the ext RAM
-        int _ramBanksCount;
+        // To handle all bank changes
+        virtual void mbcRomWrite(const uint16_t &adrr, const uint8_t &value) override;
+
+        virtual uint8_t ramBankRead(const uint16_t &adrr) override;
+        virtual void mbcRamWrite(const uint16_t &adrr, const uint8_t &value) override;
+    };
+
+    class Cartridge
+    {
+    private:
+        // MBC chip
+        std::unique_ptr<IMBC> _mbc;
 
     public:
         // Constructor/destructor
@@ -97,12 +138,6 @@ namespace gasyboy
         // Set MBC type
         void setMBCType(const uint8_t &value);
 
-        // Set rom banks number
-        void setRomBankNumber(const uint8_t &value);
-
-        // Set rom banks number
-        void setRamBankNumber(const uint8_t &value);
-
         // ROM Bank reading
         uint8_t romBankRead(const uint16_t &adrr);
 
@@ -116,6 +151,6 @@ namespace gasyboy
         // To load rom from byte array
         void loadRomFromByteArray(const std::vector<uint8_t> &byteArray);
     };
-}
+};
 
 #endif
