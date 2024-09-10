@@ -5,8 +5,9 @@
 namespace gasyboy
 {
 
-    Debugger::Debugger(Registers &registers, SDL_Window *mainWindow)
-        : _registers(registers),
+    Debugger::Debugger(Mmu &mmu, Registers &registers, SDL_Window *mainWindow)
+        : _mmu(mmu),
+          _registers(registers),
           _window(nullptr),
           _renderer(nullptr)
     {
@@ -61,14 +62,27 @@ namespace gasyboy
         ImGui_ImplSDLRenderer2_NewFrame();
         ImGui::NewFrame();
 
-        // Render ImGui components
+        // Render registers
         ImGui::Begin("Registers", nullptr, ImGuiWindowFlags_NoMove);
 
+        char buff[2];
+        snprintf(buff, sizeof(buff), "%02X", ((_registers.AF.get() & 0xF0) >> 4));
         ImGui::Text("Registers:");
-        ImGui::Text("AF: 0x%04X", _registers.AF.get());
-        ImGui::Text("BC: 0x%04X", _registers.BC.get());
-        ImGui::Text("DE: 0x%04X", _registers.DE.get());
-        ImGui::Text("HL: 0x%04X", _registers.HL.get());
+        if (ImGui::InputText("A: 0x%02X", buff, 2, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            _registers.AF.set((_registers.AF.get() & 0x0F) | (strtol(buff, nullptr, 16) << 4));
+        }
+        ImGui::SameLine();
+        ImGui::Text("F: 0x%02X", (_registers.AF.get() & 0xF));
+        ImGui::Text("B: 0x%02X", (_registers.BC.get() & 0xF0) >> 4);
+        ImGui::SameLine();
+        ImGui::Text("C: 0x%02X", (_registers.BC.get() & 0xF));
+        ImGui::Text("D: 0x%02X", (_registers.DE.get() & 0xF0) >> 4);
+        ImGui::SameLine();
+        ImGui::Text("E: 0x%02X", (_registers.DE.get() & 0xF));
+        ImGui::Text("H: 0x%02X", (_registers.HL.get() & 0xF0) >> 4);
+        ImGui::SameLine();
+        ImGui::Text("L: 0x%02X", (_registers.HL.get() & 0xF));
         ImGui::Text("SP: 0x%04X", _registers.SP);
         ImGui::Text("PC: 0x%04X", _registers.PC);
 
