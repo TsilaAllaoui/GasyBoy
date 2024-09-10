@@ -12,12 +12,13 @@ namespace gasyboy
     class Debugger
     {
     public:
-        Debugger(Registers &registers);
+        Debugger(Registers &registers, SDL_Window *mainWindow);
         ~Debugger();
         void render();
 
-    private:
         SDL_Window *_window;
+
+    private:
         SDL_Renderer *_renderer;
         Registers &_registers;
     };

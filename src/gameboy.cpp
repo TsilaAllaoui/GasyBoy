@@ -18,14 +18,14 @@ namespace gasyboy
           _cycleCounter(0),
           _ppu(_registers, _interruptManager, _mmu)
     {
-        if (_debugMode)
-        {
-            _debugger = std::make_unique<Debugger>(_registers);
-            // _debugger->run();
-        }
 
         _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
         _renderer->init();
+
+        if (_debugMode)
+        {
+            _debugger = std::make_unique<Debugger>(_registers, _renderer->_window);
+        }
     }
 
     void GameBoy::step()

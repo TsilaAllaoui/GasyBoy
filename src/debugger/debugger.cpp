@@ -5,14 +5,29 @@
 namespace gasyboy
 {
 
-    Debugger::Debugger(Registers &registers)
+    Debugger::Debugger(Registers &registers, SDL_Window *mainWindow)
         : _registers(registers),
           _window(nullptr),
           _renderer(nullptr)
     {
         // Initialize SDL and ImGui in the new thread
         SDL_Init(SDL_INIT_VIDEO);
-        _window = SDL_CreateWindow("Debugger", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
+
+        // Retrieve the position and size of the main window
+        int mainWindowX, mainWindowY, mainWindowWidth, mainWindowHeight;
+        SDL_GetWindowPosition(mainWindow, &mainWindowX, &mainWindowY);
+        SDL_GetWindowSize(mainWindow, &mainWindowWidth, &mainWindowHeight);
+
+        // Calculate position for the debugger window
+        int debuggerWindowX = mainWindowX + mainWindowWidth + 10; // 10 pixels to the right
+        int debuggerWindowY = mainWindowY;
+
+        // Create the debugger window next to the main window
+        _window = SDL_CreateWindow("Debugger",
+                                   debuggerWindowX,
+                                   debuggerWindowY,
+                                   800, 600, // Width and height for the debugger window
+                                   SDL_WINDOW_SHOWN);
         _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
         IMGUI_CHECKVERSION();
