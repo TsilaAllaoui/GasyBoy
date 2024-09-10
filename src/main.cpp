@@ -43,7 +43,7 @@ int main()
 
 int main(int argc, char *argv[])
 {
-    gasyboy::GameBoy("C:/Users/trasoloallaoui/C++/test/GasyBoy/build/Debug/Zelda.gb", true, true).boot();
+    gasyboy::GameBoy("C:/Users/trasoloallaoui/C++/test/GasyBoy/build/Debug/mbc1/bits_bank1.gb", true, true).boot();
     return 0;
     argparse::ArgumentParser program("gasyboy");
 

@@ -1,11 +1,11 @@
 #include "gbException.h"
 #include "gameboy.h"
 #include "logger.h"
+#include "imgui_impl_sdl2.h"
 
 namespace gasyboy
 {
-    // Set emulator state
-    GameBoy::State GameBoy::state = State::RUNNING;
+    GameBoy::State GameBoy::state = GameBoy::State::RUNNING;
 
     GameBoy::GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode)
         : _debugMode(debugMode),
@@ -18,35 +18,14 @@ namespace gasyboy
           _cycleCounter(0),
           _ppu(_registers, _interruptManager, _mmu)
     {
-        // Init renderer
         if (_debugMode)
         {
-            _renderer = new DebugRenderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
+            _debugger = std::make_unique<Debugger>(_registers);
+            // _debugger->run();
         }
-        else
-        {
-            _renderer = new Renderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
-        }
+
+        _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
         _renderer->init();
-    }
-
-    GameBoy::GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode)
-        : _debugMode(debugMode),
-          _gamepad(),
-          _mmu(bytes, romSize, _gamepad),
-          _registers(_mmu),
-          _interruptManager(_mmu, _registers),
-          _cpu(bootBios, _mmu, _registers, _interruptManager),
-          _timer(_mmu, _interruptManager),
-          _cycleCounter(0),
-          _ppu(_registers, _interruptManager, _mmu)
-    {
-    }
-
-    GameBoy::~GameBoy()
-    {
-        if (_renderer)
-            delete _renderer;
     }
 
     void GameBoy::step()
@@ -66,12 +45,22 @@ namespace gasyboy
 
     void GameBoy::boot()
     {
+        bool running = true;
+        SDL_Event event;
         try
         {
-            bool demo = true;
-            while (state != State::STOPPED)
+            while (running)
             {
-                loop();
+                if (_debugMode)
+                {
+                    imguiEventHandler(&event, running);
+                    _debugger->render();
+                }
+
+                if (state == State::RUNNING)
+                {
+                    loop();
+                }
             }
         }
         catch (const exception::GbException &e)
@@ -94,6 +83,19 @@ namespace gasyboy
         {
             _renderer->render();
             _ppu._canRender = false;
+        }
+    }
+
+    void GameBoy::imguiEventHandler(SDL_Event *event, bool &running)
+    {
+        while (SDL_PollEvent(event))
+        {
+            if (event->type == SDL_QUIT)
+            {
+                running = false;
+            }
+
+            ImGui_ImplSDL2_ProcessEvent(event);
         }
     }
 }

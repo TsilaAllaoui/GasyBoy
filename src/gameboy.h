@@ -14,7 +14,10 @@
 #include "timer.h"
 #include "gamepad.h"
 #include "renderer.h"
+#include "debugger.h"
 #include "interruptManager.h"
+#include <mutex>
+#include <condition_variable>
 
 namespace gasyboy
 {
@@ -26,19 +29,21 @@ namespace gasyboy
         Gamepad _gamepad;
         InterruptManager _interruptManager;
         Ppu _ppu;
-        Renderer *_renderer;
+        std::unique_ptr<Renderer> _renderer;
 
         int _cycleCounter;
 
         SDL_Window *_window;
         SDL_Rect _tile_map_pos, _bg_map_pos;
 
+        std::unique_ptr<Debugger> _debugger;
+
         bool _debugMode;
 
     public:
         GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
         GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode = false);
-        ~GameBoy();
+        ~GameBoy() = default;
 
         Registers _registers;
 
@@ -58,11 +63,13 @@ namespace gasyboy
             PAUSED
         };
 
-        // State of the emulator
         static State state;
 
         // Used for the main loop
         void loop();
+
+        // Handling imgui events
+        void imguiEventHandler(SDL_Event *event, bool &running);
     };
 }
 
