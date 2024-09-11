@@ -22,6 +22,9 @@ namespace gasyboy
         SDL_Renderer *_renderer;
         Registers &_registers;
         Mmu &_mmu;
+
+        std::map<char, char *> _bytesBuffers;
+        std::map<std::string, char *> _wordsBuffers;
     };
 }
 

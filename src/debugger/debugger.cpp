@@ -1,6 +1,7 @@
 #include "debugger.h"
 #include "gameboy.h"
 #include <chrono>
+#include <functional>
 
 namespace gasyboy
 {
@@ -11,6 +12,22 @@ namespace gasyboy
           _window(nullptr),
           _renderer(nullptr)
     {
+        _bytesBuffers = {
+            {'A', new char[2]},
+            {'F', new char[2]},
+            {'B', new char[2]},
+            {'C', new char[2]},
+            {'D', new char[2]},
+            {'E', new char[2]},
+            {'H', new char[2]},
+            {'L', new char[2]},
+        };
+
+        _wordsBuffers = {
+            {"SP", new char[4]},
+            {"PC", new char[4]},
+        };
+
         // Initialize SDL and ImGui in the new thread
         SDL_Init(SDL_INIT_VIDEO);
 
@@ -41,6 +58,16 @@ namespace gasyboy
 
     Debugger::~Debugger()
     {
+        for (auto &buffer : _bytesBuffers)
+        {
+            delete buffer.second;
+        }
+
+        for (auto &buffer : _wordsBuffers)
+        {
+            delete buffer.second;
+        }
+
         ImGui_ImplSDLRenderer2_Shutdown();
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
@@ -62,30 +89,110 @@ namespace gasyboy
         ImGui_ImplSDLRenderer2_NewFrame();
         ImGui::NewFrame();
 
-        // Render registers
-        ImGui::Begin("Registers", nullptr, ImGuiWindowFlags_NoMove);
+        // Set window position and size
+        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(370, 235), ImGuiCond_Always);
 
-        char buff[2];
-        snprintf(buff, sizeof(buff), "%02X", ((_registers.AF.get() & 0xF0) >> 4));
-        ImGui::Text("Registers:");
-        if (ImGui::InputText("A: 0x%02X", buff, 2, ImGuiInputTextFlags_EnterReturnsTrue))
+        // Create the window
+        ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+        auto renderByte = [&](const char &reg, std::function<uint8_t()> get, std::function<void(uint8_t)> set)
         {
-            _registers.AF.set((_registers.AF.get() & 0x0F) | (strtol(buff, nullptr, 16) << 4));
-        }
-        ImGui::SameLine();
-        ImGui::Text("F: 0x%02X", (_registers.AF.get() & 0xF));
-        ImGui::Text("B: 0x%02X", (_registers.BC.get() & 0xF0) >> 4);
-        ImGui::SameLine();
-        ImGui::Text("C: 0x%02X", (_registers.BC.get() & 0xF));
-        ImGui::Text("D: 0x%02X", (_registers.DE.get() & 0xF0) >> 4);
-        ImGui::SameLine();
-        ImGui::Text("E: 0x%02X", (_registers.DE.get() & 0xF));
-        ImGui::Text("H: 0x%02X", (_registers.HL.get() & 0xF0) >> 4);
-        ImGui::SameLine();
-        ImGui::Text("L: 0x%02X", (_registers.HL.get() & 0xF));
-        ImGui::Text("SP: 0x%04X", _registers.SP);
-        ImGui::Text("PC: 0x%04X", _registers.PC);
+            snprintf(_bytesBuffers[reg], sizeof(_bytesBuffers[reg]) + 2, "0x%02X", get());
+            std::string regStr(1, reg);
+            regStr += ": ";
+            ImGui::Text(regStr.c_str());
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(50.0f);
+            std::string label = "##" + std::string(1, reg);
+            if (ImGui::InputText(label.c_str(), _bytesBuffers[reg], sizeof(_bytesBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                auto newValue = std::stoi(_bytesBuffers[reg], nullptr, 16);
+                set(newValue);
+            }
+        };
 
+        auto renderWord = [&](const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set)
+        {
+            snprintf(_wordsBuffers[reg], sizeof(_wordsBuffers[reg]) + 2, "0x%04X", get());
+            ImGui::Text((reg + ": ").c_str());
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(50.0f);
+            if (ImGui::InputText(("##" + reg).c_str(), _wordsBuffers[reg], sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                auto newValue = std::stoi(_wordsBuffers[reg], nullptr, 16);
+                set(newValue);
+            }
+        };
+
+        // Render registers
+        if (ImGui::BeginTable("##CPU", 2, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
+        {
+            ImGui::TableSetupColumn("Registers", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Flags", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableNextColumn();
+            renderByte('A', [&]()
+                       { return _registers.AF.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers.AF.setLeftRegister(val); });
+            ImGui::SameLine();
+            renderByte('F', [&]()
+                       { return _registers.AF.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers.AF.setRightRegister(val); });
+
+            renderByte('B', [&]()
+                       { return _registers.BC.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers.BC.setLeftRegister(val); });
+            ImGui::SameLine();
+            renderByte('C', [&]()
+                       { return _registers.BC.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers.BC.setRightRegister(val); });
+
+            renderByte('D', [&]()
+                       { return _registers.DE.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers.DE.setLeftRegister(val); });
+            ImGui::SameLine();
+            renderByte('E', [&]()
+                       { return _registers.DE.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers.DE.setRightRegister(val); });
+
+            renderByte('H', [&]()
+                       { return _registers.HL.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers.HL.setLeftRegister(val); });
+            ImGui::SameLine();
+            renderByte('L', [&]()
+                       { return _registers.HL.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers.HL.setRightRegister(val); });
+
+            renderWord("SP", [&]()
+                       { return _registers.SP; }, [&](uint16_t val)
+                       { _registers.SP = val; });
+
+            renderWord("PC", [&]()
+                       { return _registers.PC; }, [&](uint16_t val)
+                       { _registers.PC = val; });
+
+            ImGui::TableNextColumn();
+
+            ImGui::Text("Flags");
+            bool Z = _registers.AF.getFlag('Z'); // Assuming cpu.flagZero() returns the Z flag state
+            bool N = _registers.AF.getFlag('N'); // N flag (Subtract)
+            bool H = _registers.AF.getFlag('H'); // H flag (Half Carry)
+            bool C = _registers.AF.getFlag('C'); // C flag (Carry)
+            ImGui::Checkbox("Zero", &Z);
+            ImGui::Checkbox("Subtract", &N);
+            ImGui::Checkbox("Half Carry", &H);
+            ImGui::Checkbox("Carry", &C);
+
+            ImGui::Separator();
+            ImGui::Text("State");
+            bool halted = _registers.getHalted();
+            ImGui::Checkbox("HALTED", &C);
+
+            ImGui::EndTable();
+        }
+
+        ImGui::Text("Actions");
         if (ImGui::Button("Pause", ImVec2(75, 0)))
         {
             std::cout << "Pause pressed!\n";
