@@ -48,7 +48,7 @@ namespace gasyboy
 		{
 			PAUSED,
 			RUNNING,
-			STOPPEd
+			STOPPED
 		};
 		static State state;
 

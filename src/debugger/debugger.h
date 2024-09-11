@@ -6,15 +6,19 @@
 #include "SDL.h"
 #include "registers.h"
 #include <chrono>
+#include "timer.h"
 
 namespace gasyboy
 {
     class Debugger
     {
     public:
-        Debugger(Mmu &_mmu, Registers &registers, SDL_Window *mainWindow);
+        Debugger(Mmu &_mmu, Registers &registers, Timer &timer, SDL_Window *mainWindow);
         ~Debugger();
+
         void render();
+        void renderCpuDebugScreen();
+        void renderTimerDebugScrenn();
 
         SDL_Window *_window;
 
@@ -24,6 +28,7 @@ namespace gasyboy
         SDL_Renderer *_renderer;
         Registers &_registers;
         Mmu &_mmu;
+        Timer _timer;
 
         std::map<char, char *> _bytesBuffers;
         std::map<std::string, char *> _wordsBuffers;

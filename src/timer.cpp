@@ -5,66 +5,100 @@ namespace gasyboy
 	Timer::Timer(Mmu &mmu, InterruptManager &interruptManager)
 		: _mmu(mmu),
 		  _interruptManager(interruptManager),
-		  _divideCounter(0),
-		  _timerCounter(1024)
+		  _div(0),
+		  _tima(0),
+		  _tma(0),
+		  _tac(0),
+		  _divIncrementRate(256),
+		  _timaIncrementRate(0)
 	{
 	}
 
-	bool Timer::isTimerOn()
+	uint8_t Timer::DIV()
 	{
-		uint8_t control = _mmu.readRam(0xFF07);
-		return (control >> 2) & 1;
+		return _div;
 	}
 
-	void Timer::updateTimer(const int &cycle)
+	uint8_t Timer::TIMA()
 	{
-		updateDivider(cycle);
+		return _tima;
+	}
 
-		if (isTimerOn())
+	uint8_t Timer::TMA()
+	{
+		return _tma;
+	}
+
+	uint8_t Timer::TAC()
+	{
+		return _tac;
+	}
+
+	void Timer::update(const int &cycles)
+	{
+		updateDIV(cycles);
+		updateTIMA(cycles);
+	}
+
+	void Timer::updateDIV(const int &cycle)
+	{
+		_divIncrementRate -= cycle;
+		if (_divIncrementRate <= 0)
 		{
-			_timerCounter -= cycle;
+			_divIncrementRate = 256;
+			_div++;
+		}
+	}
 
-			if (_timerCounter <= 0)
+	void Timer::resetDIV()
+	{
+		_div = 0;
+	}
+
+	void Timer::updateTIMA(const int &cycle)
+	{
+		// If the TIMA control is enabled
+		if ((_tac >> 2) & 0x1)
+		{
+			_timaIncrementRate -= cycle;
+			if (_timaIncrementRate <= 0)
 			{
-				updateFrequence();
-
-				uint8_t val = _mmu.readRam(0xFF05);
-
-				if (val == 0xFF)
+				_tima++;
+				if (_tima > 0xFF)
 				{
-					_mmu.writeRam(0xFF05, _mmu.readRam(0xFF06));
-					_interruptManager.requestInterrupt(InterruptManager::InterruptType::Timer);
-				}
-				else
-				{
-					_mmu.writeRam(0xFF05, val + 1);
+					_tima = _tma;
 				}
 			}
 		}
 	}
 
-	void Timer::updateFrequence()
+	void Timer::updateTMA(const int &value)
 	{
-		uint8_t freq = _mmu.readRam(0xFF07) & 0x3;
-
-		if (freq == 0x0)
-			_timerCounter = 1024;
-		else if (freq == 0x1)
-			_timerCounter = 16;
-		else if (freq == 0x2)
-			_timerCounter = 64;
-		else if (freq == 0x3)
-			_timerCounter = 256;
+		_tma = value;
 	}
 
-	void Timer::updateDivider(const int &cycle)
+	void Timer::updateTAC(const uint8_t &value)
 	{
-		_divideCounter += cycle;
-
-		if (_divideCounter >= 255)
+		_tac = value;
+		switch (value & 0x3)
 		{
-			_divideCounter = 0;
-			_mmu.directSet(0xFF04, _mmu.readRam(0xFF04) + 1);
+		case 0:
+			_timaIncrementRate = 1024;
+			break;
+		case 1:
+			_timaIncrementRate = 16;
+			break;
+		case 2:
+			_timaIncrementRate = 64;
+			break;
+		case 3:
+			_timaIncrementRate = 256;
+			break;
 		}
+	}
+
+	void Timer::stopTimer()
+	{
+		_div = 0;
 	}
 }

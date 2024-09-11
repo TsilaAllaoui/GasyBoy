@@ -10,7 +10,7 @@ namespace gasyboy
     GameBoy::GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode)
         : _debugMode(debugMode),
           _gamepad(),
-          _mmu(filePath, _gamepad),
+          _mmu(filePath, _gamepad, _timer),
           _registers(_mmu),
           _interruptManager(_mmu, _registers),
           _cpu(bootBios, _mmu, _registers, _interruptManager),
@@ -32,7 +32,7 @@ namespace gasyboy
     {
         const int cycle = _cpu.step();
         _cycleCounter += cycle;
-        _timer.updateTimer(cycle);
+        _timer.update(cycle);
         _gamepad.handleEvent();
         _interruptManager.handleInterrupts();
         _ppu.step(cycle);

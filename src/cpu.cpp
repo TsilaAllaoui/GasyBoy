@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "gbException.h"
+#include "timer.h"
 
 namespace gasyboy
 {
@@ -2434,6 +2435,7 @@ namespace gasyboy
 			_cycle = 4;
 			_registers.setHalted(true);
 			_registers.PC++;
+			_mmu.getTimer().resetDIV();
 			break;
 		case 0x11:
 			LD_rr_16(_registers.PC + 1, "DE");

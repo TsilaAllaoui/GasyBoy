@@ -2,10 +2,11 @@
 #include "logger.h"
 #include "mmu.h"
 #include <cstring>
+#include "timer.h"
 
 namespace gasyboy
 {
-    Mmu::Mmu(const std::string &romFilePath, Gamepad &gamepad, const bool &bootBios)
+    Mmu::Mmu(const std::string &romFilePath, Gamepad &gamepad, Timer &timer, const bool &bootBios)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
@@ -14,7 +15,8 @@ namespace gasyboy
           _gamepad(gamepad),
           _currModifiedTile(-1),
           _dmaRegionWritten(false),
-          _romFilePath(romFilePath)
+          _romFilePath(romFilePath),
+          _timer(timer)
     {
         // setting joypad to off
         _workingRam[0xFFFF - 0xC000] = 0xFF;
@@ -39,7 +41,7 @@ namespace gasyboy
         }
     }
 
-    Mmu::Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad)
+    Mmu::Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad, Timer &timer)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
@@ -47,7 +49,8 @@ namespace gasyboy
           _cartridge(),
           _gamepad(gamepad),
           _currModifiedTile(-1),
-          _dmaRegionWritten(false)
+          _dmaRegionWritten(false),
+          _timer(timer)
     {
         // setting joypad to off
         _workingRam[0xFFFF - 0xC000] = 0xFF;
@@ -73,7 +76,8 @@ namespace gasyboy
              uint8_t *mem,
              int *num_mem_accesses,
              void *mem_accesses,
-             Gamepad &gamepad)
+             Gamepad &gamepad,
+             Timer &timer)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
@@ -82,7 +86,8 @@ namespace gasyboy
           _cartridge(),
           _currModifiedTile(-1),
           _dmaRegionWritten(false),
-          _romFilePath("")
+          _romFilePath(""),
+          _timer(timer)
     {
         _mem = mem;
         _memSize = size;
@@ -240,7 +245,31 @@ namespace gasyboy
 
             // writing to DIV register reset its counter
             else if (address == 0xFF04)
+            {
                 _workingRam[address - 0xC000] = 0;
+                _timer.resetDIV();
+            }
+
+            // TIMA timer
+            else if (address == 0xFF05)
+            {
+                // Do nothing
+                return;
+            }
+
+            // TMA timer
+            else if (address == 0xFF06)
+            {
+                _workingRam[address - 0xC000] = value;
+                _timer.updateTMA(value);
+            }
+
+            // TAC Timer control
+            else if (address == 0xFF07)
+            {
+                _workingRam[address - 0xC000] = value;
+                _timer.updateTAC(value);
+            }
 
             // writing to LY register reset it
             else if (address == 0xFF44)
@@ -392,5 +421,10 @@ namespace gasyboy
         palette[1] = palette_colours[(value >> 2) & 0x3];
         palette[2] = palette_colours[(value >> 4) & 0x3];
         palette[3] = palette_colours[(value >> 6) & 0x3];
+    }
+
+    Timer Mmu::getTimer()
+    {
+        return _timer;
     }
 }

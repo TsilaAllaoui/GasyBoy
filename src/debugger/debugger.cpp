@@ -6,12 +6,13 @@
 namespace gasyboy
 {
 
-    Debugger::Debugger(Mmu &mmu, Registers &registers, SDL_Window *mainWindow)
+    Debugger::Debugger(Mmu &mmu, Registers &registers, Timer &timer, SDL_Window *mainWindow)
         : _mmu(mmu),
           _registers(registers),
           _window(nullptr),
           _renderer(nullptr),
-          _breakPoints()
+          _breakPoints(),
+          _timer(timer)
     {
         _bytesBuffers = {
             {'A', new char[2]},
@@ -27,7 +28,11 @@ namespace gasyboy
         _wordsBuffers = {
             {"SP", new char[4]},
             {"PC", new char[4]},
-            {"TARGET_PC", new char[4]},
+            {"Frequency", new char[8]},
+            {"TIMA", new char[8]},
+            {"Counter", new char[8]},
+            {"DIV", new char[8]},
+            {"TMA", new char[8]},
         };
 
         // Initialize SDL and ImGui in the new thread
@@ -93,11 +98,21 @@ namespace gasyboy
 
         // Set window position and size
         ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(370, 255), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(350, 235), ImGuiCond_Always);
 
         // Create the window
         ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
+        renderCpuDebugScreen();
+
+        ImGui::Render();
+        SDL_RenderClear(_renderer);
+        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), _renderer);
+        SDL_RenderPresent(_renderer);
+    }
+
+    void Debugger::renderCpuDebugScreen()
+    {
         auto renderByte = [&](const char &reg, std::function<uint8_t()> get, std::function<void(uint8_t)> set)
         {
             snprintf(_bytesBuffers[reg], sizeof(_bytesBuffers[reg]) + 2, "0x%02X", get());
@@ -210,10 +225,21 @@ namespace gasyboy
         }
 
         ImGui::End();
+    }
 
-        ImGui::Render();
-        SDL_RenderClear(_renderer);
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), _renderer);
-        SDL_RenderPresent(_renderer);
+    void Debugger::renderTimerDebugScrenn()
+    {
+        // Render registers
+        if (ImGui::BeginTable("##CPU", 2, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
+        {
+            ImGui::TableSetupColumn("Registers", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Flags", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableNextColumn();
+            ImGui::Text("Frequency");
+            if (ImGui::InputText("#Frequency", _wordsBuffers["Frequency"], sizeof(_wordsBuffers["Frequency"]), ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+            }
+        }
     }
 }
