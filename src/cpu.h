@@ -44,6 +44,14 @@ namespace gasyboy
 		// Fetch the current opcode
 		void fetch();
 
+		enum class State
+		{
+			PAUSED,
+			RUNNING,
+			STOPPEd
+		};
+		static State state;
+
 		// Getters
 		uint16_t getRegister(const std::string &reg);
 		uint8_t getRegister(const char &reg);

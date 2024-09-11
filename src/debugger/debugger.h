@@ -18,6 +18,8 @@ namespace gasyboy
 
         SDL_Window *_window;
 
+        std::vector<uint16_t> _breakPoints;
+
     private:
         SDL_Renderer *_renderer;
         Registers &_registers;

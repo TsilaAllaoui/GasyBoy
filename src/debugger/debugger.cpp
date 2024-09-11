@@ -10,7 +10,8 @@ namespace gasyboy
         : _mmu(mmu),
           _registers(registers),
           _window(nullptr),
-          _renderer(nullptr)
+          _renderer(nullptr),
+          _breakPoints()
     {
         _bytesBuffers = {
             {'A', new char[2]},
@@ -26,6 +27,7 @@ namespace gasyboy
         _wordsBuffers = {
             {"SP", new char[4]},
             {"PC", new char[4]},
+            {"TARGET_PC", new char[4]},
         };
 
         // Initialize SDL and ImGui in the new thread
@@ -91,7 +93,7 @@ namespace gasyboy
 
         // Set window position and size
         ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(370, 235), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(370, 255), ImGuiCond_Always);
 
         // Create the window
         ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
@@ -175,10 +177,10 @@ namespace gasyboy
             ImGui::TableNextColumn();
 
             ImGui::Text("Flags");
-            bool Z = _registers.AF.getFlag('Z'); // Assuming cpu.flagZero() returns the Z flag state
-            bool N = _registers.AF.getFlag('N'); // N flag (Subtract)
-            bool H = _registers.AF.getFlag('H'); // H flag (Half Carry)
-            bool C = _registers.AF.getFlag('C'); // C flag (Carry)
+            bool Z = _registers.AF.getFlag('Z');
+            bool N = _registers.AF.getFlag('N');
+            bool H = _registers.AF.getFlag('H');
+            bool C = _registers.AF.getFlag('C');
             ImGui::Checkbox("Zero", &Z);
             ImGui::Checkbox("Subtract", &N);
             ImGui::Checkbox("Half Carry", &H);
@@ -187,23 +189,24 @@ namespace gasyboy
             ImGui::Separator();
             ImGui::Text("State");
             bool halted = _registers.getHalted();
-            ImGui::Checkbox("HALTED", &C);
+            ImGui::Checkbox("HALTED", &halted);
 
             ImGui::EndTable();
         }
 
+        // Render actions
         ImGui::Text("Actions");
         if (ImGui::Button("Pause", ImVec2(75, 0)))
         {
             std::cout << "Pause pressed!\n";
-            GameBoy::state = GameBoy::State::PAUSED;
+            Cpu::state = Cpu::State::PAUSED;
         }
 
         ImGui::SameLine();
         if (ImGui::Button("Run", ImVec2(75, 0)))
         {
             std::cout << "Resume pressed!\n";
-            GameBoy::state = GameBoy::State::RUNNING;
+            Cpu::state = Cpu::State::RUNNING;
         }
 
         ImGui::End();

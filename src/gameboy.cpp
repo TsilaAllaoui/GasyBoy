@@ -51,32 +51,31 @@ namespace gasyboy
         {
             while (running)
             {
+                imguiEventHandler(&event, running);
+
                 if (_debugMode)
                 {
-                    imguiEventHandler(&event, running);
                     _debugger->render();
                 }
 
-                if (state == State::RUNNING)
-                {
-                    loop();
-                }
+                loop(&event, running);
             }
         }
         catch (const exception::GbException &e)
         {
-            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
-                                              e.what());
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL, e.what());
         }
     }
 
-    void GameBoy::loop()
+    void GameBoy::loop(SDL_Event *event, bool &running)
     {
         _cycleCounter = 0;
 
-        while (_cycleCounter <= MAXCYCLE)
+        while (Cpu::state == Cpu::State::RUNNING && _cycleCounter <= MAXCYCLE)
         {
             step();
+
+            imguiEventHandler(event, running);
         }
 
         if (_ppu._canRender)
@@ -90,7 +89,7 @@ namespace gasyboy
     {
         while (SDL_PollEvent(event))
         {
-            if (event->type == SDL_QUIT)
+            if (event->type == SDL_QUIT || (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_ESCAPE))
             {
                 running = false;
             }

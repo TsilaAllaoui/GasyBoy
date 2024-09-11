@@ -4,6 +4,8 @@
 namespace gasyboy
 {
 
+	Cpu::State Cpu::state = Cpu::State::RUNNING;
+
 	Cpu::Cpu(const bool &bootBios, Mmu &mmu, Registers &registers, InterruptManager &interruptManager)
 		: _mmu(mmu),
 		  _registers(registers),
@@ -2314,24 +2316,29 @@ namespace gasyboy
 
 	long Cpu::step()
 	{
-		if (_mmu.readRam(0xFF50) == 0x1 && _mmu.isInBios())
-			_mmu.disableBios();
+		if (state == State::RUNNING)
+		{
+			if (_mmu.readRam(0xFF50) == 0x1 && _mmu.isInBios())
+				_mmu.disableBios();
 
-		if (!_registers.getHalted())
-		{
-			fetch();
-			execute();
-			return _cycle;
-		}
-		else
-		{
-			if ((_mmu.readRam(0xFF0F) & 0xF) > 0)
+			if (!_registers.getHalted())
 			{
-				_registers.setHalted(false);
-				_registers.PC++;
+				fetch();
+				execute();
+				return _cycle;
 			}
-			return 4;
+			else
+			{
+				if ((_mmu.readRam(0xFF0F) & 0xF) > 0)
+				{
+					_registers.setHalted(false);
+					_registers.PC++;
+				}
+				return 4;
+			}
 		}
+
+		return 0;
 	}
 
 	void Cpu::fetch()
