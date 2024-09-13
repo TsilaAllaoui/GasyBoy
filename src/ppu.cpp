@@ -164,7 +164,7 @@ namespace gasyboy
             return;
         }
 
-        if (_mmu.readRam(0xFF4A) > *_scanline)
+        if (_mmu.readRam(0xFF4A) > *_scanline || _mmu.readRam(0xFF4A) > 144)
         {
             return;
         }

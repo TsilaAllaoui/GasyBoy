@@ -19,7 +19,7 @@ namespace gasyboy
           _ppu(_registers, _interruptManager, _mmu)
     {
         // Init renderer
-        _renderer = new Renderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
+        _renderer = new DebugRenderer(_cpu, _ppu, _registers, _interruptManager, _mmu);
         _renderer->init();
     }
 
