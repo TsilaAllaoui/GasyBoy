@@ -8,8 +8,7 @@ namespace gasyboy
     class Gamepad
     {
         // To check what type of button the emulator want to check
-        bool _buttonSelected;
-        bool _directionSelected;
+        static bool _buttonSelected;
 
         // The current button state
         std::bitset<8> _state;
@@ -46,6 +45,9 @@ namespace gasyboy
             UP = 6,
             DOWN = 7
         };
+
+        // To check if button or d-pad is selected
+        static bool isButtonSelected();
     };
 }
 

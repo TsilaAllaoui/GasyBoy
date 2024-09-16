@@ -1,5 +1,6 @@
 #include "debugger.h"
 #include "gameboy.h"
+#include "gamepad.h"
 #include <chrono>
 
 namespace gasyboy
@@ -31,6 +32,20 @@ namespace gasyboy
         _wordsBuffers = {
             {"SP", new char[4]},
             {"PC", new char[4]},
+        };
+
+        _buttons = {
+            {"A", false},
+            {"B", false},
+            {"SELECT", false},
+            {"START", false},
+        };
+
+        _directions = {
+            {"RIGHT", false},
+            {"LEFT", false},
+            {"UP", false},
+            {"DOWN", false},
         };
 
         // Initialize SDL and ImGui in the new thread
@@ -94,9 +109,14 @@ namespace gasyboy
         ImGui_ImplSDLRenderer2_NewFrame();
         ImGui::NewFrame();
 
+        // Rendering cpu state
         renderCpuDebugScreen();
 
-        renderTimerDebugScrenn();
+        // Rendering timer state
+        renderTimerDebugScreen();
+
+        // Rendering joypad state
+        renderJoypadDebugScreen();
 
         ImGui::Render();
         SDL_RenderClear(_renderer);
@@ -228,7 +248,7 @@ namespace gasyboy
         ImGui::End();
     }
 
-    void Debugger::renderTimerDebugScrenn()
+    void Debugger::renderTimerDebugScreen()
     {
         // Set window position and size
         ImGui::SetNextWindowPos(ImVec2(0, 235), ImGuiCond_Always);
@@ -238,10 +258,9 @@ namespace gasyboy
         ImGui::Begin("Timer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
         // Render registers
-        if (ImGui::BeginTable("##Timer", 2, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
+        if (ImGui::BeginTable("##Timer", 1, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
         {
-            ImGui::TableSetupColumn("Registers", ImGuiTableColumnFlags_WidthStretch);
-            ImGui::TableSetupColumn("Flags", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Timer", ImGuiTableColumnFlags_WidthStretch);
 
             ImGui::TableNextColumn();
 
@@ -261,6 +280,57 @@ namespace gasyboy
                        { return _timer.TAC(); }, [&](const uint8_t &value)
                        { _timer.setTAC(value); });
 
+            ImGui::EndTable();
+        }
+
+        ImGui::End();
+    }
+
+    void Debugger::renderJoypadDebugScreen()
+    {
+        // Set window position and size
+        ImGui::SetNextWindowPos(ImVec2(350, 0), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(350, 235), ImGuiCond_Always);
+
+        // Create the window
+        ImGui::Begin("Joypad", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+        if (!Gamepad::isButtonSelected())
+        {
+            for (size_t i = 0; i < 4; i++)
+            {
+                _directions[i].second = (_mmu.readRam(0xFF00) & (1 << i));
+                _buttons[i].second = false;
+            }
+        }
+        else
+        {
+            for (size_t i = 0; i < 4; i++)
+            {
+                _directions[i].second = false;
+                _buttons[i].second = (_mmu.readRam(0xFF00) & (1 << i));
+            }
+        }
+
+        // Render registers
+        if (ImGui::BeginTable("##Joypad", 2, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
+        {
+            ImGui::TableSetupColumn("Buttons", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Directions", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableNextColumn();
+
+            for (size_t i = 0; i < 4; i++)
+            {
+                ImGui::Checkbox(_buttons[i].first.c_str(), &(_buttons[i].second));
+            }
+
+            ImGui::TableNextColumn();
+
+            for (size_t i = 0; i < 4; i++)
+            {
+                ImGui::Checkbox(_directions[i].first.c_str(), &(_directions[i].second));
+            }
             ImGui::EndTable();
         }
 

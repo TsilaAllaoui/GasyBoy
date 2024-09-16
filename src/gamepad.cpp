@@ -9,10 +9,10 @@
 
 namespace gasyboy
 {
+    bool Gamepad::_buttonSelected = false;
+
     Gamepad::Gamepad()
-        : _buttonSelected(true),
-          _directionSelected(true),
-          _changedPalette(false),
+        : _changedPalette(false),
           _state(0xFF)
     {
     }
@@ -23,17 +23,18 @@ namespace gasyboy
 
         while (SDL_PollEvent(&event) != 0)
         {
-            // ImGui_ImplSDL2_ProcessEvent(&event);
+            ImGui_ImplSDL2_ProcessEvent(&event);
 
             if (event.type == SDL_QUIT)
-                exit(0);
-
-            if (event.type == SDL_KEYDOWN)
+            {
+                exit(ExitState::MANUAL_STOP);
+            }
+            else if (event.type == SDL_KEYDOWN)
             {
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_ESCAPE:
-                    exit(0);
+                    exit(ExitState::MANUAL_STOP);
                     break;
 
                 case SDLK_UP:
@@ -112,12 +113,12 @@ namespace gasyboy
     void Gamepad::setState(uint8_t value)
     {
         _buttonSelected = ((value & 0x20) == 0x20);
-        _directionSelected = ((value & 0x10) == 0x10);
+        // _directionSelected = ((value & 0x10) == 0x10);
     }
 
     uint8_t Gamepad::getState()
     {
-        return _buttonSelected ? static_cast<uint8_t>(_state.to_ulong()) >> 4 : (static_cast<uint8_t>(_state.to_ulong()) << 4) >> 4;
+        return _buttonSelected ? (static_cast<uint8_t>(_state.to_ulong()) >> 4) : (static_cast<uint8_t>(_state.to_ulong()) << 4) >> 4;
     }
 
     void Gamepad::setChangePalette(const bool &value)
@@ -128,5 +129,10 @@ namespace gasyboy
     bool Gamepad::getChangePalette()
     {
         return _changedPalette;
+    }
+
+    bool Gamepad::isButtonSelected()
+    {
+        return _buttonSelected;
     }
 }

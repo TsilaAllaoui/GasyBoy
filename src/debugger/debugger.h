@@ -19,7 +19,8 @@ namespace gasyboy
 
         void render();
         void renderCpuDebugScreen();
-        void renderTimerDebugScrenn();
+        void renderTimerDebugScreen();
+        void renderJoypadDebugScreen();
 
         SDL_Window *_window;
 
@@ -35,6 +36,9 @@ namespace gasyboy
         std::map<std::string, char *> _wordsBuffers;
         void renderByte(const std::string &reg, std::function<uint8_t()> get, std::function<void(uint8_t)> set);
         void renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set);
+
+        std::vector<std::pair<std::string, bool>> _buttons;
+        std::vector<std::pair<std::string, bool>> _directions;
     };
 }
 

@@ -51,8 +51,6 @@ namespace gasyboy
         {
             while (running)
             {
-                imguiEventHandler(&event, running);
-
                 if (_debugMode)
                 {
                     _debugger->render();
@@ -74,27 +72,12 @@ namespace gasyboy
         while (Cpu::state == Cpu::State::RUNNING && _cycleCounter <= MAXCYCLE)
         {
             step();
-
-            imguiEventHandler(event, running);
         }
 
         if (_ppu._canRender)
         {
             _renderer->render();
             _ppu._canRender = false;
-        }
-    }
-
-    void GameBoy::imguiEventHandler(SDL_Event *event, bool &running)
-    {
-        while (SDL_PollEvent(event))
-        {
-            if (event->type == SDL_QUIT || (event->type == SDL_KEYDOWN && event->key.keysym.sym == SDLK_ESCAPE))
-            {
-                running = false;
-            }
-
-            ImGui_ImplSDL2_ProcessEvent(event);
         }
     }
 }

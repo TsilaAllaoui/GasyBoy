@@ -67,9 +67,6 @@ namespace gasyboy
 
         // Used for the main loop
         void loop(SDL_Event *event, bool &running);
-
-        // Handling imgui events
-        void imguiEventHandler(SDL_Event *event, bool &running);
     };
 }
 

@@ -160,6 +160,11 @@ namespace gasyboy
                 {
                     return Timer::TAC();
                 }
+                // Boot register (Read only)
+                else if (address == 0xFF50)
+                {
+                    return 0xFF;
+                }
                 else
                 {
                     return _workingRam[address - 0xC000];
@@ -287,6 +292,12 @@ namespace gasyboy
             // writing to LY register reset it
             else if (address == 0xFF44)
                 _workingRam[address - 0xC000] = 0;
+
+            // LYC write
+            else if (address == 0xFF45)
+            {
+                _workingRam[address - 0xC000] = value;
+            }
 
             // OAM DMA Transfert
             else if (address == 0xFF46)
