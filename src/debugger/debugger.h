@@ -28,6 +28,7 @@ namespace gasyboy
         std::vector<uint16_t> _breakPoints;
 
         int _currentSelectedRomBank;
+        int _currentSelectedRamBank;
 
     private:
         SDL_Renderer *_renderer;
@@ -38,7 +39,7 @@ namespace gasyboy
         std::map<std::string, char *> _bytesBuffers;
         std::map<std::string, char *> _wordsBuffers;
         void renderByte(const std::string &reg, std::function<uint8_t()> get, std::function<void(uint8_t)> set);
-        void renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set);
+        void renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set, const size_t &base = 16);
 
         std::vector<std::pair<std::string, bool>> _buttons;
         std::vector<std::pair<std::string, bool>> _directions;

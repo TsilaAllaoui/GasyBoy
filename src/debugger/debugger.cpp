@@ -33,6 +33,7 @@ namespace gasyboy
         _wordsBuffers = {
             {"SP", new char[4]},
             {"PC", new char[4]},
+            {"TIMA_INCREMENT_RATE", new char[4]},
         };
 
         _buttons = {
@@ -144,9 +145,9 @@ namespace gasyboy
         }
     }
 
-    void Debugger::renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set)
+    void Debugger::renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set, const size_t &base)
     {
-        snprintf(_wordsBuffers[reg], sizeof(_wordsBuffers[reg]) + 2, "0x%04X", get());
+        snprintf(_wordsBuffers[reg], sizeof(_wordsBuffers[reg]) + 2, base == 16 ? "0x%04X" : "%d", get());
         ImGui::Text((reg + ": ").c_str());
         ImGui::SameLine();
         ImGui::SetNextItemWidth(50.0f);
@@ -275,6 +276,10 @@ namespace gasyboy
             renderByte("TIMA", [&]()
                        { return _timer.TIMA(); }, [&](const uint8_t &value)
                        { _timer.setTIMA(value); });
+            ImGui::SameLine();
+            renderWord("TIMA_INCREMENT_RATE", [&]()
+                       { return _timer._timaIncrementRate; }, [&](const uint16_t &value)
+                       { _timer._timaIncrementRate = value; }, 10);
 
             renderByte("TMA", [&]()
                        { return _timer.TMA(); }, [&](const uint8_t &value)
@@ -350,19 +355,23 @@ namespace gasyboy
         // Create the window
         ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
+        auto cartridge = _mmu.getCartridge();
+
         auto romBanks = _mmu.getCartridge().getRomBanks();
+
+        auto ramBanks = _mmu.getCartridge().getRamBanks();
 
         // Start the tab bar
         if (ImGui::BeginTabBar("##Memory"))
         {
-            // First tab
+            // Header
             if (ImGui::BeginTabItem("Header"))
             {
                 ImGui::Text("Cartridge Header");
                 ImGui::EndTabItem();
             }
 
-            // Second tab
+            // ROM 0 [0 - 0x4000]
             if (ImGui::BeginTabItem("ROM0"))
             {
                 ImGui::Text("ROM [0x0 - 0x4000]");
@@ -370,7 +379,7 @@ namespace gasyboy
                 ImGui::EndTabItem();
             }
 
-            // Third tab
+            // ROM 1 [0x4000 - 0x8000]
             if (ImGui::BeginTabItem("ROM1"))
             {
                 ImGui::Text("ROM [0x4000 - 0x8000] (multiple banks)");
@@ -378,6 +387,25 @@ namespace gasyboy
                 ImGui::SetNextItemWidth(75);
                 showIntegerCombo(1, _mmu.getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
                 showByteArray(romBanks.at(_currentSelectedRomBank), 0x4000);
+                ImGui::EndTabItem();
+            }
+
+            // Ext RAM
+            if (ImGui::BeginTabItem("Ext RAM"))
+            {
+                if (cartridge.getRamBanksNumber() == 0)
+                {
+                    ImGui::Text("No Ext RAM");
+                }
+                else
+                {
+                    ImGui::Text("Ext RAM");
+                    if (cartridge.getRamBanksNumber() > 2)
+                    {
+                        showIntegerCombo(0, cartridge.getRamBanksNumber() - 1, _currentSelectedRamBank);
+                    }
+                    showByteArray(ramBanks.at(_currentSelectedRamBank));
+                }
                 ImGui::EndTabItem();
             }
 

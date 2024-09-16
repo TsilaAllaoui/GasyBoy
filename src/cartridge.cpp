@@ -71,6 +71,11 @@ namespace gasyboy
 		return _romBanks;
 	}
 
+	std::vector<std::vector<uint8_t>> Cartridge::getRamBanks()
+	{
+		return _ramBanks;
+	}
+
 	void Cartridge::setMBCType(const uint8_t &value)
 	{
 		_cartridgeType = utils::uint8ToCartridgeType(value);

@@ -120,6 +120,9 @@ namespace gasyboy
 
         // Get rom content
         std::vector<std::vector<uint8_t>> getRomBanks();
+
+        // Get ram content
+        std::vector<std::vector<uint8_t>> getRamBanks();
     };
 }
 

@@ -9,7 +9,7 @@ namespace gasyboy
 	uint8_t Timer::_tac = 0;
 
 	int Timer::_divIncrementRate = 255;
-	uint16_t Timer::_timaIncrementRate = 0;
+	uint16_t Timer::_timaIncrementRate = 1024;
 
 	Timer::Timer(InterruptManager &interruptManager)
 		: _interruptManager(interruptManager)
@@ -114,7 +114,7 @@ namespace gasyboy
 			_timaIncrementRate = 64;
 			break;
 		case 3:
-			_timaIncrementRate = 256;
+			_timaIncrementRate = 255;
 			break;
 		}
 	}
