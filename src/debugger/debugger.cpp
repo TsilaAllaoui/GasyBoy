@@ -12,7 +12,8 @@ namespace gasyboy
           _window(nullptr),
           _renderer(nullptr),
           _breakPoints(),
-          _timer(timer)
+          _timer(timer),
+          _currentSelectedRomBank(1)
     {
         _bytesBuffers = {
             {"A", new char[2]},
@@ -64,7 +65,7 @@ namespace gasyboy
         _window = SDL_CreateWindow("Debugger",
                                    debuggerWindowX,
                                    debuggerWindowY,
-                                   800, 600, // Width and height for the debugger window
+                                   1050, 495, // Width and height for the debugger window
                                    SDL_WINDOW_SHOWN);
         _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
@@ -117,6 +118,9 @@ namespace gasyboy
 
         // Rendering joypad state
         renderJoypadDebugScreen();
+
+        // Rendering Memory state
+        renderMemoryViewerDebugScreen();
 
         ImGui::Render();
         SDL_RenderClear(_renderer);
@@ -252,7 +256,7 @@ namespace gasyboy
     {
         // Set window position and size
         ImGui::SetNextWindowPos(ImVec2(0, 235), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(350, 235), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(350, 130), ImGuiCond_Always);
 
         // Create the window
         ImGui::Begin("Timer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
@@ -289,8 +293,8 @@ namespace gasyboy
     void Debugger::renderJoypadDebugScreen()
     {
         // Set window position and size
-        ImGui::SetNextWindowPos(ImVec2(350, 0), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(350, 235), ImGuiCond_Always);
+        ImGui::SetNextWindowPos(ImVec2(0, 365), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(350, 130), ImGuiCond_Always);
 
         // Create the window
         ImGui::Begin("Joypad", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
@@ -299,7 +303,7 @@ namespace gasyboy
         {
             for (size_t i = 0; i < 4; i++)
             {
-                _directions[i].second = (_mmu.readRam(0xFF00) & (1 << i));
+                _directions[i].second = !(_mmu.readRam(0xFF00) & (1 << i));
                 _buttons[i].second = false;
             }
         }
@@ -308,7 +312,7 @@ namespace gasyboy
             for (size_t i = 0; i < 4; i++)
             {
                 _directions[i].second = false;
-                _buttons[i].second = (_mmu.readRam(0xFF00) & (1 << i));
+                _buttons[i].second = !(_mmu.readRam(0xFF00) & (1 << i));
             }
         }
 
@@ -335,5 +339,117 @@ namespace gasyboy
         }
 
         ImGui::End();
+    }
+
+    void Debugger::renderMemoryViewerDebugScreen()
+    {
+        // Set window position and size
+        ImGui::SetNextWindowPos(ImVec2(350, 0), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(670, 495), ImGuiCond_Always);
+
+        // Create the window
+        ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+        auto romBanks = _mmu.getCartridge().getRomBanks();
+
+        // Start the tab bar
+        if (ImGui::BeginTabBar("##Memory"))
+        {
+            // First tab
+            if (ImGui::BeginTabItem("Header"))
+            {
+                ImGui::Text("Cartridge Header");
+                ImGui::EndTabItem();
+            }
+
+            // Second tab
+            if (ImGui::BeginTabItem("ROM0"))
+            {
+                ImGui::Text("ROM [0x0 - 0x4000]");
+                showByteArray(romBanks.at(0));
+                ImGui::EndTabItem();
+            }
+
+            // Third tab
+            if (ImGui::BeginTabItem("ROM1"))
+            {
+                ImGui::Text("ROM [0x4000 - 0x8000] (multiple banks)");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(75);
+                showIntegerCombo(1, _mmu.getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
+                showByteArray(romBanks.at(_currentSelectedRomBank), 0x4000);
+                ImGui::EndTabItem();
+            }
+
+            // End the tab bar
+            ImGui::EndTabBar();
+        }
+
+        ImGui::End();
+    }
+
+    void Debugger::showByteArray(const std::vector<uint8_t> &data, const uint16_t &offset, size_t bytes_per_row)
+    {
+        ImGuiListClipper clipper;
+        clipper.Begin((int)data.size() / (int)bytes_per_row);
+
+        while (clipper.Step())
+        {
+            for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row)
+            {
+                size_t i = row * bytes_per_row;
+
+                // Display the memory address (offset)
+                ImGui::Text("%04X: ", static_cast<int>(i + offset));
+
+                // Display the data in hex format
+                ImGui::SameLine();
+                std::stringstream hex_stream;
+                for (size_t j = 0; j < bytes_per_row && i + j < data.size(); j++)
+                {
+                    hex_stream << std::setw(2) << std::setfill('0') << std::hex << (int)data[i + j] << " ";
+                }
+
+                std::string hex = hex_stream.str();
+                std::transform(hex.begin(), hex.end(), hex.begin(), [](char &c)
+                               { return std::toupper(c); });
+                ImGui::Text("%s", hex.c_str());
+
+                // Display the data in ASCII format (if printable)
+                ImGui::SameLine();
+                std::stringstream ascii_stream;
+                for (size_t j = 0; j < bytes_per_row && i + j < data.size(); j++)
+                {
+                    uint8_t byte = data[i + j];
+                    ascii_stream << (byte >= 32 && byte <= 126 ? static_cast<char>(byte) : '.');
+                }
+                ImGui::Text("%s", ascii_stream.str().c_str());
+            }
+        }
+
+        clipper.End();
+    }
+
+    // Show an integer combo
+    void Debugger::showIntegerCombo(int a, int b, int &selected_value)
+    {
+        if (ImGui::BeginCombo("Select Bank", std::to_string(selected_value).c_str())) // Combo label
+        {
+            for (int i = a; i <= b; ++i)
+            {
+                bool is_selected = (selected_value == i);
+                if (ImGui::Selectable(std::to_string(i).c_str(), is_selected))
+                {
+                    selected_value = i; // Update the selected value
+                }
+
+                // Set the initial focus when opening the combo (scroll to the selected value)
+                if (is_selected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
     }
 }

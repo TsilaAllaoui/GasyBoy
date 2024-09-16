@@ -66,6 +66,11 @@ namespace gasyboy
 		setRamBankNumber(_romBanks[0][0x0149]);
 	}
 
+	std::vector<std::vector<uint8_t>> Cartridge::getRomBanks()
+	{
+		return _romBanks;
+	}
+
 	void Cartridge::setMBCType(const uint8_t &value)
 	{
 		_cartridgeType = utils::uint8ToCartridgeType(value);
@@ -108,6 +113,11 @@ namespace gasyboy
 		}
 	}
 
+	uint8_t Cartridge::getRomBanksNumber()
+	{
+		return _romBanksCount;
+	}
+
 	void Cartridge::setRamBankNumber(const uint8_t &value)
 	{
 		switch (value)
@@ -131,6 +141,11 @@ namespace gasyboy
 		}
 
 		_ramBanks.resize(_ramBanksCount, std::vector<uint8_t>(0x2000, 0));
+	}
+
+	uint8_t Cartridge::getRamBanksNumber()
+	{
+		return _ramBanksCount;
 	}
 
 	uint8_t Cartridge::romBankRead(const uint16_t &addr)

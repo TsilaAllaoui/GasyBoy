@@ -393,6 +393,11 @@ namespace gasyboy
         return "TODO: get title"; // TODO
     }
 
+    Cartridge Mmu::getCartridge()
+    {
+        return _cartridge;
+    }
+
     void *Mmu::ramCellptr(const uint16_t &pos)
     {
         return &_workingRam[pos - 0xC000];

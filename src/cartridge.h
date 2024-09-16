@@ -97,11 +97,13 @@ namespace gasyboy
         // Set MBC type
         void setMBCType(const uint8_t &value);
 
-        // Set rom banks number
+        // Get/Set rom banks number
         void setRomBankNumber(const uint8_t &value);
+        uint8_t getRomBanksNumber();
 
-        // Set rom banks number
+        // Get/Set rom banks number
         void setRamBankNumber(const uint8_t &value);
+        uint8_t getRamBanksNumber();
 
         // ROM Bank reading
         uint8_t romBankRead(const uint16_t &adrr);
@@ -115,6 +117,9 @@ namespace gasyboy
 
         // To load rom from byte array
         void loadRomFromByteArray(const std::vector<uint8_t> &byteArray);
+
+        // Get rom content
+        std::vector<std::vector<uint8_t>> getRomBanks();
     };
 }
 

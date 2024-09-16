@@ -21,10 +21,13 @@ namespace gasyboy
         void renderCpuDebugScreen();
         void renderTimerDebugScreen();
         void renderJoypadDebugScreen();
+        void renderMemoryViewerDebugScreen();
 
         SDL_Window *_window;
 
         std::vector<uint16_t> _breakPoints;
+
+        int _currentSelectedRomBank;
 
     private:
         SDL_Renderer *_renderer;
@@ -39,6 +42,9 @@ namespace gasyboy
 
         std::vector<std::pair<std::string, bool>> _buttons;
         std::vector<std::pair<std::string, bool>> _directions;
+
+        void showByteArray(const std::vector<uint8_t> &data, const uint16_t &offset = 0, size_t bytes_per_row = 16);
+        void showIntegerCombo(int a, int b, int &selected_value);
     };
 }
 

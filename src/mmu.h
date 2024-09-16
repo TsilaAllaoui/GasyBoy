@@ -140,6 +140,9 @@ namespace gasyboy
         // Get cartridge title
         std::string getCartridgeTitle();
 
+        // Get rom from cartridge
+        Cartridge getCartridge();
+
         // Get address of i-th element in ram
         void *ramCellptr(const uint16_t &pos);
 
