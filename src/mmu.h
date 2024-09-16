@@ -7,7 +7,6 @@
 #include "cartridge.h"
 #include "gamepad.h"
 #include "defs.h"
-#include "timer.h"
 
 namespace gasyboy
 {
@@ -72,9 +71,6 @@ namespace gasyboy
         // rom file path
         std::string _romFilePath;
 
-        // Timer
-        Timer &_timer;
-
     public:
         // debug mode for tests
         struct mem_access
@@ -97,17 +93,12 @@ namespace gasyboy
         bool _oamDataIn;
 
         // construcor/destructor
-        Mmu(const std::string &romFilePath, Gamepad &gamepad, Timer &timer, const bool &bootBios = true);
+        Mmu(const std::string &romFilePath, Gamepad &gamepad, const bool &bootBios = true);
 
-        Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad, Timer &timer);
+        Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad);
 
         // For debugging
-        Mmu(uint8_t size,
-            uint8_t *mem,
-            int *num_mem_accesses,
-            void *mem_accesses,
-            Gamepad &gamepad, 
-            Timer& timer);
+        Mmu(uint8_t size, uint8_t *mem, int *num_mem_accesses, void *mem_accesses, Gamepad &gamepad);
 
         ~Mmu() = default;
 
@@ -216,8 +207,6 @@ namespace gasyboy
         void updateTile(uint16_t address, uint8_t value);
         void updateSprite(uint16_t address, uint8_t value);
         void updatePalette(Colour *palette, uint8_t value);
-
-        Timer getTimer();
     };
 }
 

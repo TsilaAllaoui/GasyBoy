@@ -1,7 +1,6 @@
 #include "debugger.h"
 #include "gameboy.h"
 #include <chrono>
-#include <functional>
 
 namespace gasyboy
 {
@@ -15,24 +14,23 @@ namespace gasyboy
           _timer(timer)
     {
         _bytesBuffers = {
-            {'A', new char[2]},
-            {'F', new char[2]},
-            {'B', new char[2]},
-            {'C', new char[2]},
-            {'D', new char[2]},
-            {'E', new char[2]},
-            {'H', new char[2]},
-            {'L', new char[2]},
+            {"A", new char[2]},
+            {"F", new char[2]},
+            {"B", new char[2]},
+            {"C", new char[2]},
+            {"D", new char[2]},
+            {"E", new char[2]},
+            {"H", new char[2]},
+            {"L", new char[2]},
+            {"DIV", new char[2]},
+            {"TIMA", new char[2]},
+            {"TMA", new char[2]},
+            {"TAC", new char[2]},
         };
 
         _wordsBuffers = {
             {"SP", new char[4]},
             {"PC", new char[4]},
-            {"Frequency", new char[8]},
-            {"TIMA", new char[8]},
-            {"Counter", new char[8]},
-            {"DIV", new char[8]},
-            {"TMA", new char[8]},
         };
 
         // Initialize SDL and ImGui in the new thread
@@ -96,14 +94,9 @@ namespace gasyboy
         ImGui_ImplSDLRenderer2_NewFrame();
         ImGui::NewFrame();
 
-        // Set window position and size
-        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(350, 235), ImGuiCond_Always);
-
-        // Create the window
-        ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-
         renderCpuDebugScreen();
+
+        renderTimerDebugScrenn();
 
         ImGui::Render();
         SDL_RenderClear(_renderer);
@@ -111,36 +104,44 @@ namespace gasyboy
         SDL_RenderPresent(_renderer);
     }
 
+    void Debugger::renderByte(const std::string &reg, std::function<uint8_t()> get, std::function<void(uint8_t)> set)
+    {
+        snprintf(_bytesBuffers[reg], sizeof(_bytesBuffers[reg]) + 2, "0x%02X", get());
+        std::string regStr = reg;
+        regStr += ": ";
+        ImGui::Text(regStr.c_str());
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(50.0f);
+        std::string label = "##" + reg;
+        if (ImGui::InputText(label.c_str(), _bytesBuffers[reg], sizeof(_bytesBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            auto newValue = std::stoi(_bytesBuffers[reg], nullptr, 16);
+            set(newValue);
+        }
+    }
+
+    void Debugger::renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set)
+    {
+        snprintf(_wordsBuffers[reg], sizeof(_wordsBuffers[reg]) + 2, "0x%04X", get());
+        ImGui::Text((reg + ": ").c_str());
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(50.0f);
+        if (ImGui::InputText(("##" + reg).c_str(), _wordsBuffers[reg], sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            auto newValue = std::stoi(_wordsBuffers[reg], nullptr, 16);
+            set(newValue);
+        }
+    }
+
     void Debugger::renderCpuDebugScreen()
     {
-        auto renderByte = [&](const char &reg, std::function<uint8_t()> get, std::function<void(uint8_t)> set)
-        {
-            snprintf(_bytesBuffers[reg], sizeof(_bytesBuffers[reg]) + 2, "0x%02X", get());
-            std::string regStr(1, reg);
-            regStr += ": ";
-            ImGui::Text(regStr.c_str());
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(50.0f);
-            std::string label = "##" + std::string(1, reg);
-            if (ImGui::InputText(label.c_str(), _bytesBuffers[reg], sizeof(_bytesBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
-            {
-                auto newValue = std::stoi(_bytesBuffers[reg], nullptr, 16);
-                set(newValue);
-            }
-        };
 
-        auto renderWord = [&](const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set)
-        {
-            snprintf(_wordsBuffers[reg], sizeof(_wordsBuffers[reg]) + 2, "0x%04X", get());
-            ImGui::Text((reg + ": ").c_str());
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(50.0f);
-            if (ImGui::InputText(("##" + reg).c_str(), _wordsBuffers[reg], sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
-            {
-                auto newValue = std::stoi(_wordsBuffers[reg], nullptr, 16);
-                set(newValue);
-            }
-        };
+        // Set window position and size
+        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(350, 235), ImGuiCond_Always);
+
+        // Create the window
+        ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
         // Render registers
         if (ImGui::BeginTable("##CPU", 2, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
@@ -149,35 +150,35 @@ namespace gasyboy
             ImGui::TableSetupColumn("Flags", ImGuiTableColumnFlags_WidthStretch);
 
             ImGui::TableNextColumn();
-            renderByte('A', [&]()
+            renderByte("A", [&]()
                        { return _registers.AF.getLeftRegister(); }, [&](const uint8_t &val)
                        { _registers.AF.setLeftRegister(val); });
             ImGui::SameLine();
-            renderByte('F', [&]()
+            renderByte("F", [&]()
                        { return _registers.AF.getRightRegister(); }, [&](const uint8_t &val)
                        { _registers.AF.setRightRegister(val); });
 
-            renderByte('B', [&]()
+            renderByte("B", [&]()
                        { return _registers.BC.getLeftRegister(); }, [&](const uint8_t &val)
                        { _registers.BC.setLeftRegister(val); });
             ImGui::SameLine();
-            renderByte('C', [&]()
+            renderByte("C", [&]()
                        { return _registers.BC.getRightRegister(); }, [&](const uint8_t &val)
                        { _registers.BC.setRightRegister(val); });
 
-            renderByte('D', [&]()
+            renderByte("D", [&]()
                        { return _registers.DE.getLeftRegister(); }, [&](const uint8_t &val)
                        { _registers.DE.setLeftRegister(val); });
             ImGui::SameLine();
-            renderByte('E', [&]()
+            renderByte("E", [&]()
                        { return _registers.DE.getRightRegister(); }, [&](const uint8_t &val)
                        { _registers.DE.setRightRegister(val); });
 
-            renderByte('H', [&]()
+            renderByte("H", [&]()
                        { return _registers.HL.getLeftRegister(); }, [&](const uint8_t &val)
                        { _registers.HL.setLeftRegister(val); });
             ImGui::SameLine();
-            renderByte('L', [&]()
+            renderByte("L", [&]()
                        { return _registers.HL.getRightRegister(); }, [&](const uint8_t &val)
                        { _registers.HL.setRightRegister(val); });
 
@@ -229,17 +230,40 @@ namespace gasyboy
 
     void Debugger::renderTimerDebugScrenn()
     {
+        // Set window position and size
+        ImGui::SetNextWindowPos(ImVec2(0, 235), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(350, 235), ImGuiCond_Always);
+
+        // Create the window
+        ImGui::Begin("Timer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
         // Render registers
-        if (ImGui::BeginTable("##CPU", 2, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
+        if (ImGui::BeginTable("##Timer", 2, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
         {
             ImGui::TableSetupColumn("Registers", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableSetupColumn("Flags", ImGuiTableColumnFlags_WidthStretch);
 
             ImGui::TableNextColumn();
-            ImGui::Text("Frequency");
-            if (ImGui::InputText("#Frequency", _wordsBuffers["Frequency"], sizeof(_wordsBuffers["Frequency"]), ImGuiInputTextFlags_EnterReturnsTrue))
-            {
-            }
+
+            renderByte("DIV", [&]()
+                       { return _timer.DIV(); }, [&](const uint8_t &value)
+                       { _timer.setDIV(value); });
+
+            renderByte("TIMA", [&]()
+                       { return _timer.TIMA(); }, [&](const uint8_t &value)
+                       { _timer.setTIMA(value); });
+
+            renderByte("TMA", [&]()
+                       { return _timer.TMA(); }, [&](const uint8_t &value)
+                       { _timer.setTMA(value); });
+
+            renderByte("TAC", [&]()
+                       { return _timer.TAC(); }, [&](const uint8_t &value)
+                       { _timer.setTAC(value); });
+
+            ImGui::EndTable();
         }
+
+        ImGui::End();
     }
 }

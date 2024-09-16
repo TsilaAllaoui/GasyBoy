@@ -10,11 +10,11 @@ namespace gasyboy
     GameBoy::GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode)
         : _debugMode(debugMode),
           _gamepad(),
-          _mmu(filePath, _gamepad, _timer),
+          _mmu(filePath, _gamepad),
           _registers(_mmu),
           _interruptManager(_mmu, _registers),
           _cpu(bootBios, _mmu, _registers, _interruptManager),
-          _timer(_mmu, _interruptManager),
+          _timer(_interruptManager),
           _cycleCounter(0),
           _ppu(_registers, _interruptManager, _mmu)
     {
@@ -24,7 +24,7 @@ namespace gasyboy
 
         if (_debugMode)
         {
-            _debugger = std::make_unique<Debugger>(_mmu, _registers, _renderer->_window);
+            _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _renderer->_window);
         }
     }
 

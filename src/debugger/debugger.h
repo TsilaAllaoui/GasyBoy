@@ -7,6 +7,7 @@
 #include "registers.h"
 #include <chrono>
 #include "timer.h"
+#include <functional>
 
 namespace gasyboy
 {
@@ -30,8 +31,10 @@ namespace gasyboy
         Mmu &_mmu;
         Timer _timer;
 
-        std::map<char, char *> _bytesBuffers;
+        std::map<std::string, char *> _bytesBuffers;
         std::map<std::string, char *> _wordsBuffers;
+        void renderByte(const std::string &reg, std::function<uint8_t()> get, std::function<void(uint8_t)> set);
+        void renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set);
     };
 }
 

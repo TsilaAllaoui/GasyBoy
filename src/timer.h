@@ -1,41 +1,46 @@
 #ifndef _TIMER_H_
 #define _TIMER_H_
 
-#include "interruptManager.h"
-#include "mmu.h"
+#include <cstdint>
 
 namespace gasyboy
 {
+    class InterruptManager;
+
     class Timer
     {
-        Mmu &_mmu;
         InterruptManager &_interruptManager;
 
-        // Timer registers
-        uint8_t _div;
-        uint8_t _tima;
-        uint8_t _tma;
-        uint8_t _tac;
-
-        uint16_t _divIncrementRate;
-        uint16_t _timaIncrementRate;
-
     public:
-        Timer(Mmu &mmu, InterruptManager &interruptManager);
+        Timer(InterruptManager &interruptManager);
         ~Timer() = default;
 
-        uint8_t DIV();
-        uint8_t TIMA();
-        uint8_t TMA();
-        uint8_t TAC();
+        // Timer registers
+        static uint8_t _div;
+        static uint8_t _tima;
+        static uint8_t _tma;
+        static uint8_t _tac;
+
+        static int _divIncrementRate;
+        static uint16_t _timaIncrementRate;
+
+        static uint8_t DIV();
+        static uint8_t TIMA();
+        static uint8_t TMA();
+        static uint8_t TAC();
+
+        static void setDIV(const uint8_t &value);
+        static void setTIMA(const uint8_t &value);
+        static void setTMA(const uint8_t &value);
+        static void setTAC(const uint8_t &value);
 
         void update(const int &cycles);
 
-        void updateDIV(const int &cycle);
-        void resetDIV();
-        void updateTIMA(const int &cycle);
-        void updateTMA(const int &value);
-        void updateTAC(const uint8_t &value);
+        static void updateDIV(const int &cycle);
+        static void resetDIV();
+        static void updateTIMA(const int &cycle);
+        static void updateTMA(const int &value);
+        static void updateTAC(const uint8_t &value);
 
         void stopTimer();
     };

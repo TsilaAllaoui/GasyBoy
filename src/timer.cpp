@@ -1,16 +1,18 @@
 #include "timer.h"
+#include "interruptManager.h"
 
 namespace gasyboy
 {
-	Timer::Timer(Mmu &mmu, InterruptManager &interruptManager)
-		: _mmu(mmu),
-		  _interruptManager(interruptManager),
-		  _div(0),
-		  _tima(0),
-		  _tma(0),
-		  _tac(0),
-		  _divIncrementRate(256),
-		  _timaIncrementRate(0)
+	uint8_t Timer::_div = 0;
+	uint8_t Timer::_tima = 0;
+	uint8_t Timer::_tma = 0;
+	uint8_t Timer::_tac = 0;
+
+	int Timer::_divIncrementRate = 255;
+	uint16_t Timer::_timaIncrementRate = 0;
+
+	Timer::Timer(InterruptManager &interruptManager)
+		: _interruptManager(interruptManager)
 	{
 	}
 
@@ -34,6 +36,26 @@ namespace gasyboy
 		return _tac;
 	}
 
+	void Timer::setDIV(const uint8_t &value)
+	{
+		_div = value;
+	}
+
+	void Timer::setTIMA(const uint8_t &value)
+	{
+		_tima = value;
+	}
+
+	void Timer::setTMA(const uint8_t &value)
+	{
+		_tma = value;
+	}
+
+	void Timer::setTAC(const uint8_t &value)
+	{
+		_tac = value;
+	}
+
 	void Timer::update(const int &cycles)
 	{
 		updateDIV(cycles);
@@ -45,7 +67,7 @@ namespace gasyboy
 		_divIncrementRate -= cycle;
 		if (_divIncrementRate <= 0)
 		{
-			_divIncrementRate = 256;
+			_divIncrementRate = 255;
 			_div++;
 		}
 	}

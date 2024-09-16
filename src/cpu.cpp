@@ -2435,7 +2435,7 @@ namespace gasyboy
 			_cycle = 4;
 			_registers.setHalted(true);
 			_registers.PC++;
-			_mmu.getTimer().resetDIV();
+			Timer::resetDIV();
 			break;
 		case 0x11:
 			LD_rr_16(_registers.PC + 1, "DE");
