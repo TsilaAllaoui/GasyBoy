@@ -36,7 +36,7 @@ namespace gasyboy
         SDL_Init(SDL_INIT_VIDEO);
 
         SDL_CreateWindowAndRenderer(windowWidth * 2, windowHeight * 2, 0, &_window, &_renderer);
-        SDL_SetWindowPosition(_window, 250, 250);
+        SDL_SetWindowPosition(_window, 20, 50);
         SDL_RenderSetLogicalSize(_renderer, windowWidth, windowHeight);
         SDL_SetWindowResizable(_window, SDL_TRUE);
         SDL_SetWindowTitle(_window, "GasyBoy");

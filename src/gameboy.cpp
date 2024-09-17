@@ -24,7 +24,7 @@ namespace gasyboy
 
         if (_debugMode)
         {
-            _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _renderer->_window);
+            _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _ppu, _renderer->_window);
         }
     }
 

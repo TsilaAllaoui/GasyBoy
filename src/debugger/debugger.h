@@ -8,13 +8,14 @@
 #include <chrono>
 #include "timer.h"
 #include <functional>
+#include "ppu.h"
 
 namespace gasyboy
 {
     class Debugger
     {
     public:
-        Debugger(Mmu &_mmu, Registers &registers, Timer &timer, SDL_Window *mainWindow);
+        Debugger(Mmu &_mmu, Registers &registers, Timer &timer, Ppu &ppu, SDL_Window *mainWindow);
         ~Debugger();
 
         void render();
@@ -22,6 +23,7 @@ namespace gasyboy
         void renderTimerDebugScreen();
         void renderJoypadDebugScreen();
         void renderMemoryViewerDebugScreen();
+        void renderPpuViewerDebugScreen();
 
         SDL_Window *_window;
 
@@ -30,11 +32,41 @@ namespace gasyboy
         int _currentSelectedRomBank;
         int _currentSelectedRamBank;
 
+        // PPU Control Register Flags
+        bool _lcdEnable;
+        bool _windowTimeMapArea;
+        bool _windowEnable;
+        bool _objSize8x8;
+        bool _objSize8x16;
+        bool _objEnabled;
+        bool _bgWindowEnablePriority;
+
+        // PPU Lcd Status
+        int _ly;
+        int _lyc;
+        int _scx;
+        int _scy;
+        int _wx;
+        int _wy;
+
+        // PPU Palettes
+        int _bgp;
+        int _obp0;
+        int _obp1;
+
+        // Preview sprite
+        ImVec2 _previewPos;
+        Mmu::Sprite _previewSprite;
+        bool _previewSpriteXFlip;
+        bool _previewSpriteYFlip;
+        bool _previewSpritePriority;
+
     private:
         SDL_Renderer *_renderer;
         Registers &_registers;
         Mmu &_mmu;
         Timer _timer;
+        Ppu &_ppu;
 
         std::map<std::string, char *> _bytesBuffers;
         std::map<std::string, char *> _wordsBuffers;
@@ -46,6 +78,11 @@ namespace gasyboy
 
         void showByteArray(const std::vector<uint8_t> &data, const uint16_t &offset = 0, size_t bytes_per_row = 16);
         void showIntegerCombo(int a, int b, int &selected_value);
+
+        void showPalette(const char *label, Colour palette[4], const uint8_t &w = 50, const uint8_t &h = 50);
+        ImU32 PixelToColor(uint8_t pixelValue);
+        void RenderSprite(const Mmu::Sprite &sprite);
+        void Debugger::renderPreviewSprite();
     };
 }
 
