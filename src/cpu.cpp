@@ -2317,7 +2317,7 @@ namespace gasyboy
 
 	long Cpu::step()
 	{
-		if (state == State::RUNNING)
+		if (state == State::RUNNING || state == State::STEPPING)
 		{
 			if (_mmu.readRam(0xFF50) == 0x1 && _mmu.isInBios())
 				_mmu.disableBios();

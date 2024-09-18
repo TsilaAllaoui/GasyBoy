@@ -65,9 +65,6 @@ namespace gasyboy
             {"DOWN", false},
         };
 
-        // Initialize SDL and ImGui in the new thread
-        SDL_Init(SDL_INIT_VIDEO);
-
         // Retrieve the position and size of the main window
         int mainWindowX, mainWindowY, mainWindowWidth, mainWindowHeight;
         SDL_GetWindowPosition(mainWindow, &mainWindowX, &mainWindowY);
@@ -266,6 +263,13 @@ namespace gasyboy
         {
             std::cout << "Resume pressed!\n";
             Cpu::state = Cpu::State::RUNNING;
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Step", ImVec2(75, 0)))
+        {
+            std::cout << "Step pressed!\n";
+            Cpu::state = Cpu::State::STEPPING;
         }
 
         ImGui::End();

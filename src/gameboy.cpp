@@ -69,9 +69,14 @@ namespace gasyboy
     {
         _cycleCounter = 0;
 
-        while (Cpu::state == Cpu::State::RUNNING && _cycleCounter <= MAXCYCLE)
+        while ((Cpu::state == Cpu::State::RUNNING && _cycleCounter <= MAXCYCLE) ||
+               Cpu::state == Cpu::State::STEPPING)
         {
             step();
+            if (Cpu::state == Cpu::State::STEPPING)
+            {
+                Cpu::state = Cpu::State::PAUSED;
+            }
         }
 
         if (_ppu._canRender)
