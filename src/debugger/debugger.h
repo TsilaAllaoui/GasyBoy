@@ -9,6 +9,9 @@
 #include "timer.h"
 #include <functional>
 #include "ppu.h"
+#include "disassembler.h"
+#include <thread>
+#include <mutex>
 
 namespace gasyboy
 {
@@ -24,6 +27,8 @@ namespace gasyboy
         void renderJoypadDebugScreen();
         void renderMemoryViewerDebugScreen();
         void renderPpuViewerDebugScreen();
+
+        static std::mutex mtx;
 
         SDL_Window *_window;
 
@@ -61,12 +66,15 @@ namespace gasyboy
         bool _previewSpriteYFlip;
         bool _previewSpritePriority;
 
+        std::thread _disassemblerThread;
+
     private:
         SDL_Renderer *_renderer;
         Registers &_registers;
         Mmu &_mmu;
         Timer _timer;
         Ppu &_ppu;
+        Disassembler _disassembler;
 
         std::map<std::string, char *> _bytesBuffers;
         std::map<std::string, char *> _wordsBuffers;
@@ -83,6 +91,7 @@ namespace gasyboy
         ImU32 PixelToColor(uint8_t pixelValue);
         void RenderSprite(const Mmu::Sprite &sprite);
         void Debugger::renderPreviewSprite();
+        void renderDisassemblerScreen();
     };
 }
 

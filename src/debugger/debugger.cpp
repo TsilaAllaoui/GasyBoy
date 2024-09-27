@@ -19,7 +19,8 @@ namespace gasyboy
           _currentSelectedRomBank(1),
           _lcdEnable(false),
           _previewPos(ImVec2(845, 165)),
-          _previewSprite()
+          _previewSprite(),
+          _disassembler(_mmu.getCartridge())
     {
         _bytesBuffers = {
             {"A", new char[2]},
@@ -78,7 +79,7 @@ namespace gasyboy
         _window = SDL_CreateWindow("Debugger",
                                    debuggerWindowX,
                                    debuggerWindowY,
-                                   1050, 765, // Width and height for the debugger window
+                                   1340, 765, // Width and height for the debugger window
                                    SDL_WINDOW_SHOWN);
         _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
@@ -88,6 +89,11 @@ namespace gasyboy
 
         ImGui_ImplSDL2_InitForSDLRenderer(_window, _renderer);
         ImGui_ImplSDLRenderer2_Init(_renderer);
+
+        // Disassembling rom
+        // _disassemblerThread = std::thread([&]()
+        //                                   { _disassembler.disassemble(); });
+        _disassembler.disassemble();
     }
 
     Debugger::~Debugger()
@@ -137,6 +143,9 @@ namespace gasyboy
 
         // Rendering PPU state
         renderPpuViewerDebugScreen();
+
+        // Rendering Disassembler
+        renderDisassemblerScreen();
 
         ImGui::Render();
         SDL_RenderClear(_renderer);
@@ -371,7 +380,7 @@ namespace gasyboy
     void Debugger::renderMemoryViewerDebugScreen()
     {
         // Set window position and size
-        ImGui::SetNextWindowPos(ImVec2(0, 365), ImGuiCond_Always);
+        ImGui::SetNextWindowPos(ImVec2(670, 495), ImGuiCond_Always);
         ImGui::SetNextWindowSize(ImVec2(670, 400), ImGuiCond_Always);
 
         // Create the window
@@ -490,6 +499,73 @@ namespace gasyboy
                     ImVec2(_previewPos.x + (px + 1) * (pixelSize * 4), _previewPos.y + (py + 1) * (pixelSize * 4)),
                     color);
             }
+        }
+
+        ImGui::End();
+    }
+
+    void Debugger::renderDisassemblerScreen()
+    {
+        // Set window position and size
+        ImGui::SetNextWindowPos(ImVec2(0, 365), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(670, 400), ImGuiCond_Always);
+
+        // Create the window
+        ImGui::Begin("Disassembler", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+        static int selectedRow = -1; // Track the currently selected row
+
+        if (ImGui::BeginTable("##Disassembler", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+        {
+            // Set headers for the table
+            ImGui::TableSetupColumn("Address");
+            ImGui::TableSetupColumn("Opcode (Hex)");
+            ImGui::TableSetupColumn("Mnemonic");
+            ImGui::TableHeadersRow();
+
+            // Create a clipper to only render visible rows
+            ImGuiListClipper clipper;
+            clipper.Begin(_disassembler.disassembledRom.size()); // Begin with the total number of rows
+            uint16_t address = 0;
+
+            while (clipper.Step())
+            {
+                // Render only the rows in the visible range
+                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                {
+                    auto &opcode = _disassembler.disassembledRom[i];
+
+                    ImGui::TableNextRow();
+
+                    // Create a selectable row
+                    ImGui::TableSetColumnIndex(0);
+                    bool isSelected = (selectedRow == i); // Check if this row is the selected one
+                    if (ImGui::Selectable(std::string("0x" + std::to_string(address)).c_str(), isSelected, ImGuiSelectableFlags_SpanAllColumns))
+                    {
+                        // Set this row as selected when clicked
+                        selectedRow = i;
+                    }
+                    address += opcode.numberOfBytes;
+
+                    // Display the opcode byte in hexadecimal format
+                    ImGui::TableSetColumnIndex(1);
+                    std::stringstream ss;
+                    ss << std::hex << "0x" << (int)opcode.byte << " ";
+                    for (auto &byte : opcode.operands)
+                    {
+                        ss << std::hex << "0x" << (int)byte << " ";
+                    }
+                    ss << std::endl;
+                    ImGui::Text(ss.str().c_str());
+
+                    // Display the mnemonic as a string
+                    ImGui::TableSetColumnIndex(2);
+                    ImGui::Text(opcode.mnemonic.c_str());
+                }
+            }
+
+            // End the table
+            ImGui::EndTable();
         }
 
         ImGui::End();
@@ -818,5 +894,4 @@ namespace gasyboy
         // Convert to ImGui color format (RGBA)
         return IM_COL32(color.r, color.g, color.b, color.a);
     }
-
 }
