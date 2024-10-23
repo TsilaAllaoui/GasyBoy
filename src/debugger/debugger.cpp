@@ -513,10 +513,22 @@ namespace gasyboy
         // Create the window
         ImGui::Begin("Disassembler", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-        // Assuming you have a way to track the current PC in your disassembler
-        uint16_t currentPC = _registers.PC; // Get the current program counter
+        uint16_t targetAddress = _registers.PC; // Assume we want to scroll to the current PC
+        static uint16_t previousPC = _registers.PC;
+        int targetIndex = -1;     // Will store the index of the target address
+        int surroundingLines = 5; // Number of lines before/after to show for lazy loading
 
-        if (ImGui::BeginTable("##Disassembler", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+        // Find the index of the target address
+        for (int i = 0; i < _disassembler.disassembledRom.size(); i++)
+        {
+            if (_disassembler.disassembledRom[i].address == targetAddress)
+            {
+                targetIndex = i;
+                break;
+            }
+        }
+
+        if (targetIndex >= 0 && ImGui::BeginTable("##Disassembler", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
         {
             // Set headers for the table
             ImGui::TableSetupColumn("Address");
@@ -524,10 +536,30 @@ namespace gasyboy
             ImGui::TableSetupColumn("Mnemonic");
             ImGui::TableHeadersRow();
 
-            // Create a clipper to only render visible rows
-            ImGuiListClipper clipper;
-            clipper.Begin(_disassembler.disassembledRom.size()); // Begin with the total number of rows
+            // Scroll to the position of the targetIndex (current PC)
+            if (targetIndex >= 0 && previousPC != targetAddress)
+            {
+                float rowHeight = ImGui::GetTextLineHeightWithSpacing();
+                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + targetIndex * rowHeight, 0.5f);
+                previousPC = targetAddress;
+            }
 
+            // Adjust the clipper to show ± `surroundingLines` around the target index
+            int clipStart = std::max(0, targetIndex - surroundingLines);
+            int clipEnd = _disassembler.disassembledRom.size();
+
+            ImGuiListClipper clipper;
+            clipper.Begin(clipEnd);
+            clipper.DisplayStart = clipStart;
+            clipper.DisplayEnd = clipEnd;
+
+            // Pause if any break point hit
+            if (std::find(_breakPoints.begin(), _breakPoints.end(), targetAddress) != _breakPoints.end())
+            {
+                Cpu::state = Cpu::State::PAUSED;
+            }
+
+            // Lazy load only the visible items
             while (clipper.Step())
             {
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
@@ -537,13 +569,55 @@ namespace gasyboy
 
                     ImGui::TableNextRow();
 
-                    // Create a selectable row
+                    // Create a full row selectable
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::TableNextColumn();
+
+                    std::stringstream rowLabel;
+                    rowLabel << "##Row" << i; // Use a unique label for each row
+
+                    bool isRowSelected = (i == targetIndex); // Optional: You can track row selection state if needed
+                    if (ImGui::Selectable(rowLabel.str().c_str(), isRowSelected, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, 0)))
+                    {
+                    }
+
+                    // Check if the row was double-clicked
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                    {
+                        auto it = std::find(_breakPoints.begin(), _breakPoints.end(), address);
+                        if (it != _breakPoints.end())
+                        {
+                            std::cout << "Removed breakpoint: " << std::hex << (int)address << std::endl;
+                            _breakPoints.erase(it);
+                        }
+                        else
+                        {
+                            std::cout << "Added breakpoint: " << std::hex << (int)address << std::endl;
+                            _breakPoints.emplace_back(address);
+                        }
+                    }
+
+                    // Check if the current address is a breakpoint
+                    bool isBreakPoint = std::find(_breakPoints.begin(), _breakPoints.end(), address) != _breakPoints.end();
+
+                    // Highlight row for breakpoints (reddish)
+                    if (isBreakPoint)
+                    {
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, ImGui::GetColorU32(ImVec4(0.8f, 0.2f, 0.2f, 0.65f))); // Reddish background
+                    }
+                    else if (i == targetIndex)
+                    {
+                        // Highlight the row corresponding to the target index (PC)
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, ImGui::GetColorU32(ImVec4(0.2f, 0.4f, 0.9f, 0.65f))); // Highlight row for PC
+                    }
+
+                    // Column 0: Address
                     ImGui::TableSetColumnIndex(0);
                     std::stringstream ssAddress;
                     ssAddress << "0x" << std::hex << (int)address;
                     ImGui::Text(ssAddress.str().c_str());
 
-                    // Display the opcode byte in hexadecimal format
+                    // Column 1: Opcode byte(s) in hexadecimal format
                     ImGui::TableSetColumnIndex(1);
                     std::stringstream ss;
                     ss << std::hex << "0x" << (int)opcode.byte << " ";
@@ -554,7 +628,7 @@ namespace gasyboy
                     ss << std::endl;
                     ImGui::Text(ss.str().c_str());
 
-                    // Display the mnemonic as a string
+                    // Column 2: Mnemonic
                     ImGui::TableSetColumnIndex(2);
                     ImGui::Text(opcode.mnemonic.c_str());
                 }

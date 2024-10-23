@@ -32,6 +32,7 @@ namespace gasyboy
 
         SDL_Window *_window;
 
+        // Breakpoints
         std::vector<uint16_t> _breakPoints;
 
         int _currentSelectedRomBank;
