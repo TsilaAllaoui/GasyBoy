@@ -513,7 +513,8 @@ namespace gasyboy
         // Create the window
         ImGui::Begin("Disassembler", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-        static int selectedRow = -1; // Track the currently selected row
+        // Assuming you have a way to track the current PC in your disassembler
+        uint16_t currentPC = _registers.PC; // Get the current program counter
 
         if (ImGui::BeginTable("##Disassembler", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
         {
@@ -526,26 +527,21 @@ namespace gasyboy
             // Create a clipper to only render visible rows
             ImGuiListClipper clipper;
             clipper.Begin(_disassembler.disassembledRom.size()); // Begin with the total number of rows
-            uint16_t address = 0;
 
             while (clipper.Step())
             {
-                // Render only the rows in the visible range
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                 {
-                    auto &opcode = _disassembler.disassembledRom[i];
+                    auto &opcode = _disassembler.disassembledRom[i].opcode;
+                    auto address = _disassembler.disassembledRom[i].address;
 
                     ImGui::TableNextRow();
 
                     // Create a selectable row
                     ImGui::TableSetColumnIndex(0);
-                    bool isSelected = (selectedRow == i); // Check if this row is the selected one
-                    if (ImGui::Selectable(std::string("0x" + std::to_string(address)).c_str(), isSelected, ImGuiSelectableFlags_SpanAllColumns))
-                    {
-                        // Set this row as selected when clicked
-                        selectedRow = i;
-                    }
-                    address += opcode.numberOfBytes;
+                    std::stringstream ssAddress;
+                    ssAddress << "0x" << std::hex << (int)address;
+                    ImGui::Text(ssAddress.str().c_str());
 
                     // Display the opcode byte in hexadecimal format
                     ImGui::TableSetColumnIndex(1);

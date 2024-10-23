@@ -17,6 +17,17 @@ namespace gasyboy
         std::vector<uint8_t> operands;
     };
 
+    struct OpcodeLine
+    {
+        int address;
+        Opcode opcode;
+        OpcodeLine(const int &adress__, const Opcode &opcode__)
+        {
+            address = adress__;
+            opcode = opcode__;
+        }
+    };
+
     class Disassembler
     {
         std::vector<std::vector<uint8_t>> _romBanks;
@@ -27,7 +38,7 @@ namespace gasyboy
     public:
         Disassembler(Cartridge &cartridge);
 
-        std::vector<Opcode> disassembledRom;
+        std::vector<OpcodeLine> disassembledRom;
 
         std::mutex mutex;
 

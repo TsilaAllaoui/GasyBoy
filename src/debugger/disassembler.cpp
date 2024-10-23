@@ -548,8 +548,9 @@ namespace gasyboy
                     Opcode opcode = cbOpcodeTable[byte];
                     opcode.operands.emplace_back(bank[pc + 1]);
                     opcode.operands.emplace_back(bank[pc + 2]);
+                    auto opcodeLine = OpcodeLine(pc, opcode);
+                    disassembledRom.emplace_back(opcodeLine);
                     pc += 2;
-                    disassembledRom.emplace_back(opcode);
                 }
                 else if (byte < opcodeTable.size())
                 {
@@ -558,13 +559,15 @@ namespace gasyboy
                     {
                         opcode.operands.emplace_back(bank[pc + i]);
                     }
+                    auto opcodeLine = OpcodeLine(pc, opcode);
+                    disassembledRom.emplace_back(opcodeLine);
                     pc += opcode.numberOfBytes;
-                    disassembledRom.emplace_back(opcode);
                 }
                 else
                 {
                     Opcode opcode = {1, byte, "UNKNOWN", {}};
-                    disassembledRom.emplace_back(opcode);
+                    auto opcodeLine = OpcodeLine(pc, opcode);
+                    disassembledRom.emplace_back(opcodeLine);
                     pc += 1; // Continue to the next byte
                 }
             }
