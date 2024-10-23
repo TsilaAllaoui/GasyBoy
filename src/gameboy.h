@@ -66,7 +66,7 @@ namespace gasyboy
         static State state;
 
         // Used for the main loop
-        void loop(SDL_Event *event, bool &running);
+        void loop();
     };
 }
 

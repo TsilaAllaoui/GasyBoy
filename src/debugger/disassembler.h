@@ -19,9 +19,9 @@ namespace gasyboy
 
     struct OpcodeLine
     {
-        int address;
+        uint16_t address;
         Opcode opcode;
-        OpcodeLine(const int &adress__, const Opcode &opcode__)
+        OpcodeLine(const uint16_t &adress__, const Opcode &opcode__)
         {
             address = adress__;
             opcode = opcode__;

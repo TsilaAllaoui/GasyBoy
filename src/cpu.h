@@ -61,14 +61,13 @@ namespace gasyboy
 		uint16_t next2bytes(const uint16_t &adress);
 
 		/***************Carry/HalCarry*********************/
-		bool checkAddHalfCarry(const uint8_t &a, const uint8_t &b, const uint8_t &c);
-		bool checkAddHalfCarry(const uint16_t &a, const uint16_t &b, const uint16_t &c);
+		bool checkAddHalfCarry(const uint8_t &a, const uint8_t &b);
 		bool checkAddHalfCarry(const uint16_t &a, const uint16_t &b);
 		bool checkSubHalfCarry(const uint8_t &a, const uint8_t &b);
 		bool checkSubHalfCarry(const uint16_t &a, const uint16_t &b);
+		bool checkAddCarry(const uint8_t &a, const uint8_t &b);
+		bool checkAddCarry(const uint16_t &a, const uint16_t &b);
 		bool checkSubCarry(const uint16_t &a, const uint16_t &b);
-		bool checkAddCarry(const uint8_t &a, const uint8_t &b, const uint8_t &c);
-		bool checkAddCarry(const uint16_t &a, const uint16_t &b, const uint16_t &c);
 
 		/*******8bits load group instructions*******/
 

@@ -34,12 +34,12 @@ namespace gasyboy
         static void setTMA(const uint8_t &value);
         static void setTAC(const uint8_t &value);
 
-        void update(const int &cycles);
+        void update(const uint16_t &cycles);
 
-        static void updateDIV(const int &cycle);
+        static void updateDIV(const uint16_t &cycle);
         static void resetDIV();
-        static void updateTIMA(const int &cycle);
-        static void updateTMA(const int &value);
+        static void updateTIMA(const uint16_t &cycle);
+        static void updateTMA(const uint16_t &value);
         static void updateTAC(const uint8_t &value);
 
         void stopTimer();

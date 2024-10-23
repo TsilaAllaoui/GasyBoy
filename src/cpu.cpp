@@ -371,8 +371,8 @@ namespace gasyboy
 			exit(0);
 			break;
 		}
-		(checkAddHalfCarry(value, _registers.AF.getLeftRegister(), _registers.AF.getLeftRegister() + value)) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
-		(checkAddCarry(value, _registers.AF.getLeftRegister(), _registers.AF.getLeftRegister() + value)) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+		checkAddHalfCarry(value, _registers.AF.getLeftRegister()) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
+		checkAddCarry(value, _registers.AF.getLeftRegister()) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
 		uint8_t result = _registers.AF.getLeftRegister() + value;
 		(result == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('N');
@@ -381,8 +381,8 @@ namespace gasyboy
 
 	void Cpu::ADD_A_n(const uint8_t &value)
 	{
-		(checkAddHalfCarry(value, _registers.AF.getLeftRegister(), _registers.AF.getLeftRegister() + value)) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
-		(checkAddCarry(value, _registers.AF.getLeftRegister(), _registers.AF.getLeftRegister() + value)) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+		checkAddHalfCarry(value, _registers.AF.getLeftRegister()) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
+		checkAddCarry(value, _registers.AF.getLeftRegister()) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
 		uint8_t result = _registers.AF.getLeftRegister() + value;
 		(result == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('N');
@@ -392,8 +392,7 @@ namespace gasyboy
 	void Cpu::ADD_A_16()
 	{
 		uint8_t value = _mmu.readRam(_registers.HL.get());
-		(checkAddHalfCarry(value, _registers.AF.getLeftRegister(), _registers.AF.getLeftRegister() + value)) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
-		// (checkAddCarry(value, _registers.AF.getLeftRegister(), _registers.AF.getLeftRegister() + value)) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+		checkAddHalfCarry(value, _registers.AF.getLeftRegister()) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
 		((uint16_t)value + (uint16_t)_registers.AF.getLeftRegister() >= 0x100) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
 		uint8_t result = _registers.AF.getLeftRegister() + value;
 		(result == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
@@ -650,8 +649,7 @@ namespace gasyboy
 			exit(0);
 			break;
 		}
-		uint8_t b = value;
-		uint8_t result = _registers.AF.getLeftRegister() & value;
+		uint8_t result = static_cast<uint8_t>(_registers.AF.getLeftRegister() & value);
 		_registers.AF.setLeftRegister(result);
 		(result == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.setFlag('H');
@@ -661,7 +659,7 @@ namespace gasyboy
 
 	void Cpu::AND_n(const uint8_t &value)
 	{
-		uint8_t result = _registers.AF.getLeftRegister() & value;
+		uint8_t result = static_cast<uint8_t>(_registers.AF.getLeftRegister() & value);
 		_registers.AF.setLeftRegister(result);
 		(result == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.setFlag('H');
@@ -672,7 +670,7 @@ namespace gasyboy
 	void Cpu::AND_16()
 	{
 		uint8_t value = _mmu.readRam(_registers.HL.get());
-		uint8_t result = _registers.AF.getLeftRegister() & value;
+		uint8_t result = static_cast<uint8_t>(_registers.AF.getLeftRegister() & value);
 		_registers.AF.setLeftRegister(result);
 		(result == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.setFlag('H');
@@ -711,7 +709,7 @@ namespace gasyboy
 			exit(0);
 			break;
 		}
-		uint8_t b = value;
+
 		uint8_t result = _registers.AF.getLeftRegister() | value;
 		_registers.AF.setLeftRegister(result);
 		(result == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
@@ -772,7 +770,7 @@ namespace gasyboy
 			exit(0);
 			break;
 		}
-		uint8_t b = value;
+
 		uint8_t result = _registers.AF.getLeftRegister() ^ value;
 		_registers.AF.setLeftRegister(result);
 		(result == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
@@ -913,7 +911,7 @@ namespace gasyboy
 			break;
 		}
 		(value == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
-		(checkAddHalfCarry(oldReg, 1, oldReg + 1)) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
+		checkAddHalfCarry(oldReg, 1) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
 		_registers.AF.clearFlag('N');
 	}
 
@@ -923,7 +921,7 @@ namespace gasyboy
 		uint8_t value = _mmu.readRam(_registers.HL.get()) + 1;
 		_mmu.writeRam(_registers.HL.get(), value);
 		(value == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
-		(checkAddHalfCarry(oldValue, 1, oldValue + 1)) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
+		checkAddHalfCarry(oldValue, 1) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
 		_registers.AF.clearFlag('N');
 	}
 
@@ -1138,8 +1136,8 @@ namespace gasyboy
 		uint16_t operand = _registers.HL.get();
 		_registers.HL.set(operand + value);
 		_registers.AF.clearFlag('N');
-		(checkAddCarry(operand, value, value + operand)) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-		(checkAddHalfCarry(operand, value, value + operand)) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
+		checkAddCarry(operand, value) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+		checkAddHalfCarry(operand, value) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
 	}
 
 	void Cpu::SBC_HL_rr(const std::string &reg)
@@ -1161,8 +1159,8 @@ namespace gasyboy
 		uint16_t operand = _registers.HL.get();
 		_registers.HL.set(operand - value);
 		_registers.AF.setFlag('N');
-		(checkAddCarry(operand, value, value + operand)) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-		(checkSubHalfCarry(operand, value)) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
+		checkAddCarry(operand, value) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
+		checkSubHalfCarry(operand, value) ? _registers.AF.setFlag('H') : _registers.AF.clearFlag('H');
 	}
 
 	void Cpu::INC_rr(const std::string &reg)
@@ -1234,9 +1232,8 @@ namespace gasyboy
 		uint8_t reg = _registers.AF.getLeftRegister();
 		((reg & 0x80) == 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
 		int old7bit = ((reg & 0x80) == 0x80) ? 1 : 0;
-		uint8_t value = ((reg << 1) | (old7bit));
+		uint8_t value = static_cast<uint8_t>((reg << 1) | (old7bit));
 		_registers.AF.setLeftRegister(value);
-		//(_registers.AF.getLeftRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('H');
 		_registers.AF.clearFlag('N');
@@ -1246,9 +1243,8 @@ namespace gasyboy
 	{
 		int oldCarry = _registers.AF.getFlag('C');
 		(_registers.AF.getLeftRegister() & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-		uint8_t value = ((_registers.AF.getLeftRegister() << 1) | (oldCarry << 0));
+		uint8_t value = static_cast<uint8_t>((_registers.AF.getLeftRegister() << 1) | (oldCarry << 0));
 		_registers.AF.setLeftRegister(value);
-		//(_registers.AF.getLeftRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('H');
 		_registers.AF.clearFlag('N');
@@ -1258,7 +1254,6 @@ namespace gasyboy
 	{
 		(_registers.AF.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
 		_registers.AF.setLeftRegister((_registers.AF.getLeftRegister() >> 1) | (_registers.AF.getFlag('C') << 7));
-		//(_registers.AF.getLeftRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('H');
 		_registers.AF.clearFlag('N');
 		_registers.AF.clearFlag('Z');
@@ -1268,9 +1263,8 @@ namespace gasyboy
 	{
 		int oldCarry = _registers.AF.getFlag('C');
 		(_registers.AF.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-		uint8_t value = ((_registers.AF.getLeftRegister() >> 1) | (oldCarry << 7));
+		uint8_t value = static_cast<uint8_t>((_registers.AF.getLeftRegister() >> 1) | (oldCarry << 7));
 		_registers.AF.setLeftRegister(value);
-		//(_registers.AF.getLeftRegister() == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('H');
 		_registers.AF.clearFlag('N');
@@ -1354,7 +1348,7 @@ namespace gasyboy
 		uint8_t value = _mmu.readRam(_registers.HL.get());
 		int oldCarry = _registers.AF.getFlag('C');
 		(value & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-		value = (value << 1) | (oldCarry);
+		value = static_cast<uint8_t>((value << 1) | (oldCarry));
 		(value == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('H');
 		_registers.AF.clearFlag('N');
@@ -1431,49 +1425,49 @@ namespace gasyboy
 		{
 		case 'A':
 			(_registers.AF.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.AF.setLeftRegister((_registers.AF.getLeftRegister() >> 1) | (oldCarry << 7));
+			_registers.AF.setLeftRegister(static_cast<uint8_t>((_registers.AF.getLeftRegister() >> 1) | (oldCarry << 7)));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
 			value = _registers.AF.getLeftRegister();
 			break;
 		case 'B':
 			(_registers.BC.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.BC.setLeftRegister((_registers.BC.getLeftRegister() >> 1) | (oldCarry << 7));
+			_registers.BC.setLeftRegister(static_cast<uint8_t>((_registers.BC.getLeftRegister() >> 1) | (oldCarry << 7)));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
 			value = _registers.BC.getLeftRegister();
 			break;
 		case 'C':
 			(_registers.BC.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.BC.setRightRegister((_registers.BC.getRightRegister() >> 1) | (oldCarry << 7));
+			_registers.BC.setRightRegister(static_cast<uint8_t>((_registers.BC.getRightRegister() >> 1) | (oldCarry << 7)));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
 			value = _registers.BC.getRightRegister();
 			break;
 		case 'D':
 			(_registers.DE.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.DE.setLeftRegister((_registers.DE.getLeftRegister() >> 1) | (oldCarry << 7));
+			_registers.DE.setLeftRegister(static_cast<uint8_t>((_registers.DE.getLeftRegister() >> 1) | (oldCarry << 7)));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
 			value = _registers.DE.getLeftRegister();
 			break;
 		case 'E':
 			(_registers.DE.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.DE.setRightRegister((_registers.DE.getRightRegister() >> 1) | (oldCarry << 7));
+			_registers.DE.setRightRegister(static_cast<uint8_t>((_registers.DE.getRightRegister() >> 1) | (oldCarry << 7)));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
 			value = _registers.DE.getRightRegister();
 			break;
 		case 'H':
 			(_registers.HL.getLeftRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.HL.setLeftRegister((_registers.HL.getLeftRegister() >> 1) | (oldCarry << 7));
+			_registers.HL.setLeftRegister(static_cast<uint8_t>((_registers.HL.getLeftRegister() >> 1) | (oldCarry << 7)));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
 			value = _registers.HL.getLeftRegister();
 			break;
 		case 'L':
 			(_registers.HL.getRightRegister() & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-			_registers.HL.setRightRegister((_registers.HL.getRightRegister() >> 1) | (oldCarry << 7));
+			_registers.HL.setRightRegister(static_cast<uint8_t>((_registers.HL.getRightRegister() >> 1) | (oldCarry << 7)));
 			_registers.AF.clearFlag('H');
 			_registers.AF.clearFlag('N');
 			value = _registers.HL.getRightRegister();
@@ -1491,7 +1485,7 @@ namespace gasyboy
 		int oldCarry = _registers.AF.getFlag('C');
 		uint8_t value = _mmu.readRam(_registers.HL.get());
 		(value & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-		value = ((value >> 1) | (oldCarry << 7));
+		value = static_cast<uint8_t>((value >> 1) | (oldCarry << 7));
 		_mmu.writeRam(_registers.HL.get(), value);
 		(value == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('H');
@@ -1573,7 +1567,7 @@ namespace gasyboy
 
 	void Cpu::SLA_r(const char &reg)
 	{
-		uint8_t value = 0, oldCarry = _registers.AF.getFlag('C');
+		uint8_t value = 0;
 		switch (reg)
 		{
 		case 'A':
@@ -1635,7 +1629,7 @@ namespace gasyboy
 
 	void Cpu::SLA_16()
 	{
-		uint8_t value = _mmu.readRam(_registers.HL.get()), oldCarry = _registers.AF.getFlag('C');
+		uint8_t value = _mmu.readRam(_registers.HL.get());
 		(value & 0x80) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
 		_mmu.writeRam(_registers.HL.get(), (value << 1));
 		_registers.AF.clearFlag('H');
@@ -1719,7 +1713,7 @@ namespace gasyboy
 		uint8_t value = _mmu.readRam(_registers.HL.get());
 		int old7bit = (value & 0x80);
 		(value & 0x1) ? _registers.AF.setFlag('C') : _registers.AF.clearFlag('C');
-		value = ((value >> 1) | (old7bit));
+		value = static_cast<uint8_t>((value >> 1) | (old7bit));
 		_mmu.writeRam(_registers.HL.get(), value);
 		(value == 0) ? _registers.AF.setFlag('Z') : _registers.AF.clearFlag('Z');
 		_registers.AF.clearFlag('H');
@@ -1728,7 +1722,6 @@ namespace gasyboy
 
 	void Cpu::SRL_r(const char &reg)
 	{
-		uint8_t value = 0;
 		switch (reg)
 		{
 		case 'A':
@@ -2267,7 +2260,7 @@ namespace gasyboy
 		_registers.PC = p;
 	}
 
-	bool Cpu::checkAddHalfCarry(const uint8_t &a, const uint8_t &b, const uint8_t &c)
+	bool Cpu::checkAddHalfCarry(const uint8_t &a, const uint8_t &b)
 	{
 		return ((((a & 0xF) + (b & 0xF)) & 0x10) == 0x10);
 	}
@@ -2275,11 +2268,6 @@ namespace gasyboy
 	bool Cpu::checkAddHalfCarry(const uint16_t &a, const uint16_t &b)
 	{
 		return ((a & 0xFF) + (b & 0xFF) >= 0x100);
-	}
-
-	bool Cpu::checkAddHalfCarry(const uint16_t &a, const uint16_t &b, const uint16_t &c)
-	{
-		return ((((a & 0xFFF) + (b & 0xFFF)) & 0x800) == 0x800);
 	}
 
 	bool Cpu::checkSubHalfCarry(const uint8_t &a, const uint8_t &b)
@@ -2297,12 +2285,12 @@ namespace gasyboy
 		return (((a & 0x8000) - (b & 0x8000)) < 0);
 	}
 
-	bool Cpu::checkAddCarry(const uint8_t &a, const uint8_t &b, const uint8_t &c)
+	bool Cpu::checkAddCarry(const uint8_t &a, const uint8_t &b)
 	{
 		return ((uint16_t)a + (uint16_t)b) >= 0x100;
 	}
 
-	bool Cpu::checkAddCarry(const uint16_t &a, const uint16_t &b, const uint16_t &c)
+	bool Cpu::checkAddCarry(const uint16_t &a, const uint16_t &b)
 	{
 		bool firstBit = a & 0x8000, secondtBit = b & 0x8000;
 		return (firstBit & secondtBit) ? true : false;
@@ -4847,7 +4835,6 @@ namespace gasyboy
 		}
 		default:
 			cout << "Unsupported Instruction : " << hex << (int)_mmu.readRam(_registers.PC);
-			break;
 			exit(0);
 			break;
 		}

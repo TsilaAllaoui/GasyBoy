@@ -56,9 +56,13 @@ namespace gasyboy
         // loading rom file
         try
         {
-            std::vector<uint8_t> bytes(romSize, 0);
+            std::vector<uint8_t> byteList(romSize, 0);
+            for (auto i = 0; i < romSize; i++)
+            {
+                byteList.emplace_back(bytes[i]);
+            }
 
-            _cartridge.loadRomFromByteArray(bytes);
+            _cartridge.loadRomFromByteArray(byteList);
             utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
                                               "Rom file : \"" +
                                                   _romFilePath + "\" loaded successfully");
@@ -218,7 +222,7 @@ namespace gasyboy
             _vRam[address - 0x8000] = value;
             if (address >= 0x8000 && address < 0x9800)
             {
-                updateTile(address, value);
+                updateTile(address);
                 return;
             }
         }
@@ -354,7 +358,7 @@ namespace gasyboy
     {
         uint16_t data = (value << 8);
 
-        for (int i = 0; i < 0xA0; i++)
+        for (uint16_t i = 0; i < 0xA0; i++)
         {
             uint8_t tmp = readRam(data + i);
             directSet(0xFE00 + i, tmp);
@@ -393,7 +397,7 @@ namespace gasyboy
         return "TODO: get title"; // TODO
     }
 
-    Cartridge Mmu::getCartridge()
+    Cartridge &Mmu::getCartridge()
     {
         return _cartridge;
     }
@@ -403,7 +407,7 @@ namespace gasyboy
         return &_workingRam[pos - 0xC000];
     }
 
-    void Mmu::updateTile(uint16_t laddress, uint8_t value)
+    void Mmu::updateTile(const uint16_t &laddress)
     {
         uint16_t address = laddress & 0xFFFE;
 
@@ -420,7 +424,7 @@ namespace gasyboy
         }
     }
 
-    void Mmu::updateSprite(uint16_t laddress, uint8_t value)
+    void Mmu::updateSprite(const uint16_t &laddress, const uint8_t &value)
     {
         uint16_t address = laddress - 0xFE00;
         Sprite *sprite = &sprites[address >> 2];

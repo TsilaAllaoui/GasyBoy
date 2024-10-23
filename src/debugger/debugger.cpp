@@ -15,6 +15,7 @@ namespace gasyboy
           _window(nullptr),
           _renderer(nullptr),
           _breakPoints(),
+          _currentBreakPoint(-1),
           _timer(timer),
           _currentSelectedRomBank(1),
           _lcdEnable(false),
@@ -85,7 +86,6 @@ namespace gasyboy
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        ImGuiIO &io = ImGui::GetIO();
 
         ImGui_ImplSDL2_InitForSDLRenderer(_window, _renderer);
         ImGui_ImplSDLRenderer2_Init(_renderer);
@@ -164,12 +164,12 @@ namespace gasyboy
         std::string label = "##" + reg;
         if (ImGui::InputText(label.c_str(), _bytesBuffers[reg], sizeof(_bytesBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            auto newValue = std::stoi(_bytesBuffers[reg], nullptr, 16);
+            auto newValue = static_cast<uint8_t>(std::stoi(_bytesBuffers[reg], nullptr, 16));
             set(newValue);
         }
     }
 
-    void Debugger::renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(uint16_t)> set, const size_t &base)
+    void Debugger::renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(const uint16_t &value)> set, const size_t &base)
     {
         snprintf(_wordsBuffers[reg], sizeof(_wordsBuffers[reg]) + 2, base == 16 ? "0x%04X" : "%d", get());
         ImGui::Text((reg + ": ").c_str());
@@ -177,7 +177,7 @@ namespace gasyboy
         ImGui::SetNextItemWidth(50.0f);
         if (ImGui::InputText(("##" + reg).c_str(), _wordsBuffers[reg], sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            auto newValue = std::stoi(_wordsBuffers[reg], nullptr, 16);
+            auto newValue = static_cast<uint8_t>(std::stoi(_wordsBuffers[reg], nullptr, 16));
             set(newValue);
         }
     }
@@ -456,13 +456,13 @@ namespace gasyboy
         ImGui::Text("Attributes: ");
 
         renderByte("X", [&]()
-                   { return _previewSprite.x; }, [&](const uint8_t &value) {});
+                   { return static_cast<uint8_t>(_previewSprite.x); }, [&](const uint8_t &) {});
 
         renderByte("Y", [&]()
-                   { return _previewSprite.y; }, [&](const uint8_t &value) {});
+                   { return static_cast<uint8_t>(_previewSprite.y); }, [&](const uint8_t &) {});
 
         renderByte("Tile", [&]()
-                   { return _previewSprite.tile; }, [&](const uint8_t &value) {});
+                   { return static_cast<uint8_t>(_previewSprite.tile); }, [&](const uint8_t &) {});
 
         showPalette("Palette", _previewSprite.colourPalette, 25, 25);
 
@@ -518,6 +518,12 @@ namespace gasyboy
         int targetIndex = -1;     // Will store the index of the target address
         int surroundingLines = 5; // Number of lines before/after to show for lazy loading
 
+        if (previousPC != targetAddress)
+        {
+            _breakPoints.emplace_back(_currentBreakPoint);
+            _currentBreakPoint = -1;
+        }
+
         // Find the index of the target address
         for (int i = 0; i < _disassembler.disassembledRom.size(); i++)
         {
@@ -546,7 +552,7 @@ namespace gasyboy
 
             // Adjust the clipper to show ± `surroundingLines` around the target index
             int clipStart = std::max(0, targetIndex - surroundingLines);
-            int clipEnd = _disassembler.disassembledRom.size();
+            int clipEnd = static_cast<int>(_disassembler.disassembledRom.size());
 
             ImGuiListClipper clipper;
             clipper.Begin(clipEnd);
@@ -554,9 +560,12 @@ namespace gasyboy
             clipper.DisplayEnd = clipEnd;
 
             // Pause if any break point hit
-            if (std::find(_breakPoints.begin(), _breakPoints.end(), targetAddress) != _breakPoints.end())
+            if (_currentBreakPoint < 0 && std::find(_breakPoints.begin(), _breakPoints.end(), targetAddress) != _breakPoints.end())
             {
                 Cpu::state = Cpu::State::PAUSED;
+                auto it = std::find(_breakPoints.begin(), _breakPoints.end(), targetAddress);
+                _breakPoints.erase(it);
+                _currentBreakPoint = targetAddress;
             }
 
             // Lazy load only the visible items
@@ -646,8 +655,7 @@ namespace gasyboy
         if (!sprite.ready)
             return; // Skip rendering if sprite is not ready
 
-        const Mmu::Tile &tile = _mmu.tiles[sprite.tile];                                                            // Get the tile corresponding to the sprite
-        Colour *palette = sprite.colourPalette ? sprite.colourPalette : const_cast<Colour *>(_mmu.palette_colours); // Get the sprite's palette
+        const Mmu::Tile &tile = _mmu.tiles[sprite.tile]; // Get the tile corresponding to the sprite
 
         // ImGui::GetWindowDrawList() returns the current drawing list to draw custom elements
         ImDrawList *drawList = ImGui::GetWindowDrawList();
@@ -711,7 +719,7 @@ namespace gasyboy
                 ImGui::Checkbox("LCD Enable", &_lcdEnable);
 
                 renderWord("WINDOW_TILE_MAP_AREA", [&]()
-                           { return (*controlByte & (1 << 6)) == 0 ? 0x9800 : 0x9C00; }, [&](const uint16_t &value)
+                           { return static_cast<uint16_t>((*controlByte & (1 << 6)) == 0 ? 0x9800 : 0x9C00); }, [&](const uint16_t &value)
                            {
                             if (value == 0x9800)
                             {
@@ -730,7 +738,7 @@ namespace gasyboy
                 ImGui::Checkbox("Window Enable", &_windowEnable);
 
                 renderWord("BG_WINDOW_TILE_DATA_MAP_AREA", [&]()
-                           { return (*controlByte & (1 << 4)) == 0 ? 0x9800 : 0x9C00; }, [&](const uint16_t &value)
+                           { return static_cast<uint16_t>((*controlByte & (1 << 4)) == 0 ? 0x9800 : 0x9C00); }, [&](const uint16_t &value)
                            {
                             if (value == 0x9800)
                             {
@@ -901,7 +909,7 @@ namespace gasyboy
 
                 std::string hex = hex_stream.str();
                 std::transform(hex.begin(), hex.end(), hex.begin(), [](char &c)
-                               { return std::toupper(c); });
+                               { return static_cast<char>(std::toupper(static_cast<int>(c))); });
                 ImGui::Text("%s", hex.c_str());
 
                 // Display the data in ASCII format (if printable)

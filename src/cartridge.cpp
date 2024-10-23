@@ -50,7 +50,7 @@ namespace gasyboy
 	void Cartridge::loadRomFromByteArray(const std::vector<uint8_t> &byteArray)
 	{
 		// Initialize ROM banks
-		_romBanksCount = std::max(2, int(byteArray.size() / 0x4000));
+		_romBanksCount = static_cast<uint8_t>(std::max(2, static_cast<int>(byteArray.size() / 0x4000)));
 		_romBanks.resize(_romBanksCount, std::vector<uint8_t>(0x4000));
 
 		for (int i = 0; i < _romBanksCount; ++i)
@@ -86,39 +86,39 @@ namespace gasyboy
 		switch (value)
 		{
 		case 0x00:
-			_romBanksCount = 2;
+			_romBanksCount = 2u;
 			break;
 		case 0x01:
-			_romBanksCount = 4;
+			_romBanksCount = 4u;
 			break;
 		case 0x02:
-			_romBanksCount = 8;
+			_romBanksCount = 8u;
 			break;
 		case 0x03:
-			_romBanksCount = 16;
+			_romBanksCount = 16u;
 			break;
 		case 0x04:
-			_romBanksCount = 32;
+			_romBanksCount = 32u;
 			break;
 		case 0x05:
-			_romBanksCount = 64;
+			_romBanksCount = 64u;
 			break;
 		case 0x06:
-			_romBanksCount = 128;
+			_romBanksCount = 128u;
 			break;
 		case 0x07:
-			_romBanksCount = 256;
+			_romBanksCount = 256u;
 			break;
 		case 0x08:
-			_romBanksCount = 512;
+			_romBanksCount = 512u;
 			break;
 		default:
-			_romBanksCount = 2;
+			_romBanksCount = 2u;
 			break;
 		}
 	}
 
-	uint8_t Cartridge::getRomBanksNumber()
+	uint16_t Cartridge::getRomBanksNumber()
 	{
 		return _romBanksCount;
 	}

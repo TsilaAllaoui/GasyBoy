@@ -132,7 +132,7 @@ namespace gasyboy
         int pixelOffset = *_scanline * SCREEN_WIDTH; // Start position in the framebuffer
 
         int pixel = 0; // Screen pixel position
-        for (int i = 0; i < 21; i++)
+        for (uint16_t i = 0; i < 21; i++)
         {
             uint16_t tile_address = address + i;
             if (tile_address >= endRowAddress)
@@ -190,7 +190,7 @@ namespace gasyboy
         address += ((*_scanline - windowY) / 8) * 32;
 
         // Iterate through each tile in the current scanline of the window
-        for (int tileX = 0; tileX < 21; tileX++)
+        for (uint16_t tileX = 0; tileX < 21; tileX++)
         {
             // Read the tile index from VRAM
             uint16_t tile_address = address + tileX;

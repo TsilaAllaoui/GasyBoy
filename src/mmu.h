@@ -141,7 +141,7 @@ namespace gasyboy
         std::string getCartridgeTitle();
 
         // Get rom from cartridge
-        Cartridge getCartridge();
+        Cartridge &getCartridge();
 
         // Get address of i-th element in ram
         void *ramCellptr(const uint16_t &pos);
@@ -207,8 +207,8 @@ namespace gasyboy
             {0, 0, 0, 255},
         };
 
-        void updateTile(uint16_t address, uint8_t value);
-        void updateSprite(uint16_t address, uint8_t value);
+        void updateTile(const uint16_t &address);
+        void updateSprite(const uint16_t &address, const uint8_t &value);
         void updatePalette(Colour *palette, uint8_t value);
     };
 }

@@ -106,12 +106,12 @@ namespace gasyboy
         spritemap_pixels.fill(0xFF);
         background_pixels.fill(0xFF);
 
-        initWindow(window_width, window_height);
+        initWindow(windowWidth, windowHeight);
 
         _viewportTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, _viewportWidth, _viewportHeight);
-        background_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, background_width, background_height);
-        spritemap_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, spritemap_width, spritemap_height);
-        tilemap_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, tilemap_width, tilemap_height);
+        backgroundTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, backgroundWidth, backgroundHeight);
+        spritemapTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, spritemapWidth, spritemapHeight);
+        tilemapTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, tilemapWidth, tilemapHeight);
     }
 
     void DebugRenderer::draw()
@@ -123,30 +123,22 @@ namespace gasyboy
         }
         SDL_UpdateTexture(_viewportTexture, NULL, _viewportPixels.data(), _viewportWidth * 4);
 
-        draw_background();
-        draw_tilemap();
-        draw_spritemap();
+        drawBackground();
+        drawTilemap();
+        drawSpritemap();
 
-        SDL_RenderCopy(_renderer, background_texture, NULL, &background_rect);
-        SDL_RenderCopy(_renderer, tilemap_texture, NULL, &tilemap_rect);
-        SDL_RenderCopy(_renderer, spritemap_texture, NULL, &spritemap_rect);
+        SDL_RenderCopy(_renderer, backgroundTexture, NULL, &background_rect);
+        SDL_RenderCopy(_renderer, tilemapTexture, NULL, &tilemapRect);
+        SDL_RenderCopy(_renderer, spritemapTexture, NULL, &spritemapRect);
 
-        draw_background_overflow();
-        draw_status();
+        drawBackgroundOverflow();
     }
 
-    std::string to_hex_string(const uint8_t i)
+    void DebugRenderer::drawBackground()
     {
-        std::stringstream s;
-        s << "0x" << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << i;
-        return s.str();
-    }
-
-    void DebugRenderer::draw_background()
-    {
-        for (int i = 0; i <= 1023; i++)
+        for (uint16_t i = 0; i <= 1023; i++)
         {
-            int tile = _mmu.readRam(0x9800 + i);
+            uint16_t tile = _mmu.readRam(0x9800 + i);
             if (!_ppu._control->bgWindowDataSelect && tile < 128)
                 tile += 256;
 
@@ -157,7 +149,7 @@ namespace gasyboy
                     uint8_t color = _mmu.tiles[tile].pixels[y][x];
                     int xi = (i % 32) * 8 + x;
                     int yi = (i / 32) * 8 + y;
-                    int offset = 4 * (yi * background_width + xi);
+                    int offset = 4 * (yi * backgroundWidth + xi);
                     Colour colour = _mmu.palette_BGP[color];
                     std::copy(colour.colours, colour.colours + 4, background_pixels.begin() + offset);
                 }
@@ -173,12 +165,12 @@ namespace gasyboy
             {
                 int y_pos = sprite.y + tile_num * 8;
                 // Iterate over both tiles
-                for (int x = 0; x < 8; x++)
+                for (uint8_t x = 0; x < 8; x++)
                 {
-                    for (int y = 0; y < 8; y++)
+                    for (uint8_t y = 0; y < 8; y++)
                     {
-                        uint8_t xF = sprite.options.xFlip ? 7 - x : x;
-                        uint8_t yF = sprite.options.yFlip ? 7 - y : y;
+                        uint8_t xF = sprite.options.xFlip ? static_cast<uint8_t>(7 - x) : x;
+                        uint8_t yF = sprite.options.yFlip ? static_cast<uint8_t>(7 - y) : y;
 
                         int tile = sprite.tile & (_ppu._control->spriteSize ? 0xFE : 0xFF);
                         uint8_t colour_n = _mmu.tiles[tile + tile_num].pixels[yF][xF];
@@ -187,7 +179,7 @@ namespace gasyboy
                             continue;
                         int xi = (_mmu.readRam(0xff43) + sprite.x + x) % 256;
                         int yi = (_mmu.readRam(0xff42) + y_pos + y) % 256;
-                        int offset = 4 * (yi * background_width + xi);
+                        int offset = 4 * (yi * backgroundWidth + xi);
 
                         if (offset >= background_pixels.size())
                             continue;
@@ -197,10 +189,10 @@ namespace gasyboy
                 }
             }
         }
-        SDL_UpdateTexture(background_texture, NULL, background_pixels.data(), background_width * 4);
+        SDL_UpdateTexture(backgroundTexture, NULL, background_pixels.data(), backgroundWidth * 4);
     }
 
-    void DebugRenderer::draw_tilemap()
+    void DebugRenderer::drawTilemap()
     {
         for (int i = 0; i < 384; i++)
         {
@@ -209,27 +201,19 @@ namespace gasyboy
                 for (int x = 0; x < 8; x++)
                 {
                     uint8_t colour_n = _mmu.tiles[i].pixels[y][x];
-                    int offsetX = ((i * 8 + x) % tilemap_width);
+                    int offsetX = ((i * 8 + x) % tilemapWidth);
                     int offsetY = y + (int(i / 16)) * 8;
-                    int offset = 4 * (offsetY * tilemap_width + offsetX);
+                    int offset = 4 * (offsetY * tilemapWidth + offsetX);
 
                     Colour colour = _mmu.palette_BGP[colour_n];
                     std::copy(colour.colours, colour.colours + 4, tilemap_pixels.begin() + offset);
                 }
             }
         }
-        SDL_UpdateTexture(tilemap_texture, NULL, tilemap_pixels.data(), tilemap_width * 4);
+        SDL_UpdateTexture(tilemapTexture, NULL, tilemap_pixels.data(), tilemapWidth * 4);
     }
 
-    void DebugRenderer::draw_text(int x_pos, int y_pos, std::string text)
-    {
-    }
-
-    void DebugRenderer::draw_status()
-    {
-    }
-
-    void DebugRenderer::draw_rectangle(int x, int y, int width, int height, Colour color)
+    void DebugRenderer::drawRectangle(int x, int y, int width, int height, Colour color)
     {
         SDL_Rect rect = {x, y, width, height};
 
@@ -240,39 +224,39 @@ namespace gasyboy
         SDL_RenderDrawRect(_renderer, &rect);
     }
 
-    void DebugRenderer::draw_background_overflow()
+    void DebugRenderer::drawBackgroundOverflow()
     {
-        int overflowX = std::max(*_ppu._scrollX + _viewportWidth - background_width, 0);
-        int overflowY = std::max(*_ppu._scrollY + _viewportHeight - background_height, 0);
+        int overflowX = std::max(*_ppu._scrollX + _viewportWidth - backgroundWidth, 0);
+        int overflowY = std::max(*_ppu._scrollY + _viewportHeight - backgroundHeight, 0);
 
-        draw_rectangle(background_rect.x + *_ppu._scrollX, _viewportHeight + *_ppu._scrollY, _viewportWidth - overflowX, _viewportHeight, {255, 255, 255, 100});
+        drawRectangle(background_rect.x + *_ppu._scrollX, _viewportHeight + *_ppu._scrollY, _viewportWidth - overflowX, _viewportHeight, {255, 255, 255, 100});
 
         if (overflowX)
-            draw_rectangle(background_rect.x, _viewportHeight + *_ppu._scrollY, overflowX, _viewportHeight, {255, 255, 255, 100});
+            drawRectangle(background_rect.x, _viewportHeight + *_ppu._scrollY, overflowX, _viewportHeight, {255, 255, 255, 100});
 
         if (overflowY)
-            draw_rectangle(background_rect.x + *_ppu._scrollX, _viewportHeight, _viewportWidth - overflowX, overflowY, {255, 255, 255, 100});
+            drawRectangle(background_rect.x + *_ppu._scrollX, _viewportHeight, _viewportWidth - overflowX, overflowY, {255, 255, 255, 100});
 
         if (overflowX && overflowY)
-            draw_rectangle(background_rect.x, _viewportHeight, overflowX, overflowY, {255, 255, 255, 100});
+            drawRectangle(background_rect.x, _viewportHeight, overflowX, overflowY, {255, 255, 255, 100});
     }
 
-    void DebugRenderer::draw_spritemap()
+    void DebugRenderer::drawSpritemap()
     {
         auto draw_sprite = [this](Mmu::Sprite sprite, int tile_off, int off_x, int off_y)
         {
             if (!sprite.ready)
                 return;
-            for (int x = 0; x < 8; x++)
+            for (uint8_t x = 0; x < 8; x++)
             {
-                uint8_t xF = sprite.options.xFlip ? 7 - x : x;
-                for (int y = 0; y < 8; y++)
+                uint8_t xF = sprite.options.xFlip ? static_cast<uint8_t>(7 - x) : x;
+                for (uint8_t y = 0; y < 8; y++)
                 {
-                    uint8_t yF = sprite.options.yFlip ? 7 - y : y;
+                    uint8_t yF = sprite.options.yFlip ? static_cast<uint8_t>(7 - y) : y;
                     uint8_t colour_n = _mmu.tiles[sprite.tile + tile_off].pixels[yF][xF];
-                    int offsetX = ((off_x + x) % spritemap_width);
+                    int offsetX = ((off_x + x) % spritemapWidth);
                     int offsetY = y + off_y;
-                    int offset = 4 * (offsetY * spritemap_width + offsetX);
+                    int offset = 4 * (offsetY * spritemapWidth + offsetX);
 
                     Colour colour = sprite.colourPalette[colour_n];
                     std::copy(colour.colours, colour.colours + 4, spritemap_pixels.begin() + offset);
@@ -280,7 +264,6 @@ namespace gasyboy
             }
         };
 
-        int row = 0;
         if (_ppu._control->spriteSize)
         {
             for (int i = 0, row = 0; i < 20; i++)
@@ -301,7 +284,6 @@ namespace gasyboy
             }
         }
 
-        SDL_UpdateTexture(spritemap_texture, NULL, spritemap_pixels.data(), spritemap_width * 4);
+        SDL_UpdateTexture(spritemapTexture, NULL, spritemap_pixels.data(), spritemapWidth * 4);
     }
-
 }

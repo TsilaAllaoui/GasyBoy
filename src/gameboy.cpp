@@ -30,7 +30,7 @@ namespace gasyboy
 
     void GameBoy::step()
     {
-        const int cycle = _cpu.step();
+        const uint16_t cycle = static_cast<uint16_t>(_cpu.step());
         _cycleCounter += cycle;
         _timer.update(cycle);
         _gamepad.handleEvent();
@@ -46,7 +46,6 @@ namespace gasyboy
     void GameBoy::boot()
     {
         bool running = true;
-        SDL_Event event;
         try
         {
             while (running)
@@ -56,7 +55,7 @@ namespace gasyboy
                     _debugger->render();
                 }
 
-                loop(&event, running);
+                loop();
             }
         }
         catch (const exception::GbException &e)
@@ -65,7 +64,7 @@ namespace gasyboy
         }
     }
 
-    void GameBoy::loop(SDL_Event *event, bool &running)
+    void GameBoy::loop()
     {
         _cycleCounter = 0;
 

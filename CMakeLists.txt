@@ -37,6 +37,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${EXTERNALS_DIR}/imgui
     ${EXTERNALS_DIR}/imgui/backends)
 
+# Enable warnings as errors for specific source files
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(${PROJECT_NAME} PRIVATE -Werror=unused-variable -Wno-pedantic)
+elseif(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /wd4201)
+endif()
+
 # Adding libs includes to project lib
 if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
     # Emscripten SDL setup

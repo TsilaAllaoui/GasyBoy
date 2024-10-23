@@ -44,10 +44,10 @@ namespace gasyboy
         BankingMode _bankingMode;
 
         // Number of banks of the ROM
-        int _romBanksCount;
+        uint16_t _romBanksCount;
 
         // Number of banks of the ext RAM
-        int _ramBanksCount;
+        uint8_t _ramBanksCount;
 
     public:
         // Constructor/destructor
@@ -99,7 +99,7 @@ namespace gasyboy
 
         // Get/Set rom banks number
         void setRomBankNumber(const uint8_t &value);
-        uint8_t getRomBanksNumber();
+        uint16_t getRomBanksNumber();
 
         // Get/Set rom banks number
         void setRamBankNumber(const uint8_t &value);

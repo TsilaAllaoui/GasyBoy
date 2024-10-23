@@ -75,7 +75,6 @@ namespace gasyboy
             message += reg;
             message += "\"";
             throw exception::GbException(message);
-            exit(ExitState::CRITICAL_ERROR);
         }
     }
 
@@ -130,7 +129,6 @@ namespace gasyboy
             message += reg;
             message += "\"";
             throw exception::GbException(message);
-            exit(ExitState::CRITICAL_ERROR);
         }
     }
 

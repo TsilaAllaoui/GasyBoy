@@ -56,13 +56,13 @@ namespace gasyboy
 		_tac = value;
 	}
 
-	void Timer::update(const int &cycles)
+	void Timer::update(const uint16_t &cycles)
 	{
 		updateDIV(cycles);
 		updateTIMA(cycles);
 	}
 
-	void Timer::updateDIV(const int &cycle)
+	void Timer::updateDIV(const uint16_t &cycle)
 	{
 		_divIncrementRate -= cycle;
 		if (_divIncrementRate <= 0)
@@ -77,7 +77,7 @@ namespace gasyboy
 		_div = 0;
 	}
 
-	void Timer::updateTIMA(const int &cycle)
+	void Timer::updateTIMA(const uint16_t &cycle)
 	{
 		// If the TIMA control is enabled
 		if ((_tac >> 2) & 0x1)
@@ -94,14 +94,14 @@ namespace gasyboy
 		}
 	}
 
-	void Timer::updateTMA(const int &value)
+	void Timer::updateTMA(const uint16_t &value)
 	{
-		_tma = value;
+		_tma = static_cast<uint8_t>(value);
 	}
 
 	void Timer::updateTAC(const uint8_t &value)
 	{
-		_tac = value;
+		_tac = static_cast<uint8_t>(value);
 		switch (value & 0x3)
 		{
 		case 0:

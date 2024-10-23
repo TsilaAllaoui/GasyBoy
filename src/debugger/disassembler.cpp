@@ -539,7 +539,7 @@ namespace gasyboy
         {
             // Iterate through each byte in the bank
             const auto &bank = _romBanks[bankIndex];
-            size_t pc = 0;
+            uint16_t pc = 0;
             while (pc < bank.size())
             {
                 uint8_t byte = bank[pc];
@@ -561,14 +561,14 @@ namespace gasyboy
                     }
                     auto opcodeLine = OpcodeLine(pc, opcode);
                     disassembledRom.emplace_back(opcodeLine);
-                    pc += opcode.numberOfBytes;
+                    pc += static_cast<uint16_t>(opcode.numberOfBytes);
                 }
                 else
                 {
                     Opcode opcode = {1, byte, "UNKNOWN", {}};
                     auto opcodeLine = OpcodeLine(pc, opcode);
                     disassembledRom.emplace_back(opcodeLine);
-                    pc += 1; // Continue to the next byte
+                    pc += 1;
                 }
             }
         }
