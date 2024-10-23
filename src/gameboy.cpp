@@ -21,11 +21,12 @@ namespace gasyboy
 
         _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
         _renderer->init();
-
+#ifndef __EMSCRIPTEN__
         if (_debugMode)
         {
             _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _ppu, _renderer->_window);
         }
+#endif
     }
 
     GameBoy::GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode)
@@ -65,10 +66,12 @@ namespace gasyboy
         {
             while (running)
             {
+#ifndef __EMSCRIPTEN__
                 if (_debugMode)
                 {
                     _debugger->render();
                 }
+#endif
 
                 loop();
             }

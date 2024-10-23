@@ -9,23 +9,41 @@ set(CMAKE_CXX_STANDARD 17)
 # External libs directory
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
-# Imgui source files
-file(GLOB IMGUI_SRC
-    "${EXTERNALS_DIR}/imgui/*.cpp"
-    "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdl2.cpp"
-    "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdlrenderer2.cpp"
-)
+# Adding libs includes to project lib
+if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+else()
+    # Imgui source files
+    file(GLOB IMGUI_SRC
+        "${EXTERNALS_DIR}/imgui/*.cpp"
+        "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdl2.cpp"
+        "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdlrenderer2.cpp")
+endif()
 
 # Add all source files in src/ excluding main.cpp
 file(GLOB_RECURSE GASYBOY_SOURCES_FILES src/*.cpp)
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
 
+# List of files to exclude
+set(EXCLUDE_FILES "${CMAKE_SOURCE_DIR}/src/debugger/debugger.cpp"
+    "${CMAKE_SOURCE_DIR}/src/debugger/disassembler.cpp")
+
+# Loop through the exclude list and remove them from the SOURCES list
+foreach(EXCLUDE_FILE IN LISTS EXCLUDE_FILES)
+    list(REMOVE_ITEM GASYBOY_SOURCES_FILES ${EXCLUDE_FILE})
+endforeach()
+
 # Add include directory
-set(GASYBOY_HEADERS_DIR
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/events
-)
+if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+    set(GASYBOY_HEADERS_DIR
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/events
+    )
+    set(GASYBOY_HEADERS_DIR
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/events
+    )
+endif()
 
 # Creating executable
 add_executable(${PROJECT_NAME} ${GASYBOY_SOURCES_FILES} ${IMGUI_SRC} src/main.cpp)

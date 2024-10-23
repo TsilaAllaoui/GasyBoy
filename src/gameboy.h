@@ -13,8 +13,12 @@
 #include "defs.h"
 #include "timer.h"
 #include "gamepad.h"
-#include "renderer.h"
+
+#ifndef __EMSCRIPTEN__
 #include "debugger.h"
+#endif
+
+#include "renderer.h"
 #include "interruptManager.h"
 #include <mutex>
 #include <condition_variable>
@@ -36,8 +40,9 @@ namespace gasyboy
         SDL_Window *_window;
         SDL_Rect _tile_map_pos, _bg_map_pos;
 
+#ifndef __EMSCRIPTEN__
         std::unique_ptr<Debugger> _debugger;
-
+#endif
         bool _debugMode;
 
     public:
