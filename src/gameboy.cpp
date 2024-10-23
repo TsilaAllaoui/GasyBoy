@@ -28,6 +28,21 @@ namespace gasyboy
         }
     }
 
+    GameBoy::GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode)
+        : _debugMode(debugMode),
+          _gamepad(),
+          _mmu(bytes, romSize, _gamepad),
+          _registers(_mmu),
+          _interruptManager(_mmu, _registers),
+          _cpu(bootBios, _mmu, _registers, _interruptManager),
+          _timer(_interruptManager),
+          _cycleCounter(0),
+          _ppu(_registers, _interruptManager, _mmu)
+    {
+        _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
+        _renderer->init();
+    }
+
     void GameBoy::step()
     {
         const uint16_t cycle = static_cast<uint16_t>(_cpu.step());

@@ -32,16 +32,22 @@ void main_loop()
 
 int main()
 {
+    std::cout << "Initializing GameBoy with default ROM...\n";
+
+    // Initialize GameBoy with a default ROM
     gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", true);
 
+    std::cout << "Setting up main loop...\n";
+
+    // Set up the main loop
     emscripten_set_main_loop(main_loop, 0, true);
 
-    return 0;
+    return 0; // This line won't be reached, as emscripten_set_main_loop takes over
 }
 
 #else
 
-int main(int, char **)
+int main(int argc, char **argv)
 {
     gasyboy::GameBoy("C:/Users/trasoloallaoui/C++/git/GasyBoy/build/Debug/TETRIS.gb", false, true).boot();
     return 0;

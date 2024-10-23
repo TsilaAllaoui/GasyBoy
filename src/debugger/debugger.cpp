@@ -158,7 +158,7 @@ namespace gasyboy
         snprintf(_bytesBuffers[reg], sizeof(_bytesBuffers[reg]) + 2, "0x%02X", get());
         std::string regStr = reg;
         regStr += ": ";
-        ImGui::Text(regStr.c_str());
+        ImGui::Text("%s", regStr.c_str());
         ImGui::SameLine();
         ImGui::SetNextItemWidth(50.0f);
         std::string label = "##" + reg;
@@ -172,7 +172,7 @@ namespace gasyboy
     void Debugger::renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(const uint16_t &value)> set, const size_t &base)
     {
         snprintf(_wordsBuffers[reg], sizeof(_wordsBuffers[reg]) + 2, base == 16 ? "0x%04X" : "%d", get());
-        ImGui::Text((reg + ": ").c_str());
+        ImGui::Text("%s", (reg + ": ").c_str());
         ImGui::SameLine();
         ImGui::SetNextItemWidth(50.0f);
         if (ImGui::InputText(("##" + reg).c_str(), _wordsBuffers[reg], sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
@@ -241,7 +241,7 @@ namespace gasyboy
 
             ImGui::TableNextColumn();
 
-            ImGui::Text("Flags");
+            ImGui::Text("%s", "Flags");
             bool Z = _registers.AF.getFlag('Z');
             bool N = _registers.AF.getFlag('N');
             bool H = _registers.AF.getFlag('H');
@@ -252,7 +252,7 @@ namespace gasyboy
             ImGui::Checkbox("Carry", &C);
 
             ImGui::Separator();
-            ImGui::Text("State");
+            ImGui::Text("%s", "State");
             bool halted = _registers.getHalted();
             ImGui::Checkbox("HALTED", &halted);
 
@@ -260,7 +260,7 @@ namespace gasyboy
         }
 
         // Render actions
-        ImGui::Text("Actions");
+        ImGui::Text("%s", "Actions");
         if (ImGui::Button("Pause", ImVec2(75, 0)))
         {
             std::cout << "Pause pressed!\n";
@@ -398,14 +398,14 @@ namespace gasyboy
             // Header
             if (ImGui::BeginTabItem("Header"))
             {
-                ImGui::Text("Cartridge Header");
+                ImGui::Text("%s", "Cartridge Header");
                 ImGui::EndTabItem();
             }
 
             // ROM 0 [0 - 0x4000]
             if (ImGui::BeginTabItem("ROM0"))
             {
-                ImGui::Text("ROM [0x0 - 0x4000]");
+                ImGui::Text("%s", "ROM [0x0 - 0x4000]");
                 showByteArray(romBanks.at(0));
                 ImGui::EndTabItem();
             }
@@ -413,7 +413,7 @@ namespace gasyboy
             // ROM 1 [0x4000 - 0x8000]
             if (ImGui::BeginTabItem("ROM1"))
             {
-                ImGui::Text("ROM [0x4000 - 0x8000] (multiple banks)");
+                ImGui::Text("%s", "ROM [0x4000 - 0x8000] (multiple banks)");
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(75);
                 showIntegerCombo(1, _mmu.getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
@@ -426,11 +426,11 @@ namespace gasyboy
             {
                 if (cartridge.getRamBanksNumber() == 0)
                 {
-                    ImGui::Text("No Ext RAM");
+                    ImGui::Text("%s", "No Ext RAM");
                 }
                 else
                 {
-                    ImGui::Text("Ext RAM");
+                    ImGui::Text("%s", "Ext RAM");
                     if (cartridge.getRamBanksNumber() > 2)
                     {
                         showIntegerCombo(0, cartridge.getRamBanksNumber() - 1, _currentSelectedRamBank);
@@ -453,7 +453,7 @@ namespace gasyboy
             return;
 
         ImGui::Dummy(ImVec2(10, 10));
-        ImGui::Text("Attributes: ");
+        ImGui::Text("%s", "Attributes: ");
 
         renderByte("X", [&]()
                    { return static_cast<uint8_t>(_previewSprite.x); }, [&](const uint8_t &) {});
@@ -624,7 +624,7 @@ namespace gasyboy
                     ImGui::TableSetColumnIndex(0);
                     std::stringstream ssAddress;
                     ssAddress << "0x" << std::hex << (int)address;
-                    ImGui::Text(ssAddress.str().c_str());
+                    ImGui::Text("%s", ssAddress.str().c_str());
 
                     // Column 1: Opcode byte(s) in hexadecimal format
                     ImGui::TableSetColumnIndex(1);
@@ -635,11 +635,11 @@ namespace gasyboy
                         ss << std::hex << "0x" << (int)byte << " ";
                     }
                     ss << std::endl;
-                    ImGui::Text(ss.str().c_str());
+                    ImGui::Text("%s", ss.str().c_str());
 
                     // Column 2: Mnemonic
                     ImGui::TableSetColumnIndex(2);
-                    ImGui::Text(opcode.mnemonic.c_str());
+                    ImGui::Text("%s", opcode.mnemonic.c_str());
                 }
             }
 
@@ -711,7 +711,7 @@ namespace gasyboy
             // Control Register
             if (ImGui::BeginTabItem("Control Register"))
             {
-                ImGui::Text("Control Register");
+                ImGui::Text("%s", "Control Register");
 
                 uint8_t *controlByte = reinterpret_cast<uint8_t *>(_ppu._control);
 
@@ -771,7 +771,7 @@ namespace gasyboy
             // Status Register
             if (ImGui::BeginTabItem("Status Register"))
             {
-                ImGui::Text("Status Register");
+                ImGui::Text("%s", "Status Register");
 
                 _scx = _mmu.readRam(0xFF42);
                 ImGui::SliderInt("SCX", &_scx, 0, 255);
@@ -797,7 +797,7 @@ namespace gasyboy
             // Palette
             if (ImGui::BeginTabItem("Palette"))
             {
-                ImGui::Text("Palette");
+                ImGui::Text("%s", "Palette");
 
                 showPalette("BGP", _mmu.palette_BGP);
                 showPalette("OBP0", _mmu.palette_OBP0);
@@ -809,7 +809,7 @@ namespace gasyboy
             // Tiles
             if (ImGui::BeginTabItem("Tiles"))
             {
-                ImGui::Text("Tiles");
+                ImGui::Text("%s", "Tiles");
 
                 int tilesPerRow = 16;              // Number of tiles per row in the grid
                 float tileSize = 32.0f;            // Size of each tile on screen
@@ -851,7 +851,7 @@ namespace gasyboy
             // DMA
             if (ImGui::BeginTabItem("DMA"))
             {
-                ImGui::Text("DMA");
+                ImGui::Text("%s", "DMA");
                 ImGui::Dummy(ImVec2(0, 10));
                 int j = 0;
                 for (int i = 0; i < 40; ++i, j++)
