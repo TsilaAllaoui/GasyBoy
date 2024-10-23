@@ -177,7 +177,7 @@ namespace gasyboy
         ImGui::SetNextItemWidth(50.0f);
         if (ImGui::InputText(("##" + reg).c_str(), _wordsBuffers[reg], sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            auto newValue = static_cast<uint8_t>(std::stoi(_wordsBuffers[reg], nullptr, 16));
+            auto newValue = static_cast<uint16_t>(std::stoi(_wordsBuffers[reg], nullptr, 16));
             set(newValue);
         }
     }
