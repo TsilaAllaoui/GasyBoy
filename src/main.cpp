@@ -32,7 +32,7 @@ void main_loop()
 
 int main()
 {
-    gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", true);
+    gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", false);
 
     emscripten_set_main_loop(main_loop, 0, true);
 

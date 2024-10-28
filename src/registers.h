@@ -21,7 +21,7 @@ namespace gasyboy
 
     public:
         // Constructors
-        Registers(Mmu &mmu);
+        Registers(Mmu &mmu, const bool &bootBios = true);
 
         // Get the corresponding register
         Register getRegister(const std::string &reg);

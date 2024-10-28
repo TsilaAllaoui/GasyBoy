@@ -17,35 +17,24 @@ file(GLOB IMGUI_SRC
 )
 
 # Add all source files in src/ excluding main.cpp
-file(GLOB_RECURSE GASYBOY_SOURCES_FILES src/*.cpp)
+file(GLOB GASYBOY_SOURCES_FILES src/*.cpp)
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
 
 # Add include directory
-set(GASYBOY_HEADERS_DIR
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/events
-)
-
-# Creating executable
-add_executable(${PROJECT_NAME} ${GASYBOY_SOURCES_FILES} ${IMGUI_SRC} src/main.cpp)
-
-# Add headers to executable
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${GASYBOY_HEADERS_DIR}
-    ${EXTERNALS_DIR}/argparse/include/argparse
-    ${EXTERNALS_DIR}/imgui
-    ${EXTERNALS_DIR}/imgui/backends)
-
-# Enable warnings as errors for specific source files
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(${PROJECT_NAME} PRIVATE -Werror=unused-variable -Wno-pedantic)
-elseif(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /wd4201)
-endif()
-
-# Adding libs includes to project lib
 if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+    set(GASYBOY_HEADERS_DIR
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/events
+    )
+
+    # Creating executable
+    add_executable(${PROJECT_NAME} ${GASYBOY_SOURCES_FILES} src/main.cpp)
+
+    # Add headers to executable
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        ${GASYBOY_HEADERS_DIR}
+        ${EXTERNALS_DIR}/argparse/include/argparse)
+
     # Emscripten SDL setup
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     set(SDL2_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_main,_load_file,_malloc,_free -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -sNO_DISABLE_EXCEPTION_CATCHING")
@@ -83,6 +72,31 @@ if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTE
         LINK_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 ${PRELOAD_FLAGS}"
     )
 else()
+    # Adding debugger sources
+    file(GLOB GASYBOY_DEBUGGER_SOURCES_FILES src/debugger/*.cpp)
+
+    # Imgui source files
+    file(GLOB IMGUI_SRC
+        "${EXTERNALS_DIR}/imgui/*.cpp"
+        "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdl2.cpp"
+        "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdlrenderer2.cpp"
+    )
+
+    # Creating executable
+    add_executable(${PROJECT_NAME} ${GASYBOY_SOURCES_FILES} ${GASYBOY_DEBUGGER_SOURCES_FILES} ${IMGUI_SRC} src/main.cpp)
+
+    set(GASYBOY_HEADERS_DIR
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/events)
+
+    # Add headers to executable
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        ${GASYBOY_HEADERS_DIR}
+        ${EXTERNALS_DIR}/argparse/include/argparse
+        ${EXTERNALS_DIR}/imgui
+        ${EXTERNALS_DIR}/imgui/backends)
+
     # Non-Emscripten (native) build
     add_subdirectory(externals/SDL)
     target_include_directories(${PROJECT_NAME} PRIVATE

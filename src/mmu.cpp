@@ -17,6 +17,13 @@ namespace gasyboy
           _dmaRegionWritten(false),
           _romFilePath(romFilePath)
     {
+        if (!bootBios)
+        {
+            writeRam(0xFF40, 0x91);
+            writeRam(0xFF47, 0xFC);
+            writeRam(0xFF48, 0xFF);
+        }
+
         // setting joypad to off
         _workingRam[0xFFFF - 0xC000] = 0xFF;
 
@@ -44,7 +51,7 @@ namespace gasyboy
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(true),
+          _executeBios(false),
           _cartridge(),
           _gamepad(gamepad),
           _currModifiedTile(-1),
