@@ -32,7 +32,7 @@ void main_loop()
 
 int main()
 {
-    gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", false);
+    gb = std::make_unique<gasyboy::GameBoy>("/TETRIS.gb", true);
 
     emscripten_set_main_loop(main_loop, 0, true);
 
@@ -43,7 +43,7 @@ int main()
 
 int main(int, char **)
 {
-    gasyboy::GameBoy("C:/Users/trasoloallaoui/C++/git/GasyBoy/build/Debug/TETRIS.gb", false, true).boot();
+    gasyboy::GameBoy("C:/Users/trasoloallaoui/C++/git/GasyBoy/build/Debug/TETRIS.gb", true, true).boot();
     return 0;
     // argparse::ArgumentParser program("gasyboy");
 

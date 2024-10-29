@@ -4,7 +4,6 @@
 #include <SDL2/SDL.h>
 #else
 #include "SDL.h"
-#include "imgui_impl_sdl2.h"
 #endif
 
 namespace gasyboy
@@ -23,9 +22,6 @@ namespace gasyboy
 
         while (SDL_PollEvent(&event) != 0)
         {
-#ifndef __EMSCRIPTEN__
-            ImGui_ImplSDL2_ProcessEvent(&event);
-#endif
             if (event.type == SDL_QUIT)
             {
                 exit(ExitState::MANUAL_STOP);

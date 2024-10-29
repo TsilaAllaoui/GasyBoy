@@ -320,19 +320,25 @@ namespace gasyboy
                 return;
             }
 
-            else if (address == 0xff47)
+            else if (address == 0xFF47)
             {
                 updatePalette(palette_BGP, value);
                 return;
             }
-            else if (address == 0xff48)
+            else if (address == 0xFF48)
             {
                 updatePalette(palette_OBP0, value);
                 return;
             }
-            else if (address == 0xff49)
+            else if (address == 0xFF49)
             {
                 updatePalette(palette_OBP1, value);
+                return;
+            }
+            else if (address == 0xFF50 && value != 0)
+            {
+                // Bios lockout
+                _executeBios = false;
                 return;
             }
 
