@@ -39,6 +39,12 @@ namespace gasyboy
 		}
 
 		loadRomFromByteArray(buffer);
+
+		// Get cartridge header infos
+		getCartridgeHeaderInfos();
+
+		// Log cartridge informations
+		logCartridgeHeaderInfos();
 	}
 
 	void Cartridge::loadRom(uint8_t size, uint8_t *mem)
@@ -267,5 +273,176 @@ namespace gasyboy
 				_ramBanks[_currentRamBank % _ramBanksCount][addr - 0xA000] = value; // Wrap around ram banks if overflow
 			}
 		}
+	}
+
+	std::string Cartridge::cartridgeTypeStr(const uint8_t &byte)
+	{
+		switch (byte)
+		{
+		case 0x00:
+			return "ROM_ONLY";
+		case 0x01:
+			return "MBC1";
+		case 0x02:
+			return "MBC1_RAM";
+		case 0x03:
+			return "MBC1_RAM_BATT";
+		case 0x05:
+			return "MBC2";
+		case 0x06:
+			return "MBC2_BATT";
+		case 0x08:
+			return "RAM";
+		case 0x09:
+			return "RAM_BATT";
+		case 0x0B:
+			return "MMM01";
+		case 0x0C:
+			return "MMM01_RAM";
+		case 0x0D:
+			return "MMM01_RAM_BATT";
+		case 0x0F:
+			return "MBC3_TIMER_BATT";
+		case 0x10:
+			return "MBC3_TIMER_RAM_BATT";
+		case 0x11:
+			return "MBC3";
+		case 0x12:
+			return "MBC3_RAM";
+		case 0x13:
+			return "MBC3_RAM_BATT";
+		case 0x19:
+			return "MBC5";
+		case 0x1A:
+			return "MBC5_RAM";
+		case 0x1B:
+			return "MBC5_RAM_BATT";
+		case 0x1C:
+			return "MBC5_RUMBLE";
+		case 0x1D:
+			return "MBC5_RUMBLE_RAM";
+		case 0x1E:
+			return "MBC5_RUMBLE_RAM_BATT";
+		case 0xFC:
+			return "POCKET_CAMERA";
+		case 0xFD:
+			return "BANDAI_TAMA5";
+		case 0xFE:
+			return "HuC3";
+		case 0xFF:
+			return "HuC1_RAM_BATT";
+		default:
+			return "Unknown";
+		}
+	}
+
+	std::string Cartridge::romSizeStr(const uint8_t &byte)
+	{
+		switch (byte)
+		{
+		case 0:
+			return "32KiB";
+		case 1:
+			return "64KiB";
+		case 2:
+			return "128KiB";
+		case 3:
+			return "256KiB";
+		case 4:
+			return "512KiB";
+		case 5:
+			return "1MB";
+		case 6:
+			return "2MB";
+		case 0x52:
+			return "1.1MB";
+		case 0x53:
+			return "1.2MB";
+		case 0x54:
+			return "1.5MB";
+		default:
+			return "Unknown";
+		}
+	}
+
+	std::string Cartridge::ramSizeStr(const uint8_t &byte)
+	{
+		switch (byte)
+		{
+		case 0:
+			return "None";
+		case 1:
+			return "1KiB";
+		case 2:
+			return "8KiB";
+		case 3:
+			return "32KiB";
+		case 4:
+			return "128KiB";
+		default:
+			return "Unknown";
+		}
+	}
+
+	void Cartridge::getCartridgeHeaderInfos()
+	{
+		for (int i = 0x134; i < 0x143; i++)
+		{
+			uint8_t byte = static_cast<char>(_romBanks[0][i]);
+			if (byte != 0)
+			{
+				_cartridgeHeader.name += byte;
+			}
+
+			if (i >= 0x13F && i < 0x143 && byte != 0)
+			{
+				_cartridgeHeader.manufacturer += byte;
+			}
+		}
+
+		uint8_t cgbSupportByte = _romBanks[0][0x143];
+		_cartridgeHeader.cgbSupport =
+			cgbSupportByte == 0xC0 ? "Yes (No DMG support)" : (cgbSupportByte == 0x80 ? "Yes (DMG support)" : "No");
+
+		_cartridgeHeader.sgbSupport = _romBanks[0][0x143] == 0x03 ? "Yes" : "No";
+
+		uint8_t oldLicenseeCodeByte = _romBanks[0][0x14B];
+		if (oldLicenseeCodeByte == 0x33)
+		{
+			std::string newLicenseeStr;
+			newLicenseeStr.push_back(static_cast<char>(_romBanks[0][0x144]));
+			newLicenseeStr.push_back(static_cast<char>(_romBanks[0][0x145]));
+
+			auto code = newLicenseeCodes.find(newLicenseeStr);
+			_cartridgeHeader.licenseeCode = code == newLicenseeCodes.end() ? "Unknown" : code->second;
+		}
+		else
+		{
+			auto code = oldLicenseeCodes.find(oldLicenseeCodeByte);
+			_cartridgeHeader.licenseeCode = code == oldLicenseeCodes.end() ? "Unknown" : code->second;
+		}
+
+		_cartridgeHeader.cartridgeType = cartridgeTypeStr(_romBanks[0][0x147]);
+		_cartridgeHeader.romSize = romSizeStr(_romBanks[0][0x148]);
+		_cartridgeHeader.ramSize = ramSizeStr(_romBanks[0][0x149]);
+		_cartridgeHeader.isJapaneseCartridge = (_romBanks[0][0x14A] & 0x1);
+		_cartridgeHeader.maskRomVersion = _romBanks[0][0x14C];
+	}
+
+	void Cartridge::logCartridgeHeaderInfos()
+	{
+		std::stringstream cartridgeHeaderInfo;
+
+		cartridgeHeaderInfo << "ROM Name:        	 " << _cartridgeHeader.name << std::endl;
+		cartridgeHeaderInfo << "Manufacturer:    	 " << (_cartridgeHeader.manufacturer.empty() ? "N/A" : _cartridgeHeader.manufacturer) << std::endl;
+		cartridgeHeaderInfo << "CGB Support:      	 " << _cartridgeHeader.cgbSupport << std::endl;
+		cartridgeHeaderInfo << "SGB Support:      	 " << (_cartridgeHeader.sgbSupport ? "Yes" : "No") << std::endl;
+		cartridgeHeaderInfo << "Cartridge Type:  	 " << _cartridgeHeader.cartridgeType << std::endl;
+		cartridgeHeaderInfo << "Rom Size:        	 " << _cartridgeHeader.romSize << std::endl;
+		cartridgeHeaderInfo << "RAM Size:        	 " << _cartridgeHeader.ramSize << std::endl;
+		cartridgeHeaderInfo << "Japanese Cartridge:  " << (_cartridgeHeader.isJapaneseCartridge ? "No" : "Yes") << std::endl;
+		cartridgeHeaderInfo << "Mask Rom Version:    " << std::hex << static_cast<int>(_cartridgeHeader.maskRomVersion) << std::endl;
+
+		utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "\n" + cartridgeHeaderInfo.str());
 	}
 }
