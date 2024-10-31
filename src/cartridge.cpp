@@ -70,6 +70,12 @@ namespace gasyboy
 		// Set the number of ROM and RAM banks from the ROM header
 		setRomBankNumber(_romBanks[0][0x0148]);
 		setRamBankNumber(_romBanks[0][0x0149]);
+
+		// Get cartridge header infos
+		getCartridgeHeaderInfos();
+
+		// Log cartridge informations
+		logCartridgeHeaderInfos();
 	}
 
 	std::vector<std::vector<uint8_t>> Cartridge::getRomBanks()

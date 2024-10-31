@@ -100,7 +100,10 @@ namespace gasyboy
     {
         for (auto &buffer : _bytesBuffers)
         {
-            delete buffer.second;
+            if (!buffer.second)
+            {
+                delete buffer.second;
+            }
         }
 
         for (auto &buffer : _wordsBuffers)

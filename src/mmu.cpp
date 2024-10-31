@@ -51,7 +51,7 @@ namespace gasyboy
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(false),
+          _executeBios(true),
           _cartridge(),
           _gamepad(gamepad),
           _currModifiedTile(-1),
@@ -66,7 +66,7 @@ namespace gasyboy
             std::vector<uint8_t> byteList(romSize, 0);
             for (auto i = 0; i < romSize; i++)
             {
-                byteList.emplace_back(bytes[i]);
+                byteList[i] = bytes[i];
             }
 
             _cartridge.loadRomFromByteArray(byteList);
@@ -81,11 +81,11 @@ namespace gasyboy
         }
     }
 
-    Mmu::Mmu(uint8_t size, uint8_t *mem, int *num_mem_accesses, void *mem_accesses, Gamepad &gamepad)
+    Mmu::Mmu(uint8_t size, uint8_t *mem, int *num_mem_accesses, void *mem_accesses, Gamepad &gamepad, const bool &bootBios)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(true),
+          _executeBios(bootBios),
           _gamepad(gamepad),
           _cartridge(),
           _currModifiedTile(-1),

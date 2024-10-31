@@ -42,34 +42,10 @@ if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTE
 
     target_link_libraries(${PROJECT_NAME} PRIVATE SDL2)
 
-    # Ensure the preload files are included
-    set(PRELOAD_FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/TETRIS.gb
-    )
-
-    # Copy preload files to the build directory
-    foreach(FILE ${PRELOAD_FILES})
-        get_filename_component(FILENAME ${FILE} NAME)
-        add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${FILE}
-            ${CMAKE_BINARY_DIR}/$<CONFIG>/${FILENAME}
-            COMMENT "Copying ${FILE} to build directory"
-        )
-    endforeach()
-
     # Add the Emscripten specific options
-    set(PRELOAD_FLAGS "")
-
-    foreach(FILE ${PRELOAD_FILES})
-        get_filename_component(FILENAME ${FILE} NAME)
-        list(APPEND PRELOAD_FLAGS "--preload-file ${FILENAME}")
-    endforeach()
-
     set_target_properties(${PROJECT_NAME} PROPERTIES
-        COMPILE_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1"
-        LINK_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 ${PRELOAD_FLAGS}"
+
+        LINK_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1"
     )
 else()
     # Adding debugger sources
@@ -126,11 +102,6 @@ elseif(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_S
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.wasm"
         "${CMAKE_CURRENT_SOURCE_DIR}/wasm/${PROJECT_NAME}.wasm"
-
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.data"
-        "${CMAKE_CURRENT_SOURCE_DIR}/wasm/${PROJECT_NAME}.data"
 
         COMMENT "Copying wasm generated files to wasm folder"
     )

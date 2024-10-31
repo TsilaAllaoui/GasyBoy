@@ -98,7 +98,7 @@ namespace gasyboy
         Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad);
 
         // For debugging
-        Mmu(uint8_t size, uint8_t *mem, int *num_mem_accesses, void *mem_accesses, Gamepad &gamepad);
+        Mmu(uint8_t size, uint8_t *mem, int *num_mem_accesses, void *mem_accesses, Gamepad &gamepad, const bool &bootBios = true);
 
         ~Mmu() = default;
 
