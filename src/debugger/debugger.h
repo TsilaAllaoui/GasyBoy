@@ -18,7 +18,7 @@ namespace gasyboy
     class Debugger
     {
     public:
-        Debugger(Mmu &_mmu, Registers &registers, Timer &timer, Ppu &ppu, SDL_Window *mainWindow);
+        Debugger(Mmu &_mmu, Registers &registers, Timer &timer, Ppu &ppu, SDL_Window *mainWindow, const bool &bootBios = true);
         ~Debugger();
 
         void render();
@@ -67,6 +67,9 @@ namespace gasyboy
         bool _previewSpriteXFlip;
         bool _previewSpriteYFlip;
         bool _previewSpritePriority;
+
+        // Boot bios
+        bool _executeBios;
 
         std::thread _disassemblerThread;
 

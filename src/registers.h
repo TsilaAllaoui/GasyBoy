@@ -19,9 +19,15 @@ namespace gasyboy
         // boolean to check if cpu is halted
         bool _halted;
 
+        // If booting bios
+        bool _executeBios;
+
     public:
         // Constructors
-        Registers(Mmu &mmu);
+        Registers(Mmu &mmu, const bool &bootBios = true);
+
+        // Reset registers
+        void reset();
 
         // Get the corresponding register
         Register getRegister(const std::string &reg);

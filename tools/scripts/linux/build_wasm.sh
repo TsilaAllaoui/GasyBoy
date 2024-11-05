@@ -5,6 +5,6 @@ if [ ! -d "build_wasm" ]; then
     mkdir build_wasm
 fi
 
-cd build
-cmake ..
+cd build_wasm
+emcmake cmake ..
 cmake --build .

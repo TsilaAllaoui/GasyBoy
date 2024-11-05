@@ -1,4 +1,3 @@
-#include "imgui_impl_sdl2.h"
 #include "gamepad.h"
 #include "defs.h"
 #ifdef __EMSCRIPTEN__
@@ -23,8 +22,6 @@ namespace gasyboy
 
         while (SDL_PollEvent(&event) != 0)
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
-
             if (event.type == SDL_QUIT)
             {
                 exit(ExitState::MANUAL_STOP);
@@ -113,7 +110,6 @@ namespace gasyboy
     void Gamepad::setState(uint8_t value)
     {
         _buttonSelected = ((value & 0x20) == 0x20);
-        // _directionSelected = ((value & 0x10) == 0x10);
     }
 
     uint8_t Gamepad::getState()

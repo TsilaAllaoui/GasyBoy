@@ -17,6 +17,13 @@ namespace gasyboy
           _dmaRegionWritten(false),
           _romFilePath(romFilePath)
     {
+        if (!bootBios)
+        {
+            writeRam(0xFF40, 0x91);
+            writeRam(0xFF47, 0xFC);
+            writeRam(0xFF48, 0xFF);
+        }
+
         // setting joypad to off
         _workingRam[0xFFFF - 0xC000] = 0xFF;
 
@@ -59,7 +66,7 @@ namespace gasyboy
             std::vector<uint8_t> byteList(romSize, 0);
             for (auto i = 0; i < romSize; i++)
             {
-                byteList.emplace_back(bytes[i]);
+                byteList[i] = bytes[i];
             }
 
             _cartridge.loadRomFromByteArray(byteList);
@@ -74,11 +81,11 @@ namespace gasyboy
         }
     }
 
-    Mmu::Mmu(uint8_t size, uint8_t *mem, int *num_mem_accesses, void *mem_accesses, Gamepad &gamepad)
+    Mmu::Mmu(uint8_t size, uint8_t *mem, int *num_mem_accesses, void *mem_accesses, Gamepad &gamepad, const bool &bootBios)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(true),
+          _executeBios(bootBios),
           _gamepad(gamepad),
           _cartridge(),
           _currModifiedTile(-1),
@@ -89,6 +96,46 @@ namespace gasyboy
         _memSize = size;
         _num_mem_accesses = num_mem_accesses;
         _mem_accesses = static_cast<struct mem_access *>(mem_accesses);
+    }
+
+    void Mmu::reset(const std::string &romFilePath)
+    {
+        auto mmu = Mmu(romFilePath, _gamepad, _executeBios);
+        _vRam = std::vector<uint8_t>(0x2000, 0);
+        _extRam = std::vector<uint8_t>(0x2000, 0);
+        _workingRam = std::vector<uint8_t>(0x4000, 0);
+        _currModifiedTile = -1;
+        _dmaRegionWritten = false;
+        _romFilePath = romFilePath;
+
+        if (!_executeBios)
+        {
+            writeRam(0xFF40, 0x91);
+            writeRam(0xFF47, 0xFC);
+            writeRam(0xFF48, 0xFF);
+        }
+
+        // setting joypad to off
+        _workingRam[0xFFFF - 0xC000] = 0xFF;
+
+        // loading rom file
+        try
+        {
+            if (_romFilePath.empty())
+            {
+                throw exception::GbException("Invalid rom file path");
+            }
+
+            _cartridge.loadRom(_romFilePath);
+            utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
+                                              "Rom file : \"" +
+                                                  _romFilePath + "\" loaded successfully");
+        }
+        catch (const exception::GbException &e)
+        {
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
+        }
     }
 
     void gasyboy::Mmu::setRomFile(const std::string &filePath)
@@ -313,19 +360,25 @@ namespace gasyboy
                 return;
             }
 
-            else if (address == 0xff47)
+            else if (address == 0xFF47)
             {
                 updatePalette(palette_BGP, value);
                 return;
             }
-            else if (address == 0xff48)
+            else if (address == 0xFF48)
             {
                 updatePalette(palette_OBP0, value);
                 return;
             }
-            else if (address == 0xff49)
+            else if (address == 0xFF49)
             {
                 updatePalette(palette_OBP1, value);
+                return;
+            }
+            else if (address == 0xFF50 && value != 0)
+            {
+                // Bios lockout
+                _executeBios = false;
                 return;
             }
 

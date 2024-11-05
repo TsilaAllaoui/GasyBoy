@@ -1,14 +1,16 @@
+#include "ImGuiFileDialog.h"
+#include "gameBoyProvider.h"
 #include "debugger.h"
 #include "gameboy.h"
 #include "gamepad.h"
 #include "logger.h"
-#include <chrono>
 #include "mmu.h"
+#include <chrono>
 
 namespace gasyboy
 {
 
-    Debugger::Debugger(Mmu &mmu, Registers &registers, Timer &timer, Ppu &ppu, SDL_Window *mainWindow)
+    Debugger::Debugger(Mmu &mmu, Registers &registers, Timer &timer, Ppu &ppu, SDL_Window *mainWindow, const bool &bootBios)
         : _mmu(mmu),
           _registers(registers),
           _ppu(ppu),
@@ -21,7 +23,8 @@ namespace gasyboy
           _lcdEnable(false),
           _previewPos(ImVec2(845, 165)),
           _previewSprite(),
-          _disassembler(_mmu.getCartridge())
+          _disassembler(_mmu.getCartridge()),
+          _executeBios(bootBios)
     {
         _bytesBuffers = {
             {"A", new char[2]},
@@ -87,8 +90,14 @@ namespace gasyboy
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
-        ImGui_ImplSDL2_InitForSDLRenderer(_window, _renderer);
-        ImGui_ImplSDLRenderer2_Init(_renderer);
+        static bool initialized = false;
+
+        if (!initialized)
+        {
+            ImGui_ImplSDL2_InitForSDLRenderer(_window, _renderer);
+            ImGui_ImplSDLRenderer2_Init(_renderer);
+            initialized = true;
+        }
 
         // Disassembling rom
         // _disassemblerThread = std::thread([&]()
@@ -100,7 +109,10 @@ namespace gasyboy
     {
         for (auto &buffer : _bytesBuffers)
         {
-            delete buffer.second;
+            if (!buffer.second)
+            {
+                delete buffer.second;
+            }
         }
 
         for (auto &buffer : _wordsBuffers)
@@ -177,7 +189,7 @@ namespace gasyboy
         ImGui::SetNextItemWidth(50.0f);
         if (ImGui::InputText(("##" + reg).c_str(), _wordsBuffers[reg], sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            auto newValue = static_cast<uint8_t>(std::stoi(_wordsBuffers[reg], nullptr, 16));
+            auto newValue = static_cast<uint16_t>(std::stoi(_wordsBuffers[reg], nullptr, 16));
             set(newValue);
         }
     }
@@ -279,6 +291,28 @@ namespace gasyboy
         {
             std::cout << "Step pressed!\n";
             Cpu::state = Cpu::State::STEPPING;
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Open File Dialog"))
+        {
+            Cpu::state = Cpu::State::PAUSED;
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseRom", "Choose Rom File", ".gb", config);
+        }
+
+        if (ImGuiFileDialog::Instance()->Display("ChooseRom", ImGuiWindowFlags_NoCollapse, ImVec2(640, 480)))
+        {
+            if (ImGuiFileDialog::Instance()->IsOk())
+            {
+                Cpu::state = Cpu::State::STOPPED;
+                std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+                GameBoyProvider::reset(filePath, _executeBios, true);
+            }
+
+            ImGuiFileDialog::Instance()->Close();
+            Cpu::state = Cpu::State::RUNNING;
         }
 
         ImGui::End();

@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #else
 #include "SDL.h"
+#include "debugger.h"
 #endif
 
 #include "mmu.h"
@@ -14,7 +15,6 @@
 #include "timer.h"
 #include "gamepad.h"
 #include "renderer.h"
-#include "debugger.h"
 #include "interruptManager.h"
 #include <mutex>
 #include <condition_variable>
@@ -35,9 +35,9 @@ namespace gasyboy
 
         SDL_Window *_window;
         SDL_Rect _tile_map_pos, _bg_map_pos;
-
+#ifndef __EMSCRIPTEN__
         std::unique_ptr<Debugger> _debugger;
-
+#endif
         bool _debugMode;
 
     public:
@@ -55,6 +55,11 @@ namespace gasyboy
 
         // Stop the emulator
         void stop();
+
+#ifndef __EMSCRIPTEN__
+        // Set debug mode
+        void setDebugMode(const bool &debugMode);
+#endif
 
         enum class State
         {

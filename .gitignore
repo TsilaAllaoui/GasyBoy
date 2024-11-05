@@ -1,6 +1,11 @@
+# Folders
 .vs/
 .vscode/
 build/
 roms/
 build_wasm/
+wasm/
+
+# Files
 *.gb
+imgui.ini

@@ -5,7 +5,7 @@
 
 namespace gasyboy
 {
-    Registers::Registers(Mmu &mmu)
+    Registers::Registers(Mmu &mmu, const bool &bootBios)
         : _mmu(mmu),
           AF(0),
           BC(0),
@@ -14,14 +14,54 @@ namespace gasyboy
           PC(0),
           SP(0),
           _interruptEnabled(false),
-          _halted(false)
+          _halted(false),
+          _executeBios(bootBios)
     {
-        _registersMap = {
-            {"AF", AF},
-            {"BC", BC},
-            {"DE", DE},
-            {"HL", HL},
-        };
+        if (!_executeBios)
+        {
+            AF.set(0x01B0);
+            BC.set(0x0013);
+            DE.set(0x00D8);
+            HL.set(0x014D);
+            PC = 0x100;
+            SP = 0xFFFE;
+
+            _registersMap = {
+                {"AF", AF},
+                {"BC", BC},
+                {"DE", DE},
+                {"HL", HL},
+            };
+        }
+    }
+
+    void Registers::reset()
+    {
+        AF = 0;
+        BC = 0;
+        DE = 0;
+        HL = 0;
+        PC = 0;
+        SP = 0;
+        _interruptEnabled = false;
+        _halted = false;
+
+        if (!_executeBios)
+        {
+            AF.set(0x01B0);
+            BC.set(0x0013);
+            DE.set(0x00D8);
+            HL.set(0x014D);
+            PC = 0x100;
+            SP = 0xFFFE;
+
+            _registersMap = {
+                {"AF", AF},
+                {"BC", BC},
+                {"DE", DE},
+                {"HL", HL},
+            };
+        }
     }
 
     Register Registers::getRegister(const std::string &reg)
