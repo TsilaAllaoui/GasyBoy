@@ -9,6 +9,8 @@
 
 std::unique_ptr<gasyboy::GameBoy> gb;
 
+bool bootBios = true;
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 
@@ -31,11 +33,17 @@ extern "C"
         emscripten_set_main_loop(main_loop, 0, true);
         return 1;
     }
+
+    EMSCRIPTEN_KEEPALIVE int toggle_bios(const int &value)
+    {
+        bootBios = value == 1;
+        return 1;
+    }
 }
 
 int main()
 {
-    gb = std::make_unique<gasyboy::GameBoy>(tetrisBytes.data(), tetrisBytes.size(), true);
+    gb = std::make_unique<gasyboy::GameBoy>(tetrisBytes.data(), tetrisBytes.size(), bootBios);
 
     emscripten_set_main_loop(main_loop, 0, true);
 
@@ -49,7 +57,7 @@ int main(int argc, char **argv)
     // Boot default rom
     if (argc == 1)
     {
-        gb = std::make_unique<gasyboy::GameBoy>(tetrisBytes.data(), tetrisBytes.size(), true, true);
+        gb = std::make_unique<gasyboy::GameBoy>(tetrisBytes.data(), tetrisBytes.size(), bootBios, true);
         gb->boot();
     }
 
