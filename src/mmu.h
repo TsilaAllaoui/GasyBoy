@@ -102,6 +102,9 @@ namespace gasyboy
 
         ~Mmu() = default;
 
+        // Reset MMU
+        void reset(const std::string &romFilePath);
+
         // Set file path to be loaded in cartrdige class
         void setRomFile(const std::string &file);
 

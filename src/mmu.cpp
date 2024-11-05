@@ -98,6 +98,46 @@ namespace gasyboy
         _mem_accesses = static_cast<struct mem_access *>(mem_accesses);
     }
 
+    void Mmu::reset(const std::string &romFilePath)
+    {
+        auto mmu = Mmu(romFilePath, _gamepad, _executeBios);
+        _vRam = std::vector<uint8_t>(0x2000, 0);
+        _extRam = std::vector<uint8_t>(0x2000, 0);
+        _workingRam = std::vector<uint8_t>(0x4000, 0);
+        _currModifiedTile = -1;
+        _dmaRegionWritten = false;
+        _romFilePath = romFilePath;
+
+        if (!_executeBios)
+        {
+            writeRam(0xFF40, 0x91);
+            writeRam(0xFF47, 0xFC);
+            writeRam(0xFF48, 0xFF);
+        }
+
+        // setting joypad to off
+        _workingRam[0xFFFF - 0xC000] = 0xFF;
+
+        // loading rom file
+        try
+        {
+            if (_romFilePath.empty())
+            {
+                throw exception::GbException("Invalid rom file path");
+            }
+
+            _cartridge.loadRom(_romFilePath);
+            utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
+                                              "Rom file : \"" +
+                                                  _romFilePath + "\" loaded successfully");
+        }
+        catch (const exception::GbException &e)
+        {
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
+        }
+    }
+
     void gasyboy::Mmu::setRomFile(const std::string &filePath)
     {
         _romFilePath = filePath;

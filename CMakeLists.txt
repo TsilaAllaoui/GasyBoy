@@ -9,13 +9,6 @@ set(CMAKE_CXX_STANDARD 17)
 # External libs directory
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
-# Imgui source files
-file(GLOB IMGUI_SRC
-    "${EXTERNALS_DIR}/imgui/*.cpp"
-    "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdl2.cpp"
-    "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdlrenderer2.cpp"
-)
-
 # Add all source files in src/ excluding main.cpp
 file(GLOB GASYBOY_SOURCES_FILES src/*.cpp)
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
@@ -56,6 +49,7 @@ else()
         "${EXTERNALS_DIR}/imgui/*.cpp"
         "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdl2.cpp"
         "${EXTERNALS_DIR}/imgui/backends/imgui_impl_sdlrenderer2.cpp"
+        "${EXTERNALS_DIR}/ImGuiFileDialog/ImGuiFileDialog.cpp"
     )
 
     # Creating executable
@@ -64,7 +58,8 @@ else()
     set(GASYBOY_HEADERS_DIR
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/events)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/events
+        ${EXTERNALS_DIR}/ImGuiFileDialog)
 
     # Add headers to executable
     target_include_directories(${PROJECT_NAME} PRIVATE

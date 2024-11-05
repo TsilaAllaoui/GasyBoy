@@ -2,12 +2,10 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "logger.h"
+#include "gameBoyProvider.h"
 #include "argparse.hpp"
 #include "gameboy.h"
-#include "tetris.h"
-
-std::unique_ptr<gasyboy::GameBoy> gb;
+#include "logger.h"
 
 bool bootBios = true;
 
@@ -16,10 +14,7 @@ bool bootBios = true;
 
 void main_loop()
 {
-    if (gb)
-    {
-        gb->loop();
-    }
+    gasyboy::GameBoyProvider::getGameBoy()->loop();
 }
 
 extern "C"
@@ -27,23 +22,23 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE int load_file(const char *file)
     {
         emscripten_cancel_main_loop();
-        gb.reset();
+        gasyboy::GameBoyProvider::reset(file, bootBios);
         std::cout << "Current rom file: " << file << "\n";
-        gb = std::make_unique<gasyboy::GameBoy>(file, true);
         emscripten_set_main_loop(main_loop, 0, true);
         return 1;
     }
 
-    EMSCRIPTEN_KEEPALIVE int toggle_bios(const int &value)
+    EMSCRIPTEN_KEEPALIVE int toggle_bios(const bool value)
     {
-        bootBios = value == 1;
+        bootBios = value;
+        std::cout << (bootBios ? "Boot bios enabled\n" : "Boot bios disabled\n");
         return 1;
     }
 }
 
 int main()
 {
-    gb = std::make_unique<gasyboy::GameBoy>(tetrisBytes.data(), tetrisBytes.size(), bootBios);
+    auto gb = gasyboy::GameBoyProvider::getGameBoy();
 
     emscripten_set_main_loop(main_loop, 0, true);
 
@@ -54,10 +49,12 @@ int main()
 
 int main(int argc, char **argv)
 {
+    auto gb = gasyboy::GameBoyProvider::getGameBoy();
+
     // Boot default rom
     if (argc == 1)
     {
-        gb = std::make_unique<gasyboy::GameBoy>(tetrisBytes.data(), tetrisBytes.size(), bootBios, true);
+        gb->setDebugMode(true);
         gb->boot();
     }
 
@@ -94,7 +91,7 @@ int main(int argc, char **argv)
                         "\n\t - Debug Mode: " +
                         (debugMode ? "true" : "false"));
 
-        gb = std::make_unique<gasyboy::GameBoy>(romFile, !skipBios, debugMode);
+        gasyboy::GameBoyProvider::reset(romFile, !skipBios, debugMode);
         gb->boot();
     }
     catch (const std::runtime_error &err)

@@ -68,6 +68,14 @@ namespace gasyboy
         state = State::STOPPED;
     }
 
+#ifndef __EMSCRIPTEN__
+    void GameBoy::setDebugMode(const bool &debugMode)
+    {
+        _debugMode = debugMode;
+        _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _ppu, _renderer->_window);
+    }
+#endif
+
     void GameBoy::boot()
     {
         bool running = true;
