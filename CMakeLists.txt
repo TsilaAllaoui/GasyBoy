@@ -91,12 +91,12 @@ elseif(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_S
         TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.js"
-        "${CMAKE_CURRENT_SOURCE_DIR}/wasm/${PROJECT_NAME}.js"
+        "${CMAKE_CURRENT_SOURCE_DIR}/docs/${PROJECT_NAME}.js"
 
         TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.wasm"
-        "${CMAKE_CURRENT_SOURCE_DIR}/wasm/${PROJECT_NAME}.wasm"
+        "${CMAKE_CURRENT_SOURCE_DIR}/docs/${PROJECT_NAME}.wasm"
 
         COMMENT "Copying wasm generated files to wasm folder"
     )
