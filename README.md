@@ -1,6 +1,8 @@
 # 🕹️ **GasyBoy** 🕹️
 **Gameboy** emulator made with **C++/SDL2**.
 
+<h2>Want to test it? Go here: <a href="https://tsilaallaoui.github.io/GasyBoy/index.html">GasyBoy Live Demo</a></h2>
+
 ###### ⬜⬜⬜⬜⬜⬜⬜⬜
 ###### ⬜🌫️🌫️🌫️🌫️🌫️🌫️⬜
 ###### ⬜🌫️🟩🟩🟩🟩🌫️⬜
