@@ -1,5 +1,10 @@
+#include "interruptManagerProvider.h"
+#include "utilitiesProvider.h"
+#include "gamepadProvider.h"
 #include "ImGuiFileDialog.h"
 #include "gameBoyProvider.h"
+#include "mmuProvider.h"
+#include "cpuProvider.h"
 #include "debugger.h"
 #include "gameboy.h"
 #include "gamepad.h"
@@ -306,9 +311,16 @@ namespace gasyboy
         {
             if (ImGuiFileDialog::Instance()->IsOk())
             {
-                Cpu::state = Cpu::State::STOPPED;
-                std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
-                GameBoyProvider::reset(filePath, _executeBios, true);
+                Cpu::state = Cpu::State::PAUSED;
+                provider::UtilitiesProvider::getInstance().romFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
+                _registers.reset();
+                _mmu.reset();
+                _ppu.reset();
+                // _mmu.reset();
+                provider::MmuProvider::deleteInstance();
+                provider::MmuProvider::create();
+                provider::InterruptManagerProvider::getInstance().reset();
+                provider::GamepadProvider::getInstance().reset();
             }
 
             ImGuiFileDialog::Instance()->Close();

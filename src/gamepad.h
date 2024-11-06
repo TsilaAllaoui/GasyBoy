@@ -20,6 +20,9 @@ namespace gasyboy
         // Constructor
         Gamepad();
 
+        // Reset
+        void reset();
+
         // Handle key press/release events
         void handleEvent();
 

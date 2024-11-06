@@ -24,7 +24,7 @@ namespace gasyboy
 
     public:
         // Constructors
-        Registers(Mmu &mmu, const bool &bootBios = true);
+        Registers();
 
         // Reset registers
         void reset();

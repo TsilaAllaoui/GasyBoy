@@ -390,6 +390,19 @@ namespace gasyboy
 		}
 	}
 
+	void Cartridge::reset()
+	{
+		_currentRomBank = 1;
+		_currentRamBank = 0;
+		_isRamEnabled = false;
+		_currentRtcReg = 0;
+		_bankingMode = BankingMode::MODE_0;
+		_romBanksCount = 0;
+		_ramBanksCount = 0;
+		_cartridgeType = CartridgeType::ROM_ONLY;
+		_cartridgeHeader = CartridgeHeader();
+	}
+
 	void Cartridge::getCartridgeHeaderInfos()
 	{
 		for (int i = 0x134; i < 0x143; i++)

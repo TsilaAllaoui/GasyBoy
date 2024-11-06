@@ -12,7 +12,7 @@ namespace gasyboy
         InterruptManager &_interruptManager;
 
     public:
-        Timer(InterruptManager &interruptManager);
+        Timer();
         ~Timer() = default;
 
         // Timer registers

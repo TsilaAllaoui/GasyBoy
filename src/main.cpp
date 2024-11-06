@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include "utilitiesProvider.h"
 #include "gameBoyProvider.h"
 #include "argparse.hpp"
 #include "gameboy.h"
@@ -14,7 +15,7 @@ bool bootBios = true;
 
 void main_loop()
 {
-    gasyboy::GameBoyProvider::getGameBoy()->loop();
+    gasyboy::GameBoyProvider::getInstance()->loop();
 }
 
 extern "C"
@@ -38,7 +39,7 @@ extern "C"
 
 int main()
 {
-    auto gb = gasyboy::GameBoyProvider::getGameBoy();
+    auto gb = gasyboy::GameBoyProvider::getInstance();
 
     emscripten_set_main_loop(main_loop, 0, true);
 
@@ -49,13 +50,14 @@ int main()
 
 int main(int argc, char **argv)
 {
-    auto gb = gasyboy::GameBoyProvider::getGameBoy();
+    gasyboy::provider::UtilitiesProvider::getInstance().executeBios = false;
+    auto &gb = gasyboy::GameBoyProvider::getInstance();
 
     // Boot default rom
     if (argc == 1)
     {
-        gb->setDebugMode(true);
-        gb->boot();
+        gb.setDebugMode(true);
+        gb.boot();
     }
 
     argparse::ArgumentParser program("gasyboy");
@@ -79,20 +81,19 @@ int main(int argc, char **argv)
     try
     {
         program.parse_args(argc, argv);
-        std::string romFile = std::filesystem::path(program.get<std::string>("--rom")).make_preferred().string();
-        bool skipBios = program.get<bool>("--skip_bios");
-        bool debugMode = program.get<bool>("--debug");
+        gasyboy::provider::UtilitiesProvider::getInstance().romFilePath = std::filesystem::path(program.get<std::string>("--rom")).make_preferred().string();
+        gasyboy::provider::UtilitiesProvider::getInstance().executeBios = !program.get<bool>("--skip_bios");
+        gasyboy::provider::UtilitiesProvider::getInstance().debugMode = program.get<bool>("--debug");
 
         auto logger = gasyboy::utils::Logger::getInstance();
         logger->log(gasyboy::utils::Logger::LogType::FUNCTIONAL,
-                    "Rom file: " + romFile +
+                    "Rom file: " + gasyboy::provider::UtilitiesProvider::getInstance().romFilePath +
                         "\n\t - Use BIOS: " +
-                        (!skipBios ? "true" : "false") +
+                        (gasyboy::provider::UtilitiesProvider::getInstance().executeBios ? "true" : "false") +
                         "\n\t - Debug Mode: " +
-                        (debugMode ? "true" : "false"));
+                        (gasyboy::provider::UtilitiesProvider::getInstance().debugMode ? "true" : "false"));
 
-        gasyboy::GameBoyProvider::reset(romFile, !skipBios, debugMode);
-        gb->boot();
+        gb.boot();
     }
     catch (const std::runtime_error &err)
     {

@@ -370,6 +370,9 @@ namespace gasyboy
 
         // Ram size string from byte
         std::string ramSizeStr(const uint8_t &byte);
+
+        // Reset
+        void reset();
     };
 }
 

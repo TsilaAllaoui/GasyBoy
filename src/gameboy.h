@@ -41,8 +41,8 @@ namespace gasyboy
         bool _debugMode;
 
     public:
-        GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
-        GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode = false);
+        GameBoy();
+        GameBoy(const uint8_t *bytes, const size_t &romSize);
         ~GameBoy() = default;
 
         Registers _registers;

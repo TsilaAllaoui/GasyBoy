@@ -1,5 +1,6 @@
-#include "timer.h"
+#include "interruptManagerProvider.h"
 #include "interruptManager.h"
+#include "timer.h"
 
 namespace gasyboy
 {
@@ -11,8 +12,8 @@ namespace gasyboy
 	int Timer::_divIncrementRate = 255;
 	uint16_t Timer::_timaIncrementRate = 1024;
 
-	Timer::Timer(InterruptManager &interruptManager)
-		: _interruptManager(interruptManager)
+	Timer::Timer()
+		: _interruptManager(provider::InterruptManagerProvider::getInstance())
 	{
 	}
 

@@ -1,23 +1,60 @@
+#include <cstring>
+#include "utilitiesProvider.h"
+#include "gamepadProvider.h"
 #include "gbException.h"
 #include "logger.h"
-#include "mmu.h"
-#include <cstring>
 #include "timer.h"
+#include "mmu.h"
 
 namespace gasyboy
 {
-    Mmu::Mmu(const std::string &romFilePath, Gamepad &gamepad, const bool &bootBios)
+    Mmu::Mmu(const uint8_t *bytes, const size_t &romSize)
         : _vRam(std::vector<uint8_t>(0x2000, 0)),
           _extRam(std::vector<uint8_t>(0x2000, 0)),
           _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(bootBios),
+          _executeBios(provider::UtilitiesProvider::getInstance().executeBios),
           _cartridge(),
-          _gamepad(gamepad),
+          _gamepad(provider::GamepadProvider::getInstance()),
+          _currModifiedTile(-1),
+          _dmaRegionWritten(false)
+    {
+        // setting joypad to off
+        _workingRam[0xFFFF - 0xC000] = 0xFF;
+
+        // loading rom file
+        try
+        {
+            std::vector<uint8_t> byteList(romSize, 0);
+            for (auto i = 0; i < romSize; i++)
+            {
+                byteList[i] = bytes[i];
+            }
+
+            _cartridge.loadRomFromByteArray(byteList);
+            utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
+                                              "Rom file : \"" +
+                                                  _romFilePath + "\" loaded successfully");
+        }
+        catch (const exception::GbException &e)
+        {
+            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                              e.what());
+        }
+    }
+
+    Mmu::Mmu()
+        : _vRam(std::vector<uint8_t>(0x2000, 0)),
+          _extRam(std::vector<uint8_t>(0x2000, 0)),
+          _workingRam(std::vector<uint8_t>(0x4000, 0)),
+          _executeBios(provider::UtilitiesProvider::getInstance().executeBios),
+          _cartridge(),
+          _gamepad(provider::GamepadProvider::getInstance()),
           _currModifiedTile(-1),
           _dmaRegionWritten(false),
-          _romFilePath(romFilePath)
+          _romFilePath(provider::UtilitiesProvider::getInstance().romFilePath)
+
     {
-        if (!bootBios)
+        if (!_executeBios)
         {
             writeRam(0xFF40, 0x91);
             writeRam(0xFF47, 0xFC);
@@ -47,66 +84,15 @@ namespace gasyboy
         }
     }
 
-    Mmu::Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad)
-        : _vRam(std::vector<uint8_t>(0x2000, 0)),
-          _extRam(std::vector<uint8_t>(0x2000, 0)),
-          _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(true),
-          _cartridge(),
-          _gamepad(gamepad),
-          _currModifiedTile(-1),
-          _dmaRegionWritten(false)
+    void Mmu::reset()
     {
-        // setting joypad to off
-        _workingRam[0xFFFF - 0xC000] = 0xFF;
-
-        // loading rom file
-        try
-        {
-            std::vector<uint8_t> byteList(romSize, 0);
-            for (auto i = 0; i < romSize; i++)
-            {
-                byteList[i] = bytes[i];
-            }
-
-            _cartridge.loadRomFromByteArray(byteList);
-            utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
-                                              "Rom file : \"" +
-                                                  _romFilePath + "\" loaded successfully");
-        }
-        catch (const exception::GbException &e)
-        {
-            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
-                                              e.what());
-        }
-    }
-
-    Mmu::Mmu(uint8_t size, uint8_t *mem, int *num_mem_accesses, void *mem_accesses, Gamepad &gamepad, const bool &bootBios)
-        : _vRam(std::vector<uint8_t>(0x2000, 0)),
-          _extRam(std::vector<uint8_t>(0x2000, 0)),
-          _workingRam(std::vector<uint8_t>(0x4000, 0)),
-          _executeBios(bootBios),
-          _gamepad(gamepad),
-          _cartridge(),
-          _currModifiedTile(-1),
-          _dmaRegionWritten(false),
-          _romFilePath("")
-    {
-        _mem = mem;
-        _memSize = size;
-        _num_mem_accesses = num_mem_accesses;
-        _mem_accesses = static_cast<struct mem_access *>(mem_accesses);
-    }
-
-    void Mmu::reset(const std::string &romFilePath)
-    {
-        auto mmu = Mmu(romFilePath, _gamepad, _executeBios);
         _vRam = std::vector<uint8_t>(0x2000, 0);
         _extRam = std::vector<uint8_t>(0x2000, 0);
         _workingRam = std::vector<uint8_t>(0x4000, 0);
         _currModifiedTile = -1;
         _dmaRegionWritten = false;
-        _romFilePath = romFilePath;
+        _romFilePath = provider::UtilitiesProvider::getInstance().romFilePath;
+        _cartridge.reset();
 
         if (!_executeBios)
         {

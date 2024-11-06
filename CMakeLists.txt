@@ -10,14 +10,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
 # Add all source files in src/ excluding main.cpp
-file(GLOB GASYBOY_SOURCES_FILES src/*.cpp)
+file(GLOB GASYBOY_SOURCES_FILES src/*.cpp src/providers/*.cpp)
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
 
-# Add include directory
 if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+    # Add include directory
     set(GASYBOY_HEADERS_DIR
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/events
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/providers
     )
 
     # Creating executable
@@ -59,6 +60,7 @@ else()
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger
         ${CMAKE_CURRENT_SOURCE_DIR}/src/events
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/providers
         ${EXTERNALS_DIR}/ImGuiFileDialog)
 
     # Add headers to executable
