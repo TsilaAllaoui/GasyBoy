@@ -15,6 +15,16 @@ namespace gasyboy
 	Timer::Timer()
 		: _interruptManager(provider::InterruptManagerProvider::getInstance())
 	{
+		_div = 0;
+		_tima = 0;
+		_tma = 0;
+		_tac = 0;
+		_divIncrementRate = 255;
+		_timaIncrementRate = 1024;
+	}
+
+	void Timer::reset()
+	{
 	}
 
 	uint8_t Timer::DIV()

@@ -22,10 +22,6 @@ namespace gasyboy
 
         static void deleteInstance();
 
-        // // Reset the current gameboy instance
-        // static void reset(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
-        // static void reset(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode = false);
-
         GameBoyProvider(const GameBoyProvider &) = delete;
         GameBoyProvider operator=(const GameBoyProvider &) = delete;
     };

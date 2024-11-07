@@ -15,6 +15,8 @@ namespace gasyboy
         Timer();
         ~Timer() = default;
 
+        void reset();
+
         // Timer registers
         static uint8_t _div;
         static uint8_t _tima;

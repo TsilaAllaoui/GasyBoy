@@ -39,12 +39,6 @@ namespace gasyboy
 		}
 
 		loadRomFromByteArray(buffer);
-
-		// Get cartridge header infos
-		getCartridgeHeaderInfos();
-
-		// Log cartridge informations
-		logCartridgeHeaderInfos();
 	}
 
 	void Cartridge::loadRom(uint8_t size, uint8_t *mem)

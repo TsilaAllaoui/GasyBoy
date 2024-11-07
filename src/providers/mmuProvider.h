@@ -23,7 +23,6 @@ namespace gasyboy
 
             static Mmu &getInstance();
             static Mmu &create(const uint8_t *bytes, const size_t &romSize);
-            static void create();
 
             static void deleteInstance();
         };

@@ -161,19 +161,6 @@ namespace gasyboy
 
     std::unique_ptr<GameBoy> GameBoyProvider::_gameboyInstance;
 
-    // void GameBoyProvider::reset(const std::string &filePath, const bool &bootBios, const bool &debugMode)
-    // {
-    //     Utilities utilities = {bootBios, filePath, debugMode};
-    //     _gameboyInstance.reset();
-    //     _gameboyInstance = std::make_unique<GameBoy>(utilities);
-    // }
-
-    // void GameBoyProvider::reset(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode)
-    // {
-    //     _gameboyInstance.reset();
-    //     _gameboyInstance = std::make_unique<GameBoy>(bytes, romSize, debugMode);
-    // }
-
     GameBoy &GameBoyProvider::getInstance()
     {
         if (!_gameboyInstance)

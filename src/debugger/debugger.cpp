@@ -319,16 +319,13 @@ namespace gasyboy
             {
                 Cpu::state = Cpu::State::PAUSED;
                 provider::UtilitiesProvider::getInstance().romFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
-                // _registers.reset();
-                // _mmu.reset();
-                provider::RegistersProvider::getInstance().reset();
-                provider::PpuProvider::getInstance().reset();
-                provider::MmuProvider::create();
-                provider::MmuProvider::getInstance().reset();
-                provider::MmuProvider::deleteInstance();
-                provider::MmuProvider::create();
-                provider::InterruptManagerProvider::getInstance().reset();
                 provider::GamepadProvider::getInstance().reset();
+                provider::MmuProvider::getInstance().reset();
+                provider::RegistersProvider::getInstance().reset();
+                provider::InterruptManagerProvider::getInstance().reset();
+                provider::CpuProvider::getInstance().reset();
+                provider::TimerProvider::getInstance().reset();
+                provider::PpuProvider::getInstance().reset();
             }
 
             ImGuiFileDialog::Instance()->Close();
