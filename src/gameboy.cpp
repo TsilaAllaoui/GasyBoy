@@ -1,3 +1,11 @@
+#include "interruptManagerProvider.h"
+#include "utilitiesProvider.h"
+#include "registersProvider.h"
+#include "gamepadProvider.h"
+#include "timerProvider.h"
+#include "ppuProvider.h"
+#include "cpuProvider.h"
+#include "mmuProvider.h"
 #include "gbException.h"
 #include "gameboy.h"
 #include "logger.h"
@@ -9,16 +17,16 @@ namespace gasyboy
 {
     GameBoy::State GameBoy::state = GameBoy::State::RUNNING;
 
-    GameBoy::GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode)
-        : _debugMode(debugMode),
-          _gamepad(),
-          _mmu(filePath, _gamepad, bootBios),
-          _registers(_mmu, bootBios),
-          _interruptManager(_mmu, _registers),
-          _cpu(bootBios, _mmu, _registers, _interruptManager),
-          _timer(_interruptManager),
+    GameBoy::GameBoy()
+        : _debugMode(provider::UtilitiesProvider::getInstance().debugMode),
+          _gamepad(provider::GamepadProvider::getInstance()),
+          _mmu(provider::MmuProvider::getInstance()),
+          _registers(provider::RegistersProvider::getInstance()),
+          _interruptManager(provider::InterruptManagerProvider::getInstance()),
+          _cpu(provider::CpuProvider::getInstance()),
+          _timer(provider::TimerProvider::getInstance()),
           _cycleCounter(0),
-          _ppu(_registers, _interruptManager, _mmu)
+          _ppu(provider::PpuProvider::getInstance())
     {
 
         _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
@@ -27,28 +35,29 @@ namespace gasyboy
 #ifndef __EMSCRIPTEN__
         if (_debugMode)
         {
-            _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _ppu, _renderer->_window);
+            _debugger = std::make_unique<Debugger>(_renderer->_window);
         }
 #endif
     }
 
-    GameBoy::GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode)
-        : _debugMode(debugMode),
-          _gamepad(),
-          _mmu(bytes, romSize, _gamepad),
-          _registers(_mmu, bootBios),
-          _interruptManager(_mmu, _registers),
-          _cpu(bootBios, _mmu, _registers, _interruptManager),
-          _timer(_interruptManager),
+    GameBoy::GameBoy(const uint8_t *bytes, const size_t &romSize)
+        : _debugMode(provider::UtilitiesProvider::getInstance().debugMode),
+          _gamepad(provider::GamepadProvider::getInstance()),
+          _mmu(provider::MmuProvider::create(bytes, romSize)),
+          _registers(provider::RegistersProvider::getInstance()),
+          _interruptManager(provider::InterruptManagerProvider::getInstance()),
+          _cpu(provider::CpuProvider::getInstance()),
+          _timer(provider::TimerProvider::getInstance()),
           _cycleCounter(0),
-          _ppu(_registers, _interruptManager, _mmu)
+          _ppu(provider::PpuProvider::getInstance())
     {
         _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
         _renderer->init();
+
 #ifndef __EMSCRIPTEN__
         if (_debugMode)
         {
-            _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _ppu, _renderer->_window);
+            _debugger = std::make_unique<Debugger>(_renderer->_window);
         }
 #endif
     }
@@ -72,7 +81,7 @@ namespace gasyboy
     void GameBoy::setDebugMode(const bool &debugMode)
     {
         _debugMode = debugMode;
-        _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _ppu, _renderer->_window);
+        _debugger = std::make_unique<Debugger>(_renderer->_window);
     }
 #endif
 

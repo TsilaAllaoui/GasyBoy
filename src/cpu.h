@@ -32,8 +32,11 @@ namespace gasyboy
 
 	public:
 		// Contructor/destructor
-		Cpu(const bool &bootBios, Mmu &mmu, Registers &registers, InterruptManager &interruptManager);
+		Cpu();
 		~Cpu() = default;
+
+		// Reset the cpu
+		void reset();
 
 		// A step of the cpu
 		long step();

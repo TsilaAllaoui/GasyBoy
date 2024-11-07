@@ -1,13 +1,14 @@
 #include "disassembler.h"
-#include <iostream>
-#include <vector>
-#include <iomanip>
+#include "mmuProvider.h"
 #include <exception>
 #include <stdexcept>
+#include <iostream>
+#include <iomanip>
+#include <vector>
 
 namespace gasyboy
 {
-    Disassembler::Disassembler(Cartridge &cartridge)
+    Disassembler::Disassembler()
     {
 
         opcodeTable = {
@@ -529,6 +530,7 @@ namespace gasyboy
             {2, 0xFF, "SET 7, A"},
         };
 
+        auto &cartridge = provider::MmuProvider::getInstance().getCartridge();
         _romBanks = cartridge.getRomBanks();
     }
 

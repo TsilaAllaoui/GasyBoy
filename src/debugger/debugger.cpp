@@ -1,5 +1,4 @@
 #include "ImGuiFileDialog.h"
-#include "gameBoyProvider.h"
 #include "debugger.h"
 #include "gameboy.h"
 #include "gamepad.h"
@@ -7,24 +6,33 @@
 #include "mmu.h"
 #include <chrono>
 
+#include "interruptManagerProvider.h"
+#include "registersProvider.h"
+#include "utilitiesProvider.h"
+#include "gamepadProvider.h"
+#include "timerProvider.h"
+#include "mmuProvider.h"
+#include "cpuProvider.h"
+#include "ppuProvider.h"
+
 namespace gasyboy
 {
 
-    Debugger::Debugger(Mmu &mmu, Registers &registers, Timer &timer, Ppu &ppu, SDL_Window *mainWindow, const bool &bootBios)
-        : _mmu(mmu),
-          _registers(registers),
-          _ppu(ppu),
+    Debugger::Debugger(SDL_Window *mainWindow)
+        : _mmu(provider::MmuProvider::getInstance()),
+          _registers(provider::RegistersProvider::getInstance()),
+          _ppu(provider::PpuProvider::getInstance()),
           _window(nullptr),
           _renderer(nullptr),
           _breakPoints(),
           _currentBreakPoint(-1),
-          _timer(timer),
+          _timer(provider::TimerProvider::getInstance()),
           _currentSelectedRomBank(1),
           _lcdEnable(false),
           _previewPos(ImVec2(845, 165)),
           _previewSprite(),
-          _disassembler(_mmu.getCartridge()),
-          _executeBios(bootBios)
+          _disassembler(),
+          _executeBios(provider::UtilitiesProvider::getInstance().executeBios)
     {
         _bytesBuffers = {
             {"A", new char[2]},
@@ -306,9 +314,15 @@ namespace gasyboy
         {
             if (ImGuiFileDialog::Instance()->IsOk())
             {
-                Cpu::state = Cpu::State::STOPPED;
-                std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
-                GameBoyProvider::reset(filePath, _executeBios, true);
+                Cpu::state = Cpu::State::PAUSED;
+                provider::UtilitiesProvider::getInstance().romFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
+                provider::GamepadProvider::getInstance().reset();
+                provider::MmuProvider::getInstance().reset();
+                provider::RegistersProvider::getInstance().reset();
+                provider::InterruptManagerProvider::getInstance().reset();
+                provider::CpuProvider::getInstance().reset();
+                provider::TimerProvider::getInstance().reset();
+                provider::PpuProvider::getInstance().reset();
             }
 
             ImGuiFileDialog::Instance()->Close();

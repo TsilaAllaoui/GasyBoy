@@ -39,12 +39,6 @@ namespace gasyboy
 		}
 
 		loadRomFromByteArray(buffer);
-
-		// Get cartridge header infos
-		getCartridgeHeaderInfos();
-
-		// Log cartridge informations
-		logCartridgeHeaderInfos();
 	}
 
 	void Cartridge::loadRom(uint8_t size, uint8_t *mem)
@@ -388,6 +382,19 @@ namespace gasyboy
 		default:
 			return "Unknown";
 		}
+	}
+
+	void Cartridge::reset()
+	{
+		_currentRomBank = 1;
+		_currentRamBank = 0;
+		_isRamEnabled = false;
+		_currentRtcReg = 0;
+		_bankingMode = BankingMode::MODE_0;
+		_romBanksCount = 0;
+		_ramBanksCount = 0;
+		_cartridgeType = CartridgeType::ROM_ONLY;
+		_cartridgeHeader = CartridgeHeader();
 	}
 
 	void Cartridge::getCartridgeHeaderInfos()

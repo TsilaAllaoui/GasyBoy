@@ -10,14 +10,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
 # Add all source files in src/ excluding main.cpp
-file(GLOB GASYBOY_SOURCES_FILES src/*.cpp)
+file(GLOB GASYBOY_SOURCES_FILES src/*.cpp src/providers/*.cpp)
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
 
-# Add include directory
 if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+    # Add include directory
     set(GASYBOY_HEADERS_DIR
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/events
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/providers
     )
 
     # Creating executable
@@ -29,7 +30,7 @@ if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTE
         ${EXTERNALS_DIR}/argparse/include/argparse)
 
     # Emscripten SDL setup
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    set(CMAKE_EXECUTABLE_SUFFIX ".js")
     set(SDL2_FLAGS "-s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -sEXPORTED_FUNCTIONS=_main,_load_file,_toggle_bios,_malloc,_free -sEXPORTED_RUNTIME_METHODS=ccall,cwrap -sNO_DISABLE_EXCEPTION_CATCHING")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SDL2_FLAGS}")
 
@@ -59,6 +60,7 @@ else()
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger
         ${CMAKE_CURRENT_SOURCE_DIR}/src/events
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/providers
         ${EXTERNALS_DIR}/ImGuiFileDialog)
 
     # Add headers to executable

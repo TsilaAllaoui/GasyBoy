@@ -1,11 +1,14 @@
+#include "interruptManagerProvider.h"
+#include "registersProvider.h"
+#include "mmuProvider.h"
 #include "ppu.h"
 
 namespace gasyboy
 {
-    Ppu::Ppu(Registers &registers, InterruptManager &interruptManager, Mmu &mmu)
-        : _mmu(mmu),
-          _registers(registers),
-          _interruptManager(interruptManager)
+    Ppu::Ppu()
+        : _mmu(provider::MmuProvider::getInstance()),
+          _registers(provider::RegistersProvider::getInstance()),
+          _interruptManager(provider::InterruptManagerProvider::getInstance())
 
     {
         _control = (Control *)_mmu.ramCellptr(0xff40);
@@ -302,4 +305,12 @@ namespace gasyboy
         }
     }
 
+    void Ppu::reset()
+    {
+        _control = (Control *)_mmu.ramCellptr(0xff40);
+        _lcdStat = (Stat *)_mmu.ramCellptr(0xff41);
+        _scrollY = (uint8_t *)_mmu.ramCellptr(0xff42);
+        _scrollX = (uint8_t *)_mmu.ramCellptr(0xff43);
+        _scanline = (uint8_t *)_mmu.ramCellptr(0xff44);
+    }
 }

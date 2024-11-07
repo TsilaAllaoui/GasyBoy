@@ -36,7 +36,7 @@ namespace gasyboy
         std::vector<Opcode> opcodeTable;
 
     public:
-        Disassembler(Cartridge &cartridge);
+        Disassembler();
 
         std::vector<OpcodeLine> disassembledRom;
 

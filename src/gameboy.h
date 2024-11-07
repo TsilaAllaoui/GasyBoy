@@ -23,12 +23,12 @@ namespace gasyboy
 {
     class GameBoy
     {
-        Mmu _mmu;
-        Cpu _cpu;
-        Timer _timer;
-        Gamepad _gamepad;
-        InterruptManager _interruptManager;
-        Ppu _ppu;
+        Mmu &_mmu;
+        Cpu &_cpu;
+        Timer &_timer;
+        Gamepad &_gamepad;
+        InterruptManager &_interruptManager;
+        Ppu &_ppu;
         std::unique_ptr<Renderer> _renderer;
 
         int _cycleCounter;
@@ -41,8 +41,8 @@ namespace gasyboy
         bool _debugMode;
 
     public:
-        GameBoy(const std::string &filePath, const bool &bootBios, const bool &debugMode = false);
-        GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &bootBios, const bool &debugMode = false);
+        GameBoy();
+        GameBoy(const uint8_t *bytes, const size_t &romSize);
         ~GameBoy() = default;
 
         Registers _registers;

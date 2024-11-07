@@ -16,6 +16,12 @@ namespace gasyboy
     {
     }
 
+    void Gamepad::reset()
+    {
+        _changedPalette = false;
+        _state = 0xFF;
+    }
+
     void Gamepad::handleEvent()
     {
         SDL_Event event;

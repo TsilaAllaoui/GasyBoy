@@ -93,17 +93,12 @@ namespace gasyboy
         bool _oamDataIn;
 
         // construcor/destructor
-        Mmu(const std::string &romFilePath, Gamepad &gamepad, const bool &bootBios = true);
-
-        Mmu(const uint8_t *bytes, const size_t &romSize, Gamepad &gamepad);
-
-        // For debugging
-        Mmu(uint8_t size, uint8_t *mem, int *num_mem_accesses, void *mem_accesses, Gamepad &gamepad, const bool &bootBios = true);
-
+        Mmu();
+        Mmu(const uint8_t *bytes, const size_t &romSize);
         ~Mmu() = default;
 
         // Reset MMU
-        void reset(const std::string &romFilePath);
+        void reset();
 
         // Set file path to be loaded in cartrdige class
         void setRomFile(const std::string &file);

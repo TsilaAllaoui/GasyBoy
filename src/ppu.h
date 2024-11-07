@@ -15,9 +15,13 @@ namespace gasyboy
         void renderScanLineSprites(bool *rowPixels);
 
     public:
+        Ppu();
+
         Registers &_registers;
         Mmu &_mmu;
         InterruptManager &_interruptManager;
+
+        void reset();
 
         uint8_t *_scrollX;
         uint8_t *_scrollY;
@@ -67,8 +71,8 @@ namespace gasyboy
 
         bool _canRender = false;
 
-        Ppu(Registers &registers, InterruptManager &interrupts, Mmu &mmu);
         void step(const int &cycle);
+
         void compareLyAndLyc();
     };
 }

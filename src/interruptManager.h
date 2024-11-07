@@ -14,8 +14,8 @@ namespace gasyboy
         Registers &_registers;
 
     public:
-        InterruptManager() = delete;
-        InterruptManager(Mmu &mmu, Registers &registers);
+        InterruptManager();
+        ~InterruptManager() = default;
 
         enum class InterruptType
         {
@@ -43,6 +43,8 @@ namespace gasyboy
         bool isMasterInterruptEnabled();
 
         void setMasterInterrupt(const bool &value);
+
+        void reset();
 
     private:
         std::map<InterruptType, InterruptAddress> _interruptAddressMap;

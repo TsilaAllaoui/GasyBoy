@@ -1,20 +1,25 @@
-#include "cpu.h"
+#include "interruptManagerProvider.h"
+#include "utilitiesProvider.h"
+#include "registersProvider.h"
+#include "mmuProvider.h"
 #include "gbException.h"
 #include "timer.h"
+#include "cpu.h"
 
 namespace gasyboy
 {
 
 	Cpu::State Cpu::state = Cpu::State::RUNNING;
 
-	Cpu::Cpu(const bool &bootBios, Mmu &mmu, Registers &registers, InterruptManager &interruptManager)
-		: _mmu(mmu),
-		  _registers(registers),
-		  _interruptManager(interruptManager),
+	Cpu::Cpu()
+		: _mmu(provider::MmuProvider::getInstance()),
+		  _registers(provider::RegistersProvider::getInstance()),
+		  _interruptManager(provider::InterruptManagerProvider::getInstance()),
 		  _currentOpcode(0),
 		  _cycle(0)
 	{
 		// If not booting bios, set registers directly to program
+		auto bootBios = provider::UtilitiesProvider::getInstance().executeBios;
 		if (!bootBios)
 		{
 			_mmu.disableBios();
@@ -2301,6 +2306,31 @@ namespace gasyboy
 		uint8_t leftValue = _mmu.readRam(adress + 1);
 		uint16_t value = ((leftValue << 8) | (_mmu.readRam(adress)));
 		return value;
+	}
+
+	void Cpu::reset()
+	{
+		_currentOpcode = 0;
+		_cycle = 0;
+
+		_registers.AF.set(0);
+		_registers.BC.set(0);
+		_registers.DE.set(0);
+		_registers.HL.set(0);
+		_registers.PC = 0;
+		_registers.SP = 0xFFFE;
+
+		auto bootBios = provider::UtilitiesProvider::getInstance().executeBios;
+
+		if (!bootBios)
+		{
+			_mmu.disableBios();
+			_registers.AF.set(0x01B0);
+			_registers.BC.set(0x0013);
+			_registers.DE.set(0x00D8);
+			_registers.HL.set(0x014D);
+			_registers.PC = 0x100;
+		}
 	}
 
 	long Cpu::step()

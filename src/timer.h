@@ -12,8 +12,10 @@ namespace gasyboy
         InterruptManager &_interruptManager;
 
     public:
-        Timer(InterruptManager &interruptManager);
+        Timer();
         ~Timer() = default;
+
+        void reset();
 
         // Timer registers
         static uint8_t _div;

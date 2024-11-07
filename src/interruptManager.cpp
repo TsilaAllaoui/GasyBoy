@@ -1,10 +1,12 @@
+#include "registersProvider.h"
 #include "interruptManager.h"
+#include "mmuProvider.h"
 
 namespace gasyboy
 {
-    InterruptManager::InterruptManager(Mmu &mmu, Registers &registers)
-        : _mmu(mmu),
-          _registers(registers),
+    InterruptManager::InterruptManager()
+        : _mmu(provider::MmuProvider::getInstance()),
+          _registers(provider::RegistersProvider::getInstance()),
           _masterInterrupt(false)
     {
         _interruptAddressMap = {
@@ -63,5 +65,10 @@ namespace gasyboy
     void InterruptManager::setMasterInterrupt(const bool &value)
     {
         _masterInterrupt = value;
+    }
+
+    void InterruptManager::reset()
+    {
+        _masterInterrupt = false;
     }
 }

@@ -1,3 +1,5 @@
+#include "utilitiesProvider.h"
+#include "mmuProvider.h"
 #include "gbException.h"
 #include "registers.h"
 #include "logger.h"
@@ -5,8 +7,8 @@
 
 namespace gasyboy
 {
-    Registers::Registers(Mmu &mmu, const bool &bootBios)
-        : _mmu(mmu),
+    Registers::Registers()
+        : _mmu(provider::MmuProvider::getInstance()),
           AF(0),
           BC(0),
           DE(0),
@@ -15,7 +17,7 @@ namespace gasyboy
           SP(0),
           _interruptEnabled(false),
           _halted(false),
-          _executeBios(bootBios)
+          _executeBios(provider::UtilitiesProvider::getInstance().executeBios)
     {
         if (!_executeBios)
         {
