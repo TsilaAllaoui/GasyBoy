@@ -169,10 +169,12 @@ namespace gasyboy
             if (utilities.romFilePath.empty())
             {
                 _gameboyInstance = std::make_unique<GameBoy>(_tetrisBytes.data(), _tetrisBytes.size());
+                std::cout << "Creating emulator with two parameters...\n";
             }
             else
             {
                 _gameboyInstance = std::make_unique<GameBoy>();
+                std::cout << "Creating emulator without parameters...\n";
             }
         }
 

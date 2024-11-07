@@ -1,10 +1,4 @@
-#include "interruptManagerProvider.h"
-#include "utilitiesProvider.h"
-#include "gamepadProvider.h"
 #include "ImGuiFileDialog.h"
-#include "gameBoyProvider.h"
-#include "mmuProvider.h"
-#include "cpuProvider.h"
 #include "debugger.h"
 #include "gameboy.h"
 #include "gamepad.h"
@@ -12,10 +6,13 @@
 #include "mmu.h"
 #include <chrono>
 
+#include "interruptManagerProvider.h"
 #include "registersProvider.h"
 #include "utilitiesProvider.h"
+#include "gamepadProvider.h"
 #include "timerProvider.h"
 #include "mmuProvider.h"
+#include "cpuProvider.h"
 #include "ppuProvider.h"
 
 namespace gasyboy
