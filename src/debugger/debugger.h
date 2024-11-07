@@ -18,7 +18,7 @@ namespace gasyboy
     class Debugger
     {
     public:
-        Debugger(Mmu &_mmu, Registers &registers, Timer &timer, Ppu &ppu, SDL_Window *mainWindow, const bool &bootBios = true);
+        Debugger(SDL_Window *mainWindow);
         ~Debugger();
 
         void render();

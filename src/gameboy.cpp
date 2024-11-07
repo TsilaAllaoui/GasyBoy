@@ -2,6 +2,7 @@
 #include "utilitiesProvider.h"
 #include "registersProvider.h"
 #include "gamepadProvider.h"
+#include "timerProvider.h"
 #include "ppuProvider.h"
 #include "cpuProvider.h"
 #include "mmuProvider.h"
@@ -23,7 +24,7 @@ namespace gasyboy
           _registers(provider::RegistersProvider::getInstance()),
           _interruptManager(provider::InterruptManagerProvider::getInstance()),
           _cpu(provider::CpuProvider::getInstance()),
-          _timer(),
+          _timer(provider::TimerProvider::getInstance()),
           _cycleCounter(0),
           _ppu(provider::PpuProvider::getInstance())
     {
@@ -34,7 +35,7 @@ namespace gasyboy
 #ifndef __EMSCRIPTEN__
         if (_debugMode)
         {
-            _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _ppu, _renderer->_window);
+            _debugger = std::make_unique<Debugger>(_renderer->_window);
         }
 #endif
     }
@@ -46,16 +47,17 @@ namespace gasyboy
           _registers(provider::RegistersProvider::getInstance()),
           _interruptManager(provider::InterruptManagerProvider::getInstance()),
           _cpu(provider::CpuProvider::getInstance()),
-          _timer(),
+          _timer(provider::TimerProvider::getInstance()),
           _cycleCounter(0),
           _ppu(provider::PpuProvider::getInstance())
     {
         _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
         _renderer->init();
+
 #ifndef __EMSCRIPTEN__
         if (_debugMode)
         {
-            _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _ppu, _renderer->_window);
+            _debugger = std::make_unique<Debugger>(_renderer->_window);
         }
 #endif
     }
@@ -79,7 +81,7 @@ namespace gasyboy
     void GameBoy::setDebugMode(const bool &debugMode)
     {
         _debugMode = debugMode;
-        _debugger = std::make_unique<Debugger>(_mmu, _registers, _timer, _ppu, _renderer->_window);
+        _debugger = std::make_unique<Debugger>(_renderer->_window);
     }
 #endif
 

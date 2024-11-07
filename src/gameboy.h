@@ -23,12 +23,12 @@ namespace gasyboy
 {
     class GameBoy
     {
-        Mmu _mmu;
-        Cpu _cpu;
-        Timer _timer;
-        Gamepad _gamepad;
-        InterruptManager _interruptManager;
-        Ppu _ppu;
+        Mmu &_mmu;
+        Cpu &_cpu;
+        Timer &_timer;
+        Gamepad &_gamepad;
+        InterruptManager &_interruptManager;
+        Ppu &_ppu;
         std::unique_ptr<Renderer> _renderer;
 
         int _cycleCounter;
