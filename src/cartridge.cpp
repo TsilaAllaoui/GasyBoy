@@ -50,7 +50,7 @@ namespace gasyboy
 	void Cartridge::loadRomFromByteArray(const std::vector<uint8_t> &byteArray)
 	{
 		// Initialize ROM banks
-		_romBanksCount = static_cast<uint8_t>(std::max(2, static_cast<int>(byteArray.size() / 0x4000)));
+		_romBanksCount = static_cast<uint16_t>(std::max(2, static_cast<int>(byteArray.size() / 0x4000)));
 		_romBanks.resize(_romBanksCount, std::vector<uint8_t>(0x4000));
 
 		for (int i = 0; i < _romBanksCount; ++i)
@@ -174,7 +174,7 @@ namespace gasyboy
 			else
 			{
 				std::stringstream ss;
-				ss << "Read Warning: Invalid Rom bank acces: " << std::hex << (int)_currentRomBank << ", max Rom banks number is: " << std::hex << (int)_romBanksCount;
+				ss << "Read Warning: Invalid Rom bank access: " << std::hex << (int)_currentRomBank << ", max Rom banks number is: " << std::hex << (int)_romBanksCount;
 				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 				return _romBanks[_currentRomBank % _romBanksCount][addr - 0x4000]; // Wrap around rom banks if overflow
 			}
@@ -249,7 +249,7 @@ namespace gasyboy
 			else
 			{
 				std::stringstream ss;
-				ss << "Read Warning: Invalid Ram bank acces: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
+				ss << "Read Warning: Invalid Ram bank access: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
 				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 				return _ramBanks[_currentRamBank % _ramBanksCount][addr - 0xA000]; // Wrap around ram banks if overflow
 			}
@@ -268,7 +268,7 @@ namespace gasyboy
 			else
 			{
 				std::stringstream ss;
-				ss << "Write Warning: Invalid Ram bank acces: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
+				ss << "Write Warning: Invalid Ram bank access: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
 				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 				_ramBanks[_currentRamBank % _ramBanksCount][addr - 0xA000] = value; // Wrap around ram banks if overflow
 			}

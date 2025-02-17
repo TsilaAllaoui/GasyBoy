@@ -300,7 +300,10 @@ namespace gasyboy
 
                 // Render the pixel if it has higher priority or the background pixel is transparent
                 if (!rowPixels[x_temp] || !sprite.options.renderPriority)
-                    _framebuffer[pixelOffset] = sprite.colourPalette[colour];
+                    if (sprite.colourPalette && pixelOffset >= 0 && pixelOffset < SCREEN_WIDTH * SCREEN_HEIGHT)
+                    {
+                        _framebuffer[pixelOffset] = sprite.colourPalette[colour];
+                    }
             }
         }
     }

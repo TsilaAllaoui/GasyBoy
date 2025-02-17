@@ -81,7 +81,10 @@ namespace gasyboy
     void GameBoy::setDebugMode(const bool &debugMode)
     {
         _debugMode = debugMode;
-        _debugger = std::make_unique<Debugger>(_renderer->_window);
+        if (_debugMode)
+        {
+            _debugger = std::make_unique<Debugger>(_renderer->_window);
+        }
     }
 #endif
 
