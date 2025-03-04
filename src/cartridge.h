@@ -22,17 +22,27 @@ namespace gasyboy
         // RAM banks
         std::vector<std::vector<uint8_t>> _ramBanks;
 
+        // RTC banks
+        std::vector<std::vector<uint8_t>> _rtcBanks;
+
         // The current RAM Bank
         uint8_t _currentRamBank;
 
         // For checking if RAM is writable
         bool _isRamEnabled;
 
-        // RTC registers
-        uint8_t RTCS, RTCM, RTCH, RTCDL, RTCDH;
+        // For checking if RAM/RTC is writable (MBC3)
+        bool _isRamRtcEnabled;
 
-        // Current used RTC register mapped in 0xA000-0xBFFFF
-        uint8_t _currentRtcReg;
+        // RTC registers
+        uint8_t RTCS,
+            RTCM, RTCH, RTCDL, RTCDH;
+
+        // Current used RTC register
+        int _currentRtcReg;
+
+        // RTC latch state
+        uint8_t _rtcLatchState;
 
         // ROM/RAM Banking mode
         enum class BankingMode
@@ -373,6 +383,15 @@ namespace gasyboy
 
         // Reset
         void reset();
+    };
+
+    struct RtcState
+    {
+        uint8_t seconds; // 0-59
+        uint8_t minutes; // 0-59
+        uint8_t hours;   // 0-23
+        uint8_t dayLow;  // lower 8 bits of day counter
+        uint8_t dayHigh; // upper 1 bit of day counter + control flags (halt, day carry)
     };
 }
 
