@@ -13,12 +13,16 @@ namespace gasyboy
 		: _currentRomBank(1), // Default ROM bank starts at 1 (0 is always mapped)
 		  _currentRamBank(0),
 		  _isRamEnabled(false),
-		  _currentRtcReg(0),
+		  _isRamRtcEnabled(false),
+		  _currentRtcReg(-1),
+		  _rtcLatchState(0),
 		  _bankingMode(BankingMode::MODE_0),
 		  _romBanksCount(0),
 		  _ramBanksCount(0),
 		  _cartridgeType(CartridgeType::ROM_ONLY)
 	{
+		// TODO: add correct rtc bank size
+		_rtcBanks.resize(4, std::vector<uint8_t>(0x2000, 0));
 	}
 
 	void Cartridge::loadRom(const std::string &filename)
@@ -50,7 +54,7 @@ namespace gasyboy
 	void Cartridge::loadRomFromByteArray(const std::vector<uint8_t> &byteArray)
 	{
 		// Initialize ROM banks
-		_romBanksCount = static_cast<uint8_t>(std::max(2, static_cast<int>(byteArray.size() / 0x4000)));
+		_romBanksCount = static_cast<uint16_t>(std::max(2, static_cast<int>(byteArray.size() / 0x4000)));
 		_romBanks.resize(_romBanksCount, std::vector<uint8_t>(0x4000));
 
 		for (int i = 0; i < _romBanksCount; ++i)
@@ -174,7 +178,7 @@ namespace gasyboy
 			else
 			{
 				std::stringstream ss;
-				ss << "Read Warning: Invalid Rom bank acces: " << std::hex << (int)_currentRomBank << ", max Rom banks number is: " << std::hex << (int)_romBanksCount;
+				ss << "Read Warning: Invalid Rom bank access: " << std::hex << (int)_currentRomBank << ", max Rom banks number is: " << std::hex << (int)_romBanksCount;
 				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 				return _romBanks[_currentRomBank % _romBanksCount][addr - 0x4000]; // Wrap around rom banks if overflow
 			}
@@ -192,10 +196,10 @@ namespace gasyboy
 			_cartridgeType == CartridgeType::MBC1_RAM ||
 			_cartridgeType == CartridgeType::MBC1_RAM_BATT)
 		{
-			if (addr >= 0 && addr < 0x2000)
+			if (addr >= 0x0000 && addr < 0x2000)
 			{
-				// Enable/disable RAM writing
-				_isRamEnabled = (value & 0x0F) == 0x0A;
+				// Enable/disable external RAM writing.
+				_isRamEnabled = ((value & 0x0F) == 0x0A);
 			}
 			else if (addr >= 0x2000 && addr < 0x4000)
 			{
@@ -205,6 +209,7 @@ namespace gasyboy
 				{
 					_currentRomBank = 1;
 				}
+				// Optionally, you can include the bank adjustments as you had:
 				else if (_currentRomBank == 0x20)
 				{
 					_currentRomBank = 0x21;
@@ -220,6 +225,8 @@ namespace gasyboy
 			}
 			else if (addr >= 0x4000 && addr < 0x6000)
 			{
+				// Banking mode affects whether this register selects an additional ROM bank bit
+				// or selects the RAM bank number.
 				if (_bankingMode == BankingMode::MODE_1)
 				{
 					_currentRamBank = value & 0x03;
@@ -232,8 +239,99 @@ namespace gasyboy
 			}
 			else if (addr >= 0x6000 && addr < 0x8000)
 			{
-				// Set MBC1 mode
+				// Set banking mode (ROM/RAM banking)
 				_bankingMode = (value & 0x01) == 0 ? BankingMode::MODE_0 : BankingMode::MODE_1;
+			}
+		}
+
+		else if (_cartridgeType == CartridgeType::MBC3 ||
+				 _cartridgeType == CartridgeType::MBC3_RAM ||
+				 _cartridgeType == CartridgeType::MBC3_RAM_BATT ||
+				 _cartridgeType == CartridgeType::MBC3_TIMER_BATT ||
+				 _cartridgeType == CartridgeType::MBC3_TIMER_RAM_BATT)
+		{
+			if (addr >= 0x0000 && addr < 0x2000)
+			{
+				// Enable/disable external RAM and RTC registers.
+				// When value's lower nibble is 0x0A, they are enabled.
+				_isRamRtcEnabled = ((value & 0x0F) == 0x0A);
+			}
+			else if (addr >= 0x2000 && addr < 0x4000)
+			{
+				// Set ROM bank number (0x01 - 0x7F).
+				// Bank 0 is not allowed, so if zero is written, default to bank 1.
+				_currentRomBank = value & 0x7F;
+				if (_currentRomBank == 0)
+				{
+					_currentRomBank = 1;
+				}
+			}
+			else if (addr >= 0x4000 && addr < 0x6000)
+			{
+				// This address range is used for selecting either a RAM bank (0x00 - 0x03)
+				// or one of the RTC registers (0x08 - 0x0C).
+				if (value <= 0x03)
+				{
+					// Select RAM bank 0-3.
+					_currentRamBank = value;
+					_currentRtcReg = -1; // no RTC register is currently selected
+				}
+				else if (value >= 0x08 && value <= 0x0C)
+				{
+					// Select one of the RTC registers:
+					// 0x08: RTC Seconds
+					// 0x09: RTC Minutes
+					// 0x0A: RTC Hours
+					// 0x0B: RTC Lower 8 bits of Day Counter
+					// 0x0C: RTC Upper 1 bit of Day Counter and control flags
+					_currentRtcReg = value;
+				}
+			}
+			else if (addr >= 0x6000 && addr < 0x8000)
+			{
+				// Latch clock data:
+				// Writing 0x00 then 0x01 latches the current RTC values.
+				// (A proper implementation would compare transitions.)
+				if (value == 0x00)
+				{
+					_rtcLatchState = 0;
+				}
+				else if (value == 0x01 && _rtcLatchState == 0)
+				{
+					_rtcLatchState = 1;
+					// The following function should copy the current RTC counters
+					// into a latched copy that can be read without race conditions.
+					// LatchRtc();
+				}
+			}
+		}
+		else if (_cartridgeType == CartridgeType::MBC5 ||
+				 _cartridgeType == CartridgeType::MBC5_RAM ||
+				 _cartridgeType == CartridgeType::MBC5_RAM_BATT)
+		{
+			if (addr >= 0x0000 && addr < 0x2000)
+			{
+				// Enable/disable external RAM.
+				// Only enable if lower nibble is 0x0A.
+				_isRamEnabled = ((value & 0x0F) == 0x0A);
+			}
+			else if (addr >= 0x2000 && addr < 0x3000)
+			{
+				// Set lower 8 bits of the ROM bank number.
+				// Preserve the 9th bit (if already set).
+				_currentRomBank = (_currentRomBank & 0x100) | value;
+			}
+			else if (addr >= 0x3000 && addr < 0x4000)
+			{
+				// Set the 9th bit of the ROM bank number.
+				// Only the lowest bit of the value is used.
+				_currentRomBank = (_currentRomBank & 0xFF) | ((value & 0x01) << 8);
+			}
+			else if (addr >= 0x4000 && addr < 0x6000)
+			{
+				// Select external RAM bank.
+				// MBC5 can support up to 16 banks; mask to the lower 4 bits.
+				_currentRamBank = value & 0x0F;
 			}
 		}
 	}
@@ -244,12 +342,25 @@ namespace gasyboy
 		{
 			if (_currentRamBank < _ramBanksCount)
 			{
-				return _ramBanks[_currentRamBank][addr - 0xA000];
+				if (_cartridgeType == CartridgeType::MBC1 ||
+					_cartridgeType == CartridgeType::MBC1_RAM ||
+					_cartridgeType == CartridgeType::MBC1_RAM_BATT)
+				{
+					return _ramBanks[_currentRamBank][addr - 0xA000];
+				}
+				else if (_cartridgeType == CartridgeType::MBC3 ||
+						 _cartridgeType == CartridgeType::MBC3_RAM ||
+						 _cartridgeType == CartridgeType::MBC3_RAM_BATT ||
+						 _cartridgeType == CartridgeType::MBC3_TIMER_BATT ||
+						 _cartridgeType == CartridgeType::MBC3_TIMER_RAM_BATT)
+				{
+					return (_currentRtcReg < 0) ? _ramBanks[_currentRamBank][addr - 0xA000] : _rtcBanks[_currentRtcReg][addr - 0xA000];
+				}
 			}
 			else
 			{
 				std::stringstream ss;
-				ss << "Read Warning: Invalid Ram bank acces: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
+				ss << "Read Warning: Invalid Ram bank access: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
 				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 				return _ramBanks[_currentRamBank % _ramBanksCount][addr - 0xA000]; // Wrap around ram banks if overflow
 			}
@@ -268,7 +379,7 @@ namespace gasyboy
 			else
 			{
 				std::stringstream ss;
-				ss << "Write Warning: Invalid Ram bank acces: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
+				ss << "Write Warning: Invalid Ram bank access: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
 				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 				_ramBanks[_currentRamBank % _ramBanksCount][addr - 0xA000] = value; // Wrap around ram banks if overflow
 			}
@@ -389,7 +500,7 @@ namespace gasyboy
 		_currentRomBank = 1;
 		_currentRamBank = 0;
 		_isRamEnabled = false;
-		_currentRtcReg = 0;
+		_currentRtcReg = -1;
 		_bankingMode = BankingMode::MODE_0;
 		_romBanksCount = 0;
 		_ramBanksCount = 0;
