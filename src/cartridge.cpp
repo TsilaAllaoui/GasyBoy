@@ -356,6 +356,15 @@ namespace gasyboy
 				{
 					return (_currentRtcReg < 0) ? _ramBanks[_currentRamBank][addr - 0xA000] : _rtcBanks[_currentRtcReg][addr - 0xA000];
 				}
+				else if (_cartridgeType == CartridgeType::MBC5 ||
+					_cartridgeType == CartridgeType::MBC5_RAM ||
+					_cartridgeType == CartridgeType::MBC5_RAM_BATT ||
+					_cartridgeType == CartridgeType::MBC5_RUMBLE ||
+					_cartridgeType == CartridgeType::MBC5_RUMBLE_RAM ||
+					_cartridgeType == CartridgeType::MBC5_RUMBLE_RAM_BATT)
+				{
+					return _ramBanks[_currentRamBank][addr - 0xA000];
+				}
 			}
 			else
 			{
