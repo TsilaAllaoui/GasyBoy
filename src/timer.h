@@ -24,7 +24,7 @@ namespace gasyboy
         static uint8_t _tac;
 
         static int _divIncrementRate;
-        static uint16_t _timaIncrementRate;
+        static int _timaIncrementRate;
 
         static uint8_t DIV();
         static uint8_t TIMA();
