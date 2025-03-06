@@ -35,81 +35,81 @@ namespace gasyboy
 
         switch (_mode)
         {
-            case 2: // Mode 2: OAM search (80 T-cycles)
-                if (_modeClock >= 80)
+        case 2: // Mode 2: OAM search (80 T-cycles)
+            if (_modeClock >= 80)
+            {
+                _modeClock -= 80;
+                _mode = 3; // Transition to drawing mode.
+            }
+            break;
+
+        case 3: // Mode 3: Drawing (approx. 172 T-cycles)
+            if (_modeClock >= 172)
+            {
+                _modeClock -= 172;
+
+                // Render the current scanline.
+                // This could be implemented as calls to renderScanLineBackground(),
+                // renderScanLineWindow(), and renderScanLineSprites().
+                renderScanLines();
+
+                _mode = 0; // Enter H-Blank.
+
+                // Optionally, trigger H-Blank interrupt if enabled.
+                if (_lcdStat->hblankInterrupt)
                 {
-                    _modeClock -= 80;
-                    _mode = 3;  // Transition to drawing mode.
+                    _interruptManager.requestInterrupt(InterruptManager::InterruptType::LCDStat);
                 }
-                break;
+            }
+            break;
 
-            case 3: // Mode 3: Drawing (approx. 172 T-cycles)
-                if (_modeClock >= 172)
+        case 0: // Mode 0: H-Blank (remaining 204 T-cycles)
+            if (_modeClock >= 204)
+            {
+                _modeClock -= 204;
+                // End of the current scanline.
+                (*_scanline)++;
+
+                // Check for V-Blank start.
+                if (*_scanline >= 144)
                 {
-                    _modeClock -= 172;
-                    
-                    // Render the current scanline.
-                    // This could be implemented as calls to renderScanLineBackground(),
-                    // renderScanLineWindow(), and renderScanLineSprites().
-                    renderScanLines();
+                    _mode = 1; // Enter V-Blank.
 
-                    _mode = 0;  // Enter H-Blank.
-                    
-                    // Optionally, trigger H-Blank interrupt if enabled.
-                    if (_lcdStat->hblankInterrupt)
+                    // Request V-Blank interrupt.
+                    _interruptManager.requestInterrupt(InterruptManager::InterruptType::VBlank);
+                    // Also request LCD STAT interrupt if enabled for V-Blank.
+                    if (_lcdStat->vblankInterrupt)
                     {
                         _interruptManager.requestInterrupt(InterruptManager::InterruptType::LCDStat);
                     }
-                }
-                break;
 
-            case 0: // Mode 0: H-Blank (remaining 204 T-cycles)
-                if (_modeClock >= 204)
+                    _canRender = true;
+                }
+                else
                 {
-                    _modeClock -= 204;
-                    // End of the current scanline.
-                    (*_scanline)++;
-                    
-                    // Check for V-Blank start.
-                    if (*_scanline >= 144)
-                    {
-                        _mode = 1;  // Enter V-Blank.
-                        
-                        // Request V-Blank interrupt.
-                        _interruptManager.requestInterrupt(InterruptManager::InterruptType::VBlank);
-                        // Also request LCD STAT interrupt if enabled for V-Blank.
-                        if (_lcdStat->vblankInterrupt)
-                        {
-                            _interruptManager.requestInterrupt(InterruptManager::InterruptType::LCDStat);
-                        }
-                        
-                        _canRender = true;
-                    }
-                    else
-                    {
-                        _mode = 2;  // Next scanline: go back to Mode 2.
-                    }
-                    
-                    // Update the LY=LYC check.
-                    compareLyAndLyc();
+                    _mode = 2; // Next scanline: go back to Mode 2.
                 }
-                break;
 
-            case 1: // Mode 1: V-Blank (each scanline lasts 456 T-cycles)
-                if (_modeClock >= 456)
+                // Update the LY=LYC check.
+                compareLyAndLyc();
+            }
+            break;
+
+        case 1: // Mode 1: V-Blank (each scanline lasts 456 T-cycles)
+            if (_modeClock >= 456)
+            {
+                _modeClock -= 456;
+                (*_scanline)++;
+                compareLyAndLyc();
+
+                // After scanline 153, a new frame begins.
+                if (*_scanline > 153)
                 {
-                    _modeClock -= 456;
-                    (*_scanline)++;
-                    compareLyAndLyc();
-
-                    // After scanline 153, a new frame begins.
-                    if (*_scanline > 153)
-                    {
-                        *_scanline = 0;
-                        _mode = 2;  // Start at Mode 2 for the new frame.
-                    }
+                    *_scanline = 0;
+                    _mode = 2; // Start at Mode 2 for the new frame.
                 }
-                break;
+            }
+            break;
         }
 
         // Update the STAT register's mode field so that it reflects the current mode.

@@ -1,6 +1,11 @@
 #include <iostream>
 #include <bitset>
 #include <cmath>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <stdexcept>
+#include <algorithm>
 #include "cartridge.h"
 #include "logger.h"
 #include "utils.h"
@@ -53,19 +58,22 @@ namespace gasyboy
 
 	void Cartridge::loadRomFromByteArray(const std::vector<uint8_t> &byteArray)
 	{
-		// Initialize ROM banks
+		// Initialize ROM banks; each bank is 16KB (0x4000)
 		_romBanksCount = static_cast<uint16_t>(std::max(2, static_cast<int>(byteArray.size() / 0x4000)));
 		_romBanks.resize(_romBanksCount, std::vector<uint8_t>(0x4000));
 
-		for (int i = 0; i < _romBanksCount; ++i)
+		for (size_t i = 0; i < _romBanksCount; ++i)
 		{
-			std::copy(byteArray.begin() + i * 0x4000, byteArray.begin() + (i + 1) * 0x4000, _romBanks[i].begin());
+			// Ensure we don't read past byteArray end in case of an incomplete bank.
+			size_t start = i * 0x4000;
+			size_t end = std::min(start + 0x4000, byteArray.size());
+			std::copy(byteArray.begin() + start, byteArray.begin() + end, _romBanks[i].begin());
 		}
 
-		// Set cartridge type from the ROM header
+		// Set cartridge type from the ROM header (at 0x0147)
 		setMBCType(_romBanks[0][0x0147]);
 
-		// Set the number of ROM and RAM banks from the ROM header
+		// Set the number of ROM and RAM banks from the ROM header (0x0148 and 0x0149)
 		setRomBankNumber(_romBanks[0][0x0148]);
 		setRamBankNumber(_romBanks[0][0x0149]);
 
@@ -140,15 +148,25 @@ namespace gasyboy
 		case 0x00:
 			_ramBanksCount = 0;
 			break;
+		// MBC2 typically uses 512 x 4 bits, but here we set 1 bank for consistency if accessed
 		case 0x01:
+			_ramBanksCount = 1;
+			break;
+		// 0x02 typically means 8KB RAM (1 bank)
 		case 0x02:
 			_ramBanksCount = 1;
 			break;
+		// 0x03 means 32KB RAM (4 banks of 8KB each)
 		case 0x03:
 			_ramBanksCount = 4;
 			break;
+		// 0x04 means 128KB RAM (16 banks of 8KB each)
 		case 0x04:
 			_ramBanksCount = 16;
+			break;
+		// 0x05 means 64KB RAM (8 banks of 8KB each)
+		case 0x05:
+			_ramBanksCount = 8;
 			break;
 		default:
 			_ramBanksCount = 1;
@@ -178,7 +196,8 @@ namespace gasyboy
 			else
 			{
 				std::stringstream ss;
-				ss << "Read Warning: Invalid Rom bank access: " << std::hex << (int)_currentRomBank << ", max Rom banks number is: " << std::hex << (int)_romBanksCount;
+				ss << "Read Warning: Invalid Rom bank access: " << std::hex << (int)_currentRomBank
+				   << ", max Rom banks number is: " << std::hex << (int)_romBanksCount;
 				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 				return _romBanks[_currentRomBank % _romBanksCount][addr - 0x4000]; // Wrap around rom banks if overflow
 			}
@@ -209,7 +228,6 @@ namespace gasyboy
 				{
 					_currentRomBank = 1;
 				}
-				// Optionally, you can include the bank adjustments as you had:
 				else if (_currentRomBank == 0x20)
 				{
 					_currentRomBank = 0x21;
@@ -243,7 +261,6 @@ namespace gasyboy
 				_bankingMode = (value & 0x01) == 0 ? BankingMode::MODE_0 : BankingMode::MODE_1;
 			}
 		}
-
 		else if (_cartridgeType == CartridgeType::MBC3 ||
 				 _cartridgeType == CartridgeType::MBC3_RAM ||
 				 _cartridgeType == CartridgeType::MBC3_RAM_BATT ||
@@ -253,13 +270,11 @@ namespace gasyboy
 			if (addr >= 0x0000 && addr < 0x2000)
 			{
 				// Enable/disable external RAM and RTC registers.
-				// When value's lower nibble is 0x0A, they are enabled.
 				_isRamRtcEnabled = ((value & 0x0F) == 0x0A);
 			}
 			else if (addr >= 0x2000 && addr < 0x4000)
 			{
-				// Set ROM bank number (0x01 - 0x7F).
-				// Bank 0 is not allowed, so if zero is written, default to bank 1.
+				// Set ROM bank number (0x01 - 0x7F). Bank 0 is not allowed.
 				_currentRomBank = value & 0x7F;
 				if (_currentRomBank == 0)
 				{
@@ -268,30 +283,20 @@ namespace gasyboy
 			}
 			else if (addr >= 0x4000 && addr < 0x6000)
 			{
-				// This address range is used for selecting either a RAM bank (0x00 - 0x03)
-				// or one of the RTC registers (0x08 - 0x0C).
+				// Select RAM bank (0x00-0x03) or RTC register (0x08-0x0C)
 				if (value <= 0x03)
 				{
-					// Select RAM bank 0-3.
 					_currentRamBank = value;
-					_currentRtcReg = -1; // no RTC register is currently selected
+					_currentRtcReg = -1; // No RTC register selected
 				}
 				else if (value >= 0x08 && value <= 0x0C)
 				{
-					// Select one of the RTC registers:
-					// 0x08: RTC Seconds
-					// 0x09: RTC Minutes
-					// 0x0A: RTC Hours
-					// 0x0B: RTC Lower 8 bits of Day Counter
-					// 0x0C: RTC Upper 1 bit of Day Counter and control flags
 					_currentRtcReg = value;
 				}
 			}
 			else if (addr >= 0x6000 && addr < 0x8000)
 			{
-				// Latch clock data:
-				// Writing 0x00 then 0x01 latches the current RTC values.
-				// (A proper implementation would compare transitions.)
+				// Latch clock data: writing 0x00 then 0x01 latches the current RTC values.
 				if (value == 0x00)
 				{
 					_rtcLatchState = 0;
@@ -299,38 +304,36 @@ namespace gasyboy
 				else if (value == 0x01 && _rtcLatchState == 0)
 				{
 					_rtcLatchState = 1;
-					// The following function should copy the current RTC counters
-					// into a latched copy that can be read without race conditions.
+					// TODO: Implement LatchRtc() to safely latch RTC counters.
 					// LatchRtc();
 				}
 			}
 		}
 		else if (_cartridgeType == CartridgeType::MBC5 ||
 				 _cartridgeType == CartridgeType::MBC5_RAM ||
-				 _cartridgeType == CartridgeType::MBC5_RAM_BATT)
+				 _cartridgeType == CartridgeType::MBC5_RAM_BATT ||
+				 _cartridgeType == CartridgeType::MBC5_RUMBLE ||
+				 _cartridgeType == CartridgeType::MBC5_RUMBLE_RAM ||
+				 _cartridgeType == CartridgeType::MBC5_RUMBLE_RAM_BATT)
 		{
 			if (addr >= 0x0000 && addr < 0x2000)
 			{
 				// Enable/disable external RAM.
-				// Only enable if lower nibble is 0x0A.
 				_isRamEnabled = ((value & 0x0F) == 0x0A);
 			}
 			else if (addr >= 0x2000 && addr < 0x3000)
 			{
 				// Set lower 8 bits of the ROM bank number.
-				// Preserve the 9th bit (if already set).
 				_currentRomBank = (_currentRomBank & 0x100) | value;
 			}
 			else if (addr >= 0x3000 && addr < 0x4000)
 			{
 				// Set the 9th bit of the ROM bank number.
-				// Only the lowest bit of the value is used.
 				_currentRomBank = (_currentRomBank & 0xFF) | ((value & 0x01) << 8);
 			}
 			else if (addr >= 0x4000 && addr < 0x6000)
 			{
 				// Select external RAM bank.
-				// MBC5 can support up to 16 banks; mask to the lower 4 bits.
 				_currentRamBank = value & 0x0F;
 			}
 		}
@@ -354,14 +357,15 @@ namespace gasyboy
 						 _cartridgeType == CartridgeType::MBC3_TIMER_BATT ||
 						 _cartridgeType == CartridgeType::MBC3_TIMER_RAM_BATT)
 				{
-					return (_currentRtcReg < 0) ? _ramBanks[_currentRamBank][addr - 0xA000] : _rtcBanks[_currentRtcReg][addr - 0xA000];
+					return (_currentRtcReg < 0) ? _ramBanks[_currentRamBank][addr - 0xA000]
+												: _rtcBanks[_currentRtcReg][addr - 0xA000];
 				}
 				else if (_cartridgeType == CartridgeType::MBC5 ||
-					_cartridgeType == CartridgeType::MBC5_RAM ||
-					_cartridgeType == CartridgeType::MBC5_RAM_BATT ||
-					_cartridgeType == CartridgeType::MBC5_RUMBLE ||
-					_cartridgeType == CartridgeType::MBC5_RUMBLE_RAM ||
-					_cartridgeType == CartridgeType::MBC5_RUMBLE_RAM_BATT)
+						 _cartridgeType == CartridgeType::MBC5_RAM ||
+						 _cartridgeType == CartridgeType::MBC5_RAM_BATT ||
+						 _cartridgeType == CartridgeType::MBC5_RUMBLE ||
+						 _cartridgeType == CartridgeType::MBC5_RUMBLE_RAM ||
+						 _cartridgeType == CartridgeType::MBC5_RUMBLE_RAM_BATT)
 				{
 					return _ramBanks[_currentRamBank][addr - 0xA000];
 				}
@@ -369,7 +373,8 @@ namespace gasyboy
 			else
 			{
 				std::stringstream ss;
-				ss << "Read Warning: Invalid Ram bank access: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
+				ss << "Read Warning: Invalid Ram bank access: " << std::hex << (int)_currentRamBank
+				   << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
 				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 				return _ramBanks[_currentRamBank % _ramBanksCount][addr - 0xA000]; // Wrap around ram banks if overflow
 			}
@@ -388,7 +393,8 @@ namespace gasyboy
 			else
 			{
 				std::stringstream ss;
-				ss << "Write Warning: Invalid Ram bank access: " << std::hex << (int)_currentRamBank << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
+				ss << "Write Warning: Invalid Ram bank access: " << std::hex << (int)_currentRamBank
+				   << ", max Ram banks number is: " << std::hex << (int)_ramBanksCount;
 				utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, ss.str());
 				_ramBanks[_currentRamBank % _ramBanksCount][addr - 0xA000] = value; // Wrap around ram banks if overflow
 			}
@@ -519,25 +525,29 @@ namespace gasyboy
 
 	void Cartridge::getCartridgeHeaderInfos()
 	{
+		_cartridgeHeader.name.clear();
+		_cartridgeHeader.manufacturer.clear();
+
 		for (int i = 0x134; i < 0x143; i++)
 		{
-			uint8_t byte = static_cast<char>(_romBanks[0][i]);
+			char byte = static_cast<char>(_romBanks[0][i]);
 			if (byte != 0)
 			{
-				_cartridgeHeader.name += byte;
+				_cartridgeHeader.name.push_back(byte);
 			}
 
 			if (i >= 0x13F && i < 0x143 && byte != 0)
 			{
-				_cartridgeHeader.manufacturer += byte;
+				_cartridgeHeader.manufacturer.push_back(byte);
 			}
 		}
 
 		uint8_t cgbSupportByte = _romBanks[0][0x143];
 		_cartridgeHeader.cgbSupport =
-			cgbSupportByte == 0xC0 ? "Yes (No DMG support)" : (cgbSupportByte == 0x80 ? "Yes (DMG support)" : "No");
+			(cgbSupportByte == 0xC0) ? "Yes (No DMG support)" : (cgbSupportByte == 0x80) ? "Yes (DMG support)"
+																						 : "No";
 
-		_cartridgeHeader.sgbSupport = _romBanks[0][0x143] == 0x03 ? "Yes" : "No";
+		_cartridgeHeader.sgbSupport = (_romBanks[0][0x143] == 0x03) ? "Yes" : "No";
 
 		uint8_t oldLicenseeCodeByte = _romBanks[0][0x14B];
 		if (oldLicenseeCodeByte == 0x33)
@@ -547,18 +557,19 @@ namespace gasyboy
 			newLicenseeStr.push_back(static_cast<char>(_romBanks[0][0x145]));
 
 			auto code = newLicenseeCodes.find(newLicenseeStr);
-			_cartridgeHeader.licenseeCode = code == newLicenseeCodes.end() ? "Unknown" : code->second;
+			_cartridgeHeader.licenseeCode = (code == newLicenseeCodes.end()) ? "Unknown" : code->second;
 		}
 		else
 		{
 			auto code = oldLicenseeCodes.find(oldLicenseeCodeByte);
-			_cartridgeHeader.licenseeCode = code == oldLicenseeCodes.end() ? "Unknown" : code->second;
+			_cartridgeHeader.licenseeCode = (code == oldLicenseeCodes.end()) ? "Unknown" : code->second;
 		}
 
 		_cartridgeHeader.cartridgeType = cartridgeTypeStr(_romBanks[0][0x147]);
 		_cartridgeHeader.romSize = romSizeStr(_romBanks[0][0x148]);
 		_cartridgeHeader.ramSize = ramSizeStr(_romBanks[0][0x149]);
-		_cartridgeHeader.isJapaneseCartridge = (_romBanks[0][0x14A] & 0x1);
+		// Correct interpretation: a destination code of 0 means Japanese.
+		_cartridgeHeader.isJapaneseCartridge = (_romBanks[0][0x14A] == 0);
 		_cartridgeHeader.maskRomVersion = _romBanks[0][0x14C];
 	}
 
@@ -566,14 +577,14 @@ namespace gasyboy
 	{
 		std::stringstream cartridgeHeaderInfo;
 
-		cartridgeHeaderInfo << "ROM Name:        	 " << _cartridgeHeader.name << std::endl;
-		cartridgeHeaderInfo << "Manufacturer:    	 " << (_cartridgeHeader.manufacturer.empty() ? "N/A" : _cartridgeHeader.manufacturer) << std::endl;
-		cartridgeHeaderInfo << "CGB Support:      	 " << _cartridgeHeader.cgbSupport << std::endl;
-		cartridgeHeaderInfo << "SGB Support:      	 " << (_cartridgeHeader.sgbSupport ? "Yes" : "No") << std::endl;
-		cartridgeHeaderInfo << "Cartridge Type:  	 " << _cartridgeHeader.cartridgeType << std::endl;
-		cartridgeHeaderInfo << "Rom Size:        	 " << _cartridgeHeader.romSize << std::endl;
-		cartridgeHeaderInfo << "RAM Size:        	 " << _cartridgeHeader.ramSize << std::endl;
-		cartridgeHeaderInfo << "Japanese Cartridge:  " << (_cartridgeHeader.isJapaneseCartridge ? "No" : "Yes") << std::endl;
+		cartridgeHeaderInfo << "ROM Name:            " << _cartridgeHeader.name << std::endl;
+		cartridgeHeaderInfo << "Manufacturer:        " << (_cartridgeHeader.manufacturer.empty() ? "N/A" : _cartridgeHeader.manufacturer) << std::endl;
+		cartridgeHeaderInfo << "CGB Support:         " << _cartridgeHeader.cgbSupport << std::endl;
+		cartridgeHeaderInfo << "SGB Support:         " << _cartridgeHeader.sgbSupport << std::endl;
+		cartridgeHeaderInfo << "Cartridge Type:      " << _cartridgeHeader.cartridgeType << std::endl;
+		cartridgeHeaderInfo << "Rom Size:            " << _cartridgeHeader.romSize << std::endl;
+		cartridgeHeaderInfo << "RAM Size:            " << _cartridgeHeader.ramSize << std::endl;
+		cartridgeHeaderInfo << "Japanese Cartridge:  " << (_cartridgeHeader.isJapaneseCartridge ? "Yes" : "No") << std::endl;
 		cartridgeHeaderInfo << "Mask Rom Version:    " << std::hex << static_cast<int>(_cartridgeHeader.maskRomVersion) << std::endl;
 
 		utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "\n" + cartridgeHeaderInfo.str());
