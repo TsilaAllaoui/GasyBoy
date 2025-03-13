@@ -1,6 +1,6 @@
-@echo off
+#!/bin/bash
 
-:: Check if the "build_wasm" directory exists
+# Check if the "build_wasm" directory exists
 if not exist "build_wasm" (
     echo "Creating build_wasm directory..."
     mkdir build_wasm
@@ -16,13 +16,13 @@ emcmake cmake .. && cmake --build .
 
 echo "******************************"
 echo "Copying WASM file to docs directory"
-:: Ensure docs directory exists
+# Ensure docs directory exists
 if not exist "..\docs" (
     echo "Creating docs directory..."
     mkdir ..\docs
 )
 
-:: Copy WASM file
+# Copy WASM file
 echo "Copying WASM file..."
 copy /Y *.wasm ..\docs\
 
