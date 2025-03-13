@@ -110,7 +110,7 @@ namespace gasyboy
         // Disassembling rom
         // _disassemblerThread = std::thread([&]()
         //                                   { _disassembler.disassemble(); });
-        _disassembler.disassemble();
+        // _disassembler.disassemble();
     }
 
     Debugger::~Debugger()
@@ -427,72 +427,72 @@ namespace gasyboy
 
     void Debugger::renderMemoryViewerDebugScreen()
     {
-        // Set window position and size
-        ImGui::SetNextWindowPos(ImVec2(670, 495), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(670, 400), ImGuiCond_Always);
+        // // Set window position and size
+        // ImGui::SetNextWindowPos(ImVec2(670, 495), ImGuiCond_Always);
+        // ImGui::SetNextWindowSize(ImVec2(670, 400), ImGuiCond_Always);
 
-        // Create the window
-        ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        // // Create the window
+        // ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-        auto cartridge = _mmu.getCartridge();
+        // auto cartridge = _mmu.getCartridge();
 
-        auto romBanks = _mmu.getCartridge().getRomBanks();
+        // auto romBanks = _mmu.getCartridge().getRomBanks();
 
-        auto ramBanks = _mmu.getCartridge().getRamBanks();
+        // auto ramBanks = _mmu.getCartridge().getRamBanks();
 
-        // Start the tab bar
-        if (ImGui::BeginTabBar("##Memory"))
-        {
-            // Header
-            if (ImGui::BeginTabItem("Header"))
-            {
-                ImGui::Text("Cartridge Header");
-                ImGui::EndTabItem();
-            }
+        // // Start the tab bar
+        // if (ImGui::BeginTabBar("##Memory"))
+        // {
+        //     // Header
+        //     if (ImGui::BeginTabItem("Header"))
+        //     {
+        //         ImGui::Text("Cartridge Header");
+        //         ImGui::EndTabItem();
+        //     }
 
-            // ROM 0 [0 - 0x4000]
-            if (ImGui::BeginTabItem("ROM0"))
-            {
-                ImGui::Text("ROM [0x0 - 0x4000]");
-                showByteArray(romBanks.at(0));
-                ImGui::EndTabItem();
-            }
+        //     // ROM 0 [0 - 0x4000]
+        //     if (ImGui::BeginTabItem("ROM0"))
+        //     {
+        //         ImGui::Text("ROM [0x0 - 0x4000]");
+        //         showByteArray(romBanks.at(0));
+        //         ImGui::EndTabItem();
+        //     }
 
-            // ROM 1 [0x4000 - 0x8000]
-            if (ImGui::BeginTabItem("ROM1"))
-            {
-                ImGui::Text("ROM [0x4000 - 0x8000] (multiple banks)");
-                ImGui::SameLine();
-                ImGui::SetNextItemWidth(75);
-                showIntegerCombo(1, _mmu.getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
-                showByteArray(romBanks.at(_currentSelectedRomBank), 0x4000);
-                ImGui::EndTabItem();
-            }
+        //     // ROM 1 [0x4000 - 0x8000]
+        //     if (ImGui::BeginTabItem("ROM1"))
+        //     {
+        //         ImGui::Text("ROM [0x4000 - 0x8000] (multiple banks)");
+        //         ImGui::SameLine();
+        //         ImGui::SetNextItemWidth(75);
+        //         showIntegerCombo(1, _mmu.getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
+        //         showByteArray(romBanks.at(_currentSelectedRomBank), 0x4000);
+        //         ImGui::EndTabItem();
+        //     }
 
-            // Ext RAM
-            if (ImGui::BeginTabItem("Ext RAM"))
-            {
-                if (cartridge.getRamBanksNumber() == 0)
-                {
-                    ImGui::Text("No Ext RAM");
-                }
-                else
-                {
-                    ImGui::Text("Ext RAM");
-                    if (cartridge.getRamBanksNumber() > 2)
-                    {
-                        showIntegerCombo(0, cartridge.getRamBanksNumber() - 1, _currentSelectedRamBank);
-                    }
-                    showByteArray(ramBanks.at(_currentSelectedRamBank));
-                }
-                ImGui::EndTabItem();
-            }
+        //     // Ext RAM
+        //     if (ImGui::BeginTabItem("Ext RAM"))
+        //     {
+        //         if (cartridge.getRamBanksNumber() == 0)
+        //         {
+        //             ImGui::Text("No Ext RAM");
+        //         }
+        //         else
+        //         {
+        //             ImGui::Text("Ext RAM");
+        //             if (cartridge.getRamBanksNumber() > 2)
+        //             {
+        //                 showIntegerCombo(0, cartridge.getRamBanksNumber() - 1, _currentSelectedRamBank);
+        //             }
+        //             showByteArray(ramBanks.at(_currentSelectedRamBank));
+        //         }
+        //         ImGui::EndTabItem();
+        //     }
 
-            // End the tab bar
-            ImGui::EndTabBar();
-        }
+        //     // End the tab bar
+        //     ImGui::EndTabBar();
+        // }
 
-        ImGui::End();
+        // ImGui::End();
     }
 
     void Debugger::renderPreviewSprite()

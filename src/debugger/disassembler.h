@@ -30,7 +30,7 @@ namespace gasyboy
 
     class Disassembler
     {
-        std::vector<std::vector<uint8_t>> _romBanks;
+        std::vector<uint8_t> _rom;
         // Opcodes tables
         std::vector<Opcode> cbOpcodeTable;
         std::vector<Opcode> opcodeTable;

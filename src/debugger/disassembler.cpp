@@ -10,6 +10,7 @@ namespace gasyboy
 {
     Disassembler::Disassembler()
     {
+        _rom = provider::MmuProvider::getInstance().getCartridge().getRom();
 
         opcodeTable = {
             {1, 0x00, "NOP"},
@@ -531,35 +532,24 @@ namespace gasyboy
         };
 
         auto &cartridge = provider::MmuProvider::getInstance().getCartridge();
-        _romBanks = cartridge.getRomBanks();
+        _rom = cartridge.getRom();
     }
 
     void Disassembler::disassemble()
     {
-        // Iterate over each bank
-        for (size_t bankIndex = 0; bankIndex < _romBanks.size(); ++bankIndex)
+        uint16_t pc = 0;
+        while (pc < _rom.size())
         {
-            // Iterate through each byte in the bank
-            const auto &bank = _romBanks[bankIndex];
-            uint16_t pc = 0;
-            while (pc < bank.size())
+            uint8_t byte = _rom[pc];
+            if (byte == 0xCB)
             {
-                uint8_t byte = bank[pc];
-                if (byte == 0xCB)
+                uint8_t cbByte = _rom[pc + 1];
+                if (cbByte < cbOpcodeTable.size())
                 {
-                    Opcode opcode = cbOpcodeTable[byte];
-                    opcode.operands.emplace_back(bank[pc + 1]);
-                    opcode.operands.emplace_back(bank[pc + 2]);
-                    auto opcodeLine = OpcodeLine(pc, opcode);
-                    disassembledRom.emplace_back(opcodeLine);
-                    pc += 2;
-                }
-                else if (byte < opcodeTable.size())
-                {
-                    Opcode opcode = opcodeTable[byte];
+                    Opcode opcode = cbOpcodeTable[cbByte];
                     for (int i = 1; i < opcode.numberOfBytes; i++)
                     {
-                        opcode.operands.emplace_back(bank[pc + i]);
+                        opcode.operands.emplace_back(_rom[pc + i]);
                     }
                     auto opcodeLine = OpcodeLine(pc, opcode);
                     disassembledRom.emplace_back(opcodeLine);
@@ -567,11 +557,29 @@ namespace gasyboy
                 }
                 else
                 {
-                    Opcode opcode = {1, byte, "UNKNOWN", {}};
+                    Opcode opcode = {2, cbByte, "UNKNOWN", {_rom[pc + 1]}};
                     auto opcodeLine = OpcodeLine(pc, opcode);
                     disassembledRom.emplace_back(opcodeLine);
-                    pc += 1;
+                    pc += 2;
                 }
+            }
+            else if (byte < opcodeTable.size())
+            {
+                Opcode opcode = opcodeTable[byte];
+                for (int i = 1; i < opcode.numberOfBytes; i++)
+                {
+                    opcode.operands.emplace_back(_rom[pc + i]);
+                }
+                auto opcodeLine = OpcodeLine(pc, opcode);
+                disassembledRom.emplace_back(opcodeLine);
+                pc += static_cast<uint16_t>(opcode.numberOfBytes);
+            }
+            else
+            {
+                Opcode opcode = {1, byte, "UNKNOWN", {}};
+                auto opcodeLine = OpcodeLine(pc, opcode);
+                disassembledRom.emplace_back(opcodeLine);
+                pc += 1;
             }
         }
     }
