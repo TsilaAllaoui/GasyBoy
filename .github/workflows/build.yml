@@ -3,33 +3,68 @@ name: Build and Deploy WASM
 on:
   push:
     branches:
-      - master
+      - master  # Trigger on the master branch
   pull_request:
     branches:
-      - master
+      - master  # Trigger on pull requests to the master branch
   release:
     types: [created]
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
   build_wasm:
-    runs-on: ubuntu-latest  # Run only on Ubuntu to simplify
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]  # Support Linux and Windows
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Install Emscripten (Linux/macOS)
+      - name: Set up Emscripten (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: nektos/act@v2 # Emscripten GitHub Action
+        with:
+          emsdk_version: 'latest'  # Use latest version of Emscripten
+
+      # Install Emscripten (Windows)
+      - name: Set up Emscripten (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install emscripten
+
+      # Run build script based on OS
       - name: Run build_wasm.sh (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           chmod +x tools/scripts/linux/build_wasm.sh
           tools/scripts/linux/build_wasm.sh
 
-      # Ensure docs directory exists
-      - name: Ensure /docs exists
+      - name: Run build_wasm.bat (Windows)
+        if: runner.os == 'Windows'
+        run: tools/scripts/windows/build_wasm.bat
+        shell: cmd
+
+      # Ensure /docs directory exists
+      - name: Ensure /docs exists (Linux/macOS)
+        if: runner.os != 'Windows'
         run: mkdir -p docs
 
-      # Move only gasyboy.wasm to /docs
-      - name: Copy gasyboy.wasm to /docs
+      - name: Ensure /docs exists (Windows)
+        if: runner.os == 'Windows'
+        run: if not exist docs mkdir docs
+
+      # Copy gasyboy.wasm to /docs
+      - name: Copy gasyboy.wasm to /docs (Linux/macOS)
+        if: runner.os != 'Windows'
         run: cp build_wasm/gasyboy.wasm docs/
+
+      - name: Copy gasyboy.wasm to /docs (Windows)
+        if: runner.os == 'Windows'
+        run: copy build_wasm\gasyboy.wasm docs\
 
       # Commit and push gasyboy.wasm to the repo
       - name: Commit and push gasyboy.wasm
@@ -37,5 +72,5 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add docs/gasyboy.wasm
-          git commit -m "Update gasyboy.wasm from pipeline" || echo "No changes to commit"
-          git push origin master
+          git commit -m "Update gasyboy.wasm" || echo "No changes to commit"
+          git push origin master  # Push to master branch
