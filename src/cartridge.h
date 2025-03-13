@@ -6,6 +6,7 @@
 #include <cstring>
 #include <vector>
 #include <cmath>
+#include <mbc.h>
 #include <map>
 
 namespace gasyboy
@@ -13,42 +14,14 @@ namespace gasyboy
     class Cartridge
     {
     private:
-        // ROM memory
-        std::vector<std::vector<uint8_t>> _romBanks;
+        // MBC
+        std::unique_ptr<IMBC> _mbc;
 
-        // The current ROM bank
-        uint8_t _currentRomBank;
+        // Rom
+        std::vector<uint8_t> _rom;
 
-        // RAM banks
-        std::vector<std::vector<uint8_t>> _ramBanks;
-
-        // The current RAM Bank
-        uint8_t _currentRamBank;
-
-        // For checking if RAM is writable
-        bool _isRamEnabled;
-
-        // RTC registers
-        uint8_t RTCS, RTCM, RTCH, RTCDL, RTCDH;
-
-        // Current used RTC register mapped in 0xA000-0xBFFFF
-        uint8_t _currentRtcReg;
-
-        // ROM/RAM Banking mode
-        enum class BankingMode
-        {
-            MODE_0,
-            MODE_1
-        };
-
-        // MBC mode
-        BankingMode _bankingMode;
-
-        // Number of banks of the ROM
-        uint16_t _romBanksCount;
-
-        // Number of banks of the ext RAM
-        uint8_t _ramBanksCount;
+        // Ram
+        std::vector<uint8_t> _ram;
 
     public:
         // Constructor/destructor
@@ -317,6 +290,7 @@ namespace gasyboy
 
         // Cartridge header informations
         CartridgeHeader _cartridgeHeader;
+
         // Cartridge type
         CartridgeType _cartridgeType;
 
@@ -327,34 +301,27 @@ namespace gasyboy
         void loadRom(uint8_t size, uint8_t *mem);
 
         // Set MBC type
-        void setMBCType(const uint8_t &value);
+        void setMBC(const uint8_t &value);
 
-        // Get/Set rom banks number
-        void setRomBankNumber(const uint8_t &value);
-        uint16_t getRomBanksNumber();
+        // ROM/RAM reading from MBC
+        uint8_t mbcRomRead(const uint16_t &adrr);
+        uint8_t mbcRamRead(const uint16_t &adrr);
 
-        // Get/Set rom banks number
-        void setRamBankNumber(const uint8_t &value);
-        uint8_t getRamBanksNumber();
-
-        // ROM Bank reading
-        uint8_t romBankRead(const uint16_t &adrr);
-
-        // RAM Bank reading
-        uint8_t ramBankRead(const uint16_t &adrr);
-
-        // To handle all bank changes
+        // ROM/RAM writing from MBC
         void mbcRomWrite(const uint16_t &adrr, const uint8_t &value);
         void mbcRamWrite(const uint16_t &adrr, const uint8_t &value);
 
-        // To load rom from byte array
-        void loadRomFromByteArray(const std::vector<uint8_t> &byteArray);
+        // Set ROM
+        void setRom(const std::vector<uint8_t> &rom);
 
-        // Get rom content
-        std::vector<std::vector<uint8_t>> getRomBanks();
+        // Set RAM
+        void setRam(const std::vector<uint8_t> &ram);
 
-        // Get ram content
-        std::vector<std::vector<uint8_t>> getRamBanks();
+        // Get ROM
+        const std::vector<uint8_t> &getRom();
+
+        // Get RAM
+        const std::vector<uint8_t> &getRam();
 
         // Get cartridge header infos
         void getCartridgeHeaderInfos();
@@ -373,6 +340,9 @@ namespace gasyboy
 
         // Reset
         void reset();
+
+        // Getting RAM banks count
+        int getRamBanksCount();
     };
 }
 

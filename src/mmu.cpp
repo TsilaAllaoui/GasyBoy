@@ -24,13 +24,8 @@ namespace gasyboy
         // loading rom file
         try
         {
-            std::vector<uint8_t> byteList(romSize, 0);
-            for (auto i = 0; i < romSize; i++)
-            {
-                byteList[i] = bytes[i];
-            }
-
-            _cartridge.loadRomFromByteArray(byteList);
+            std::vector<uint8_t> byteList(bytes, bytes + romSize);
+            _cartridge.setRom(byteList);
             utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
                                               "Rom file : \"" +
                                                   _romFilePath + "\" loaded successfully");
@@ -151,12 +146,12 @@ namespace gasyboy
 
                 // return ROM content otherwise
                 else
-                    return _cartridge.romBankRead(address);
+                    return _cartridge.mbcRomRead(address);
             }
 
             // for reading ROM
             else if (address >= 0x100 && address < 0x8000)
-                return _cartridge.romBankRead(address);
+                return _cartridge.mbcRomRead(address);
 
             // fro reading vram
             else if (address >= 0x8000 && address < 0xA000)
@@ -164,7 +159,7 @@ namespace gasyboy
 
             // for reading _extRam
             else if (address >= 0xA000 && address < 0xC000)
-                return _cartridge.ramBankRead(address);
+                return _cartridge.mbcRamRead(address);
 
             // for reading high RAM
             else if (address >= 0xC000 && address < 0xFF00)
