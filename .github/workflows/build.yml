@@ -1,0 +1,41 @@
+name: Build and Deploy WASM
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  release:
+    types: [created]
+
+jobs:
+  build_wasm:
+    runs-on: ubuntu-latest  # Run only on Ubuntu to simplify
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run build_wasm.sh (Linux/macOS)
+        run: |
+          chmod +x tools/scripts/linux/build_wasm.sh
+          tools/scripts/linux/build_wasm.sh
+
+      # Ensure docs directory exists
+      - name: Ensure /docs exists
+        run: mkdir -p docs
+
+      # Move only gasyboy.wasm to /docs
+      - name: Copy gasyboy.wasm to /docs
+        run: cp build_wasm/gasyboy.wasm docs/
+
+      # Commit and push gasyboy.wasm to the repo
+      - name: Commit and push gasyboy.wasm
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add docs/gasyboy.wasm
+          git commit -m "Update gasyboy.wasm from pipeline" || echo "No changes to commit"
+          git push origin main

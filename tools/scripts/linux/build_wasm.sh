@@ -8,3 +8,9 @@ fi
 cd build_wasm
 emcmake cmake ..
 cmake --build .
+
+# Ensure docs directory exists
+mkdir -p ../docs
+
+# Copy WASM to docs
+cp *.wasm ../docs/ 2>/dev/null || echo "No WASM-related files found."
