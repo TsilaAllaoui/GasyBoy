@@ -1,34 +1,41 @@
-name: Build and Deploy WASM
+name: Build with Emscripten
 
 on:
   push:
     branches:
-      - main
+      - master  # Trigger on the master branch
   pull_request:
     branches:
-      - main
-  release:
-    types: [created]
+      - master  # Trigger on pull requests to the master branch
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  build_wasm:
-    runs-on: ubuntu-latest  # Run only on Ubuntu to simplify
+  build:
+    runs-on: ubuntu-latest  # Run on Linux (Ubuntu)
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Checkout the repository
 
-      - name: Run build_wasm.sh (Linux/macOS)
+      # Set up Emscripten using emsdk
+      - name: Set up Emscripten
+        uses: mymindstorm/setup-emsdk@v14  # Set up Emscripten SDK
+
+      # Verify Emscripten installation
+      - name: Verify Emscripten
+        run: emcc -v  # Verify that emcc is working
+
+      # Run the build script for WASM (or your other build steps)
+      - name: Run build_wasm.sh (Linux)
         run: |
           chmod +x tools/scripts/linux/build_wasm.sh
           tools/scripts/linux/build_wasm.sh
 
-      # Ensure docs directory exists
-      - name: Ensure /docs exists
+      # Ensure /docs directory exists and copy gasyboy.wasm
+      - name: Ensure /docs exists (Linux)
         run: mkdir -p docs
 
-      # Move only gasyboy.wasm to /docs
-      - name: Copy gasyboy.wasm to /docs
+      - name: Copy gasyboy.wasm to /docs (Linux)
         run: cp build_wasm/gasyboy.wasm docs/
 
       # Commit and push gasyboy.wasm to the repo
@@ -37,5 +44,5 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add docs/gasyboy.wasm
-          git commit -m "Update gasyboy.wasm from pipeline" || echo "No changes to commit"
-          git push origin main
+          git commit -m "Update gasyboy.wasm" || echo "No changes to commit"
+          git push origin master  # Push to master branch
