@@ -254,7 +254,6 @@ namespace gasyboy
 	{
 		_rom.clear();
 		_ram.clear();
-		_mbc.reset();
 		_cartridgeType = CartridgeType::ROM_ONLY;
 		_cartridgeHeader = CartridgeHeader();
 	}
