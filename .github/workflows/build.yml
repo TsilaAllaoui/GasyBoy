@@ -13,58 +13,31 @@ on:
 
 jobs:
   build_wasm:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]  # Support Linux and Windows
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest  # Run only on Linux (Ubuntu)
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Install Emscripten (Linux/macOS)
-      - name: Set up Emscripten (Linux/macOS)
-        if: runner.os != 'Windows'
-        uses: nektos/act@v2 # Emscripten GitHub Action
+      # Set up Emscripten
+      - name: Set up Emscripten
+        uses: lovasoa/setup-emscripten@master
         with:
-          emsdk_version: 'latest'  # Use latest version of Emscripten
+          emscripten-version: '1.38.47'  # Specify the version of Emscripten to use
 
-      # Install Emscripten (Windows)
-      - name: Set up Emscripten (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install emscripten
-
-      # Run build script based on OS
-      - name: Run build_wasm.sh (Linux/macOS)
-        if: runner.os != 'Windows'
+      # Run the build script
+      - name: Run build_wasm.sh (Linux)
         run: |
           chmod +x tools/scripts/linux/build_wasm.sh
           tools/scripts/linux/build_wasm.sh
 
-      - name: Run build_wasm.bat (Windows)
-        if: runner.os == 'Windows'
-        run: tools/scripts/windows/build_wasm.bat
-        shell: cmd
-
       # Ensure /docs directory exists
-      - name: Ensure /docs exists (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Ensure /docs exists (Linux)
         run: mkdir -p docs
 
-      - name: Ensure /docs exists (Windows)
-        if: runner.os == 'Windows'
-        run: if not exist docs mkdir docs
-
       # Copy gasyboy.wasm to /docs
-      - name: Copy gasyboy.wasm to /docs (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Copy gasyboy.wasm to /docs (Linux)
         run: cp build_wasm/gasyboy.wasm docs/
-
-      - name: Copy gasyboy.wasm to /docs (Windows)
-        if: runner.os == 'Windows'
-        run: copy build_wasm\gasyboy.wasm docs\
 
       # Commit and push gasyboy.wasm to the repo
       - name: Commit and push gasyboy.wasm
