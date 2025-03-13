@@ -1,4 +1,4 @@
-name: Build and Deploy WASM
+name: Build with Emscripten
 
 on:
   push:
@@ -7,41 +7,34 @@ on:
   pull_request:
     branches:
       - master  # Trigger on pull requests to the master branch
-  release:
-    types: [created]
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  build_wasm:
-    runs-on: ubuntu-latest  # Run only on Linux (Ubuntu)
+  build:
+    runs-on: ubuntu-latest  # Run on Linux (Ubuntu)
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Checkout the repository
 
-      # Install Python 3.12
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-
-      # Set up Emscripten
+      # Set up Emscripten using emsdk
       - name: Set up Emscripten
-        uses: lovasoa/setup-emscripten@master
-        with:
-          emscripten-version: '1.38.47'  # Specify the version of Emscripten to use
+        uses: mymindstorm/setup-emsdk@v14  # Set up Emscripten SDK
 
-      # Run the build script
+      # Verify Emscripten installation
+      - name: Verify Emscripten
+        run: emcc -v  # Verify that emcc is working
+
+      # Run the build script for WASM (or your other build steps)
       - name: Run build_wasm.sh (Linux)
         run: |
           chmod +x tools/scripts/linux/build_wasm.sh
           tools/scripts/linux/build_wasm.sh
 
-      # Ensure /docs directory exists
+      # Ensure /docs directory exists and copy gasyboy.wasm
       - name: Ensure /docs exists (Linux)
         run: mkdir -p docs
 
-      # Copy gasyboy.wasm to /docs
       - name: Copy gasyboy.wasm to /docs (Linux)
         run: cp build_wasm/gasyboy.wasm docs/
 
