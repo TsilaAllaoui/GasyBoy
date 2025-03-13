@@ -10,7 +10,7 @@ namespace gasyboy
 	uint8_t Timer::_tac = 0;
 
 	int Timer::_divIncrementRate = 255;
-	uint16_t Timer::_timaIncrementRate = 1024;
+	int Timer::_timaIncrementRate = 1024;
 
 	Timer::Timer()
 		: _interruptManager(provider::InterruptManagerProvider::getInstance())
@@ -96,10 +96,12 @@ namespace gasyboy
 			_timaIncrementRate -= cycle;
 			if (_timaIncrementRate <= 0)
 			{
+				updateTAC(_tac);
 				_tima++;
 				if (_tima > 0xFF)
 				{
 					_tima = _tma;
+					provider::InterruptManagerProvider::getInstance().requestInterrupt(InterruptManager::InterruptType::Timer);
 				}
 			}
 		}

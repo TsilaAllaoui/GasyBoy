@@ -344,6 +344,15 @@ namespace gasyboy
         // Getting RAM banks count
         int getRamBanksCount();
     };
+
+    struct RtcState
+    {
+        uint8_t seconds; // 0-59
+        uint8_t minutes; // 0-59
+        uint8_t hours;   // 0-23
+        uint8_t dayLow;  // lower 8 bits of day counter
+        uint8_t dayHigh; // upper 1 bit of day counter + control flags (halt, day carry)
+    };
 }
 
 #endif
