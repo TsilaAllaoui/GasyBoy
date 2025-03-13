@@ -50,9 +50,22 @@ namespace gasyboy
 		logCartridgeHeaderInfos();
 	}
 
-	void Cartridge::loadRom(uint8_t size, uint8_t *mem)
+	void Cartridge::loadRomFromByteArray(const size_t &size, uint8_t *mem)
 	{
+		// Setting up ROM
 		_rom = std::vector<uint8_t>(mem, mem + size);
+
+		// Setting up RAM
+		_ram = std::vector<uint8_t>(getRamBanksCount() * 0x2000, 0);
+
+		// Setting up MBC
+		setMBC(_rom[0x147]);
+
+		// Get cartridge header infos
+		getCartridgeHeaderInfos();
+
+		// Log cartridge informations
+		logCartridgeHeaderInfos();
 	}
 
 	const std::vector<uint8_t> &Cartridge::getRom()

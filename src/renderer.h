@@ -1,4 +1,4 @@
-#ifdef __EMSCRIPTEN__
+#ifdef EMSCRIPTEN
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
 #else

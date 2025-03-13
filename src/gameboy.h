@@ -1,7 +1,7 @@
 #ifndef _GAMEBOY_H_
 #define _GAMEBOY_H_
 
-#ifdef __EMSCRIPTEN__
+#ifdef EMSCRIPTEN
 #include <SDL2/SDL.h>
 #else
 #include "SDL.h"
@@ -35,7 +35,7 @@ namespace gasyboy
 
         SDL_Window *_window;
         SDL_Rect _tile_map_pos, _bg_map_pos;
-#ifndef __EMSCRIPTEN__
+#ifndef EMSCRIPTEN
         std::unique_ptr<Debugger> _debugger;
 #endif
         bool _debugMode;
@@ -56,7 +56,7 @@ namespace gasyboy
         // Stop the emulator
         void stop();
 
-#ifndef __EMSCRIPTEN__
+#ifndef EMSCRIPTEN
         // Set debug mode
         void setDebugMode(const bool &debugMode);
 #endif

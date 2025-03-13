@@ -17,7 +17,7 @@ namespace gasyboy
     class MBC0 : public IMBC
     {
     public:
-        std::vector<uint8_t> &_rom;
+        std::vector<uint8_t> _rom;
 
         MBC0(std::vector<uint8_t> rom);
         virtual uint8_t readByte(const uint16_t &address) override;

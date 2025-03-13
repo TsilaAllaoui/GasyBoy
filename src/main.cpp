@@ -17,7 +17,7 @@
 #include "cpuProvider.h"
 #include "ppuProvider.h"
 
-#ifdef __EMSCRIPTEN__
+#ifdef EMSCRIPTEN
 #include <emscripten.h>
 
 void main_loop()
@@ -62,13 +62,14 @@ int main()
 
 int main(int argc, char **argv)
 {
-    gasyboy::provider::UtilitiesProvider::getInstance().executeBios = false;
+    gasyboy::provider::UtilitiesProvider::getInstance().executeBios = true;
+    gasyboy::provider::UtilitiesProvider::getInstance().romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Pokemon Gold Version.gb"; // POKEMON_SILVER.gb"; // Legend of Zelda, The - Link's Awakening (USA) (Rev-B).gb"; // POKEMON_SILVER.gb";
     auto &gb = gasyboy::GameBoyProvider::getInstance();
 
     // Boot default rom
     if (argc == 1)
     {
-        gb.setDebugMode(true);
+        gb.setDebugMode(false);
         gb.boot();
     }
 

@@ -3,8 +3,9 @@
 namespace gasyboy
 {
 
-    MBC0::MBC0(std::vector<uint8_t> _rom) : _rom(_rom)
+    MBC0::MBC0(std::vector<uint8_t> rom) : _rom(rom)
     {
+        int a = 0;
     }
 
     uint8_t MBC0::readByte(const uint16_t &address)

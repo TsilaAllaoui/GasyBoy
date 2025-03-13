@@ -298,7 +298,7 @@ namespace gasyboy
         void loadRom(const std::string &filename);
 
         // For debugging
-        void loadRom(uint8_t size, uint8_t *mem);
+        void loadRomFromByteArray(const size_t &size, uint8_t *mem);
 
         // Set MBC type
         void setMBC(const uint8_t &value);

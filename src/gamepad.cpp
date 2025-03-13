@@ -1,9 +1,10 @@
 #include "gamepad.h"
 #include "defs.h"
-#ifdef __EMSCRIPTEN__
+// #include "SDL.h"
+#include <SDL2/SDL.h>
+#ifdef EMSCRIPTEN
 #include <SDL2/SDL.h>
 #else
-#include "SDL.h"
 #endif
 
 namespace gasyboy
