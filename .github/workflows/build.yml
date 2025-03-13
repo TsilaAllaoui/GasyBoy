@@ -1,4 +1,4 @@
-name: Build with Emscripten
+name: Build with Emscripten and SDL
 
 on:
   push:
@@ -27,6 +27,21 @@ jobs:
       # Verify Emscripten installation
       - name: Verify Emscripten
         run: emcc -v  # Verify that emcc is working
+
+      # Set up SDL
+      - name: Set up SDL
+        uses: libsdl-org/setup-sdl@main
+        id: sdl
+        with:
+          install-linux-dependencies: true
+          version: 2-latest
+          version-sdl-image: 2-latest
+
+      # Configure and build your project
+      - name: Configure and build your project
+        run: |
+          cmake -S . -B build
+          cmake --build build --verbose
 
       # Run the build script for WASM (or your other build steps)
       - name: Run build_wasm.sh (Linux)
