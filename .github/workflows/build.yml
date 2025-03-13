@@ -3,10 +3,10 @@ name: Build and Deploy WASM
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
   release:
     types: [created]
 
@@ -38,4 +38,4 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git add docs/gasyboy.wasm
           git commit -m "Update gasyboy.wasm from pipeline" || echo "No changes to commit"
-          git push origin main
+          git push origin master
