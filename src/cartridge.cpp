@@ -14,8 +14,6 @@ namespace gasyboy
 	Cartridge::Cartridge()
 		: _cartridgeType(CartridgeType::ROM_ONLY)
 	{
-		// TODO: add correct rtc bank size
-		_rtcBanks.resize(4, std::vector<uint8_t>(0x2000, 0));
 	}
 
 	void Cartridge::loadRom(const std::string &filename)
