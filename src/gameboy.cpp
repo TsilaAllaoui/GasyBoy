@@ -9,7 +9,7 @@
 #include "gbException.h"
 #include "gameboy.h"
 #include "logger.h"
-#ifndef __EMSCRIPTEN__
+#ifndef EMSCRIPTEN
 #include "imgui_impl_sdl2.h"
 #endif
 
@@ -32,7 +32,7 @@ namespace gasyboy
         _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
         _renderer->init();
 
-#ifndef __EMSCRIPTEN__
+#ifndef EMSCRIPTEN
         if (_debugMode)
         {
             _debugger = std::make_unique<Debugger>(_renderer->_window);
@@ -54,7 +54,7 @@ namespace gasyboy
         _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
         _renderer->init();
 
-#ifndef __EMSCRIPTEN__
+#ifndef EMSCRIPTEN
         if (_debugMode)
         {
             _debugger = std::make_unique<Debugger>(_renderer->_window);
@@ -77,7 +77,7 @@ namespace gasyboy
         state = State::STOPPED;
     }
 
-#ifndef __EMSCRIPTEN__
+#ifndef EMSCRIPTEN
     void GameBoy::setDebugMode(const bool &debugMode)
     {
         _debugMode = debugMode;
@@ -95,7 +95,7 @@ namespace gasyboy
         {
             while (running)
             {
-#ifndef __EMSCRIPTEN__
+#ifndef EMSCRIPTEN
                 if (_debugMode)
                 {
                     _debugger->render();

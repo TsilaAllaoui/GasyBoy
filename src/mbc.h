@@ -11,13 +11,13 @@ namespace gasyboy
     public:
         virtual uint8_t readByte(const uint16_t &address) = 0;
         virtual void writeByte(const uint16_t &address, const uint8_t &value) = 0;
-        ~IMBC() = default;
+        virtual ~IMBC() = default;
     };
 
     class MBC0 : public IMBC
     {
     public:
-        std::vector<uint8_t> &_rom;
+        std::vector<uint8_t> _rom;
 
         MBC0(std::vector<uint8_t> rom);
         virtual uint8_t readByte(const uint16_t &address) override;

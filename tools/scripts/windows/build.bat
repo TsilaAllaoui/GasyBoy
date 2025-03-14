@@ -1,10 +1,18 @@
 @echo off
 
-:: Check if the "build_wasm" directory exists
+:: Check if the "build" directory exists
 if not exist "build" (
-    mkdir build
+    echo "Creating build directory..."
+    mkdir build_wasm
 )
 
+echo "******************************"
+echo "Entering build folder"
 cd build
-emcmake cmake ..
-cmake --build .
+
+echo "******************************"
+echo "Generating build files and Building project"
+cmake .. && cmake --build .
+
+echo "******************************"
+echo "Build and copy process completed."

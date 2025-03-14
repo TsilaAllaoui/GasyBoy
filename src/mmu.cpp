@@ -24,8 +24,7 @@ namespace gasyboy
         // loading rom file
         try
         {
-            std::vector<uint8_t> byteList(bytes, bytes + romSize);
-            _cartridge.setRom(byteList);
+            _cartridge.loadRomFromByteArray(romSize, const_cast<uint8_t *>(bytes));
             utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
                                               "Rom file : \"" +
                                                   _romFilePath + "\" loaded successfully");
@@ -87,6 +86,7 @@ namespace gasyboy
         _currModifiedTile = -1;
         _dmaRegionWritten = false;
         _romFilePath = provider::UtilitiesProvider::getInstance().romFilePath;
+        _executeBios = provider::UtilitiesProvider::getInstance().executeBios;
         _cartridge.reset();
 
         if (!_executeBios)
