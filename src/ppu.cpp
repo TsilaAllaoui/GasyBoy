@@ -105,8 +105,23 @@ namespace gasyboy
     void Ppu::renderScanLines()
     {
         bool rowPixels[160] = {0};
-        renderScanLineBackground(rowPixels);
-        renderScanLineWindow();
+
+        // Check if the Background Enable bit (LCDC.0) is set
+        if (_control->bgDisplay)
+        {
+            renderScanLineBackground(rowPixels);
+            renderScanLineWindow();
+        }
+        else
+        {
+            // If background is disabled, fill the row with white pixels
+            int pixelOffset = *_scanline * SCREEN_WIDTH;
+            for (int i = 0; i < SCREEN_WIDTH; ++i)
+            {
+                _framebuffer[pixelOffset + i] = _mmu.palette_BGP[0]; // Color 0 (usually white)
+            }
+        }
+
         renderScanLineSprites(rowPixels);
     }
 
