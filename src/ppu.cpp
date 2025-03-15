@@ -187,20 +187,29 @@ namespace gasyboy
     void Ppu::renderScanLineSprites(bool *rowPixels)
     {
         int sprite_height = _control->spriteSize ? 16 : 8;
-        // Process per pixel for correct sprite priority and transparency.
-        for (int x = 0; x < SCREEN_WIDTH; x++)
+        int spritesRendered = 0;
+
+        for (int i = 0; i < 40; i++)
         {
-            for (int i = 0; i < 40; i++)
+            auto &sprite = _mmu.sprites[i];
+
+            // Check if the sprite is on the current scanline
+            if ((*_scanline < sprite.y) || (*_scanline >= sprite.y + sprite_height))
+                continue;
+
+            // Limit the number of sprites per scanline to 10
+            if (spritesRendered >= 10)
+                break;
+
+            for (int x = 0; x < 8; x++)
             {
-                auto &sprite = _mmu.sprites[i];
-                if ((*_scanline < sprite.y) || (*_scanline >= sprite.y + sprite_height))
-                    continue;
-                if (x < sprite.x || x >= sprite.x + 8)
+                int pixelX = sprite.x + x;
+                if (pixelX < 0 || pixelX >= SCREEN_WIDTH)
                     continue;
 
-                int spriteX = x - sprite.x;
+                int spriteX = x;
                 if (sprite.options.xFlip)
-                    spriteX = 7 - spriteX;
+                    spriteX = 7 - x;
                 int spriteY = *_scanline - sprite.y;
                 if (sprite.options.yFlip)
                     spriteY = sprite_height - 1 - spriteY;
@@ -214,16 +223,17 @@ namespace gasyboy
 
                 if (colour == 0)
                     continue;
-                if (sprite.options.renderPriority && rowPixels[x])
+                if (sprite.options.renderPriority && rowPixels[pixelX])
                     continue;
 
-                int pixelOffset = *_scanline * SCREEN_WIDTH + x;
+                int pixelOffset = *_scanline * SCREEN_WIDTH + pixelX;
                 if (sprite.colourPalette && pixelOffset >= 0 && pixelOffset < SCREEN_WIDTH * SCREEN_HEIGHT)
                 {
                     _framebuffer[pixelOffset] = sprite.colourPalette[colour];
                 }
-                break;
             }
+
+            spritesRendered++;
         }
     }
 
