@@ -48,13 +48,8 @@ namespace gasyboy
                 0x34, 0x20, 0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE,
                 0x3E, 0x01, 0xE0, 0x50};
 
-        // memory region of the gaameboy
-        std::vector<uint8_t> _vRam;
-        std::vector<uint8_t> _extRam;
-        std::vector<uint8_t> _workingRam;
-
-        // boolean to check if executing from BIOS
-        bool _executeBios;
+        // boolean to check if reading from BIOS
+        bool _biosEnabled;
 
         // context of the gamepad
         Gamepad &_gamepad;
@@ -62,35 +57,9 @@ namespace gasyboy
         // the actual cartridge
         Cartridge _cartridge;
 
-        // to check if vram is written
-        bool _vramWritten;
-
-        // for storing the modified tiles
-        std::vector<int> _modifiedTiles;
-
-        // rom file path
-        std::string _romFilePath;
-
     public:
-        // debug mode for tests
-        struct mem_access
-        {
-            int type;
-            uint16_t addr;
-            uint8_t val;
-        };
-        int *_num_mem_accesses;
-        struct mem_access *_mem_accesses;
-
-        uint8_t *_mem;
-        uint8_t _memSize;
-
-        // the current modified tile
-        int _currModifiedTile;
-
-        bool _dmaRegionWritten;
-
-        bool _oamDataIn;
+        // memory region of the gaameboy
+        std::vector<uint8_t> _memory;
 
         // construcor/destructor
         Mmu();
@@ -99,9 +68,6 @@ namespace gasyboy
 
         // Reset MMU
         void reset();
-
-        // Set file path to be loaded in cartrdige class
-        void setRomFile(const std::string &file);
 
         // reading/writing into memory
         uint8_t readRam(const uint16_t &adrr);
@@ -117,32 +83,8 @@ namespace gasyboy
         std::vector<uint8_t> getVram();
         uint8_t getPaletteColor(const uint8_t &index);
 
-        // directly set value in memory region
-        void directSet(const uint16_t &adrr, const uint8_t &value);
-
-        // DMA Transfert routine
-        void doDmaTransfert(const uint8_t &value);
-
-        // getting immediate 16bits in low endianess
-        uint16_t getNext2Bytes(const uint16_t &adress);
-
-        // get if vram is writen
-        bool isVramWritten();
-
-        // set vramWritten status
-        void setVramWriteStatus(const bool &value);
-
-        // unset dma written
-        void unsetDMAWritten();
-
-        // Get cartridge title
-        std::string getCartridgeTitle();
-
         // Get rom from cartridge
         Cartridge &getCartridge();
-
-        // Get address of i-th element in ram
-        void *ramCellptr(const uint16_t &pos);
 
         // Usefull structs
         struct Sprite

@@ -2336,7 +2336,7 @@ namespace gasyboy
 	{
 		if (state == State::RUNNING || state == State::STEPPING)
 		{
-			if (_mmu.readRam(0xFF50) == 0x1 && _mmu.isInBios())
+			if (_mmu.isInBios() && _mmu.readRam(0xFF50) == 0x1)
 				_mmu.disableBios();
 
 			if (!_registers.getHalted())

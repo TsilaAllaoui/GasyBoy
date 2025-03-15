@@ -11,11 +11,11 @@ namespace gasyboy
           _interruptManager(provider::InterruptManagerProvider::getInstance())
 
     {
-        _control = (Control *)_mmu.ramCellptr(0xff40);
-        _lcdStat = (Stat *)_mmu.ramCellptr(0xff41);
-        _scrollY = (uint8_t *)_mmu.ramCellptr(0xff42);
-        _scrollX = (uint8_t *)_mmu.ramCellptr(0xff43);
-        _scanline = (uint8_t *)_mmu.ramCellptr(0xff44);
+        _control = (Control *)&_mmu._memory[0xff40];
+        _lcdStat = (Stat *)&_mmu._memory[0xff41];
+        _scrollY = &_mmu._memory[0xff42];
+        _scrollX = &_mmu._memory[0xff43];
+        _scanline = &_mmu._memory[0xff44];
     }
 
     void Ppu::step(const int &cycle)
@@ -310,10 +310,11 @@ namespace gasyboy
 
     void Ppu::reset()
     {
-        _control = (Control *)_mmu.ramCellptr(0xff40);
-        _lcdStat = (Stat *)_mmu.ramCellptr(0xff41);
-        _scrollY = (uint8_t *)_mmu.ramCellptr(0xff42);
-        _scrollX = (uint8_t *)_mmu.ramCellptr(0xff43);
-        _scanline = (uint8_t *)_mmu.ramCellptr(0xff44);
+        _control = (Control *)&_mmu._memory[0xff40];
+        _lcdStat = (Stat *)&_mmu._memory[0xff41];
+        _scrollY = &_mmu._memory[0xff42];
+        _scrollX = &_mmu._memory[0xff43];
+        _scanline = &_mmu._memory[0xff44];
     }
+
 }
