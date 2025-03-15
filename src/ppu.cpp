@@ -112,17 +112,11 @@ namespace gasyboy
             renderScanLineBackground(rowPixels);
             renderScanLineWindow();
         }
-        else
-        {
-            // If background is disabled, fill the row with white pixels
-            int pixelOffset = *_scanline * SCREEN_WIDTH;
-            for (int i = 0; i < SCREEN_WIDTH; ++i)
-            {
-                _framebuffer[pixelOffset + i] = _mmu.palette_BGP[0]; // Color 0 (usually white)
-            }
-        }
 
-        renderScanLineSprites(rowPixels);
+        if (_control->spriteDisplayEnable)
+        {
+            renderScanLineSprites(rowPixels);
+        }
     }
 
     void Ppu::renderScanLineBackground(bool *rowPixels)
