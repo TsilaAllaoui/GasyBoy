@@ -135,12 +135,13 @@ namespace gasyboy
         if (address == 0xff0f)
             return _memory[0xFF0F];
 
-        if (address < 0x100 && !_biosEnabled)
-            return _cartridge.mbcRomRead(address);
-
         // Switchable ROM banks
         if (address < 0x8000)
+        {
+            if (address < 0x100 && _biosEnabled)
+                return _bios[address];
             return _cartridge.mbcRomRead(address);
+        }
 
         // Switchable RAM banks
         if (address >= 0xA000 && address <= 0xBFFF)
