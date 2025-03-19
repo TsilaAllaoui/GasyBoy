@@ -761,7 +761,7 @@ namespace gasyboy
             {
                 ImGui::Text("Control Register");
 
-                uint8_t *controlByte = reinterpret_cast<uint8_t *>(_ppu._control);
+                uint8_t *controlByte = reinterpret_cast<uint8_t *>(_ppu.LCDC);
 
                 _lcdEnable = (*controlByte & (1 << 7)) == 1;
                 ImGui::Checkbox("LCD Enable", &_lcdEnable);

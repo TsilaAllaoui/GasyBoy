@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Check if the "build_wasm" directory exists
-if [ ! -d "build_wasm" ]; then
-    echo "Creating build_wasm directory..."
-    mkdir build_wasm
+# Check if the "build" directory exists
+if [ ! -d "build" ]; then
+    echo "Creating build directory..."
+    mkdir build
 fi
 
 echo "******************************"
 echo "Entering build folder"
-cd build_wasm
+cd build
 
 echo "******************************"
 echo "Generating build files and Building project"
