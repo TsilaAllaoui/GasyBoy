@@ -139,7 +139,7 @@ namespace gasyboy
         for (uint16_t i = 0; i <= 1023; i++)
         {
             uint16_t tile = _mmu.readRam(0x9800 + i);
-            if (!_ppu._control->bgWindowDataSelect && tile < 128)
+            if (!_ppu.LCDC->bgWindowDataSelect && tile < 128)
                 tile += 256;
 
             for (int y = 0; y < 8; y++)
@@ -161,7 +161,7 @@ namespace gasyboy
         {
             if (!sprite.ready)
                 continue;
-            for (int tile_num = 0; tile_num < 1 + int(_ppu._control->spriteSize); tile_num++)
+            for (int tile_num = 0; tile_num < 1 + int(_ppu.LCDC->spriteSize); tile_num++)
             {
                 int y_pos = sprite.y + tile_num * 8;
                 // Iterate over both tiles
@@ -172,7 +172,7 @@ namespace gasyboy
                         uint8_t xF = sprite.options.xFlip ? static_cast<uint8_t>(7 - x) : x;
                         uint8_t yF = sprite.options.yFlip ? static_cast<uint8_t>(7 - y) : y;
 
-                        int tile = sprite.tile & (_ppu._control->spriteSize ? 0xFE : 0xFF);
+                        int tile = sprite.tile & (_ppu.LCDC->spriteSize ? 0xFE : 0xFF);
                         uint8_t colour_n = _mmu.tiles[tile + tile_num].pixels[yF][xF];
 
                         if (!colour_n)
@@ -226,16 +226,16 @@ namespace gasyboy
 
     void DebugRenderer::drawBackgroundOverflow()
     {
-        int overflowX = std::max(*_ppu._scrollX + _viewportWidth - backgroundWidth, 0);
-        int overflowY = std::max(*_ppu._scrollY + _viewportHeight - backgroundHeight, 0);
+        int overflowX = std::max(*_ppu.SCX + _viewportWidth - backgroundWidth, 0);
+        int overflowY = std::max(*_ppu.SCY + _viewportHeight - backgroundHeight, 0);
 
-        drawRectangle(background_rect.x + *_ppu._scrollX, _viewportHeight + *_ppu._scrollY, _viewportWidth - overflowX, _viewportHeight, {255, 255, 255, 100});
+        drawRectangle(background_rect.x + *_ppu.SCX, _viewportHeight + *_ppu.SCY, _viewportWidth - overflowX, _viewportHeight, {255, 255, 255, 100});
 
         if (overflowX)
-            drawRectangle(background_rect.x, _viewportHeight + *_ppu._scrollY, overflowX, _viewportHeight, {255, 255, 255, 100});
+            drawRectangle(background_rect.x, _viewportHeight + *_ppu.SCY, overflowX, _viewportHeight, {255, 255, 255, 100});
 
         if (overflowY)
-            drawRectangle(background_rect.x + *_ppu._scrollX, _viewportHeight, _viewportWidth - overflowX, overflowY, {255, 255, 255, 100});
+            drawRectangle(background_rect.x + *_ppu.SCX, _viewportHeight, _viewportWidth - overflowX, overflowY, {255, 255, 255, 100});
 
         if (overflowX && overflowY)
             drawRectangle(background_rect.x, _viewportHeight, overflowX, overflowY, {255, 255, 255, 100});
@@ -264,7 +264,7 @@ namespace gasyboy
             }
         };
 
-        if (_ppu._control->spriteSize)
+        if (_ppu.LCDC->spriteSize)
         {
             for (int i = 0, row = 0; i < 20; i++)
             {
