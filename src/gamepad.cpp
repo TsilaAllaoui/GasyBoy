@@ -34,18 +34,18 @@ namespace gasyboy
             {
                 exit(ExitState::MANUAL_STOP);
             }
-            // else if (event.type == SDL_DROPFILE)
-            // {
-            //     char *droppedFile = event.drop.file;
-            //     if (droppedFile)
-            //     {
-            //         std::string filePath(droppedFile);
-            //         provider::UtilitiesProvider::getInstance().romFilePath = filePath;
-            //         provider::GameBoyProvider::deleteInstance();
-            //         // provider::GameBoyProvider::getInstance().reset();
-            //         SDL_free(droppedFile);
-            //     }
-            // }
+            else if (event.type == SDL_DROPFILE)
+            {
+                // Resetting gambeoy instance and loading new ROM
+                char *droppedFile = event.drop.file;
+                if (droppedFile)
+                {
+                    std::string filePath(droppedFile);
+                    gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
+                    gasyboy::provider::UtilitiesProvider::getInstance()->wasReset = true;
+                    SDL_free(droppedFile);
+                }
+            }
             else if (event.type == SDL_KEYDOWN)
             {
                 switch (event.key.keysym.sym)

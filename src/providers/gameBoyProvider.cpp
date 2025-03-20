@@ -166,16 +166,16 @@ namespace gasyboy
         std::shared_ptr<GameBoy> GameBoyProvider::getInstance()
         {
             auto utilities = provider::UtilitiesProvider::getInstance();
-            if (!_gameboyInstance || utilities->wasReset)
+            if (!_gameboyInstance)
             {
                 if (utilities->romFilePath.empty())
                 {
-                    _gameboyInstance = std::make_shared<GameBoy>(_tetrisBytes.data(), _tetrisBytes.size(), utilities->wasReset);
+                    _gameboyInstance = std::make_shared<GameBoy>(_tetrisBytes.data(), _tetrisBytes.size());
                     std::cout << "Creating emulator with two parameters...\n";
                 }
                 else
                 {
-                    _gameboyInstance = std::make_shared<GameBoy>(utilities->wasReset);
+                    _gameboyInstance = std::make_shared<GameBoy>();
                     std::cout << "Creating emulator without parameters...\n";
                 }
             }

@@ -42,8 +42,8 @@ namespace gasyboy
         bool _debugMode;
 
     public:
-        GameBoy(const bool &wasReset = false);
-        GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &wasReset = false);
+        GameBoy();
+        GameBoy(const uint8_t *bytes, const size_t &romSize);
         ~GameBoy() = default;
 
         // Start the emulator
