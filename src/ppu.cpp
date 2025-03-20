@@ -208,18 +208,16 @@ namespace gasyboy
 
     void Ppu::renderScanLineWindow()
     {
-
-        uint8_t windowY = _mmu->readRam(0xFF4A);
-        if (windowY > *LY)
+        if (*WY > *LY || *WX > 160 || *WX <= 0)
             return;
 
         uint16_t address = 0x9800;
         if (LCDC->windowDisplaySelect)
             address += 0x400;
-        uint8_t windowX = _mmu->readRam(0xFF4B) - 7;
-        int y = (*LY - windowY) & 7;
+        *WX = -7;
+        int y = (*LY - *WY) & 7;
         int pixelOffset = *LY * SCREEN_WIDTH;
-        address += ((*LY - windowY) / 8) * 32;
+        address += ((*LY - *WY) / 8) * 32;
 
         for (uint16_t tileX = 0; tileX < 21; tileX++)
         {
@@ -230,7 +228,7 @@ namespace gasyboy
 
             for (int x = 0; x < 8; x++)
             {
-                int windowPixelX = windowX + tileX * 8 + x;
+                int windowPixelX = *WX + tileX * 8 + x;
                 if (windowPixelX < 0 || windowPixelX >= SCREEN_WIDTH)
                     continue;
                 int colour = _mmu->tiles[tile].pixels[y][x];
