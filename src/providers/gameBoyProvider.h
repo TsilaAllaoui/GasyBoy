@@ -8,23 +8,27 @@
 
 namespace gasyboy
 {
-    class GameBoyProvider
+    namespace provider
     {
-        static std::unique_ptr<GameBoy> _gameboyInstance;
+        class GameBoyProvider
+        {
+            static std::shared_ptr<GameBoy> _gameboyInstance;
 
-        static std::vector<uint8_t> _tetrisBytes;
+            static std::vector<uint8_t> _tetrisBytes;
 
-    public:
-        GameBoyProvider() = default;
-        ~GameBoyProvider() = default;
+        public:
+            GameBoyProvider() = default;
+            ~GameBoyProvider() = default;
 
-        static GameBoy &getInstance();
+            static std::shared_ptr<GameBoy> getInstance();
 
-        static void deleteInstance();
+            static void deleteInstance();
 
-        GameBoyProvider(const GameBoyProvider &) = delete;
-        GameBoyProvider operator=(const GameBoyProvider &) = delete;
-    };
+            GameBoyProvider(const GameBoyProvider &) = delete;
+            GameBoyProvider operator=(const GameBoyProvider &) = delete;
+            void reset();
+        };
+    }
 }
 
 #endif

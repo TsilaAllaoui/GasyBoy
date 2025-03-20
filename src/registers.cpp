@@ -17,7 +17,7 @@ namespace gasyboy
           SP(0),
           _interruptEnabled(false),
           _halted(false),
-          _executeBios(provider::UtilitiesProvider::getInstance().executeBios)
+          _executeBios(provider::UtilitiesProvider::getInstance()->executeBios)
     {
         if (!_executeBios)
         {
@@ -35,6 +35,21 @@ namespace gasyboy
                 {"HL", HL},
             };
         }
+    }
+
+    Registers &Registers::operator=(const Registers &other)
+    {
+        AF = other.AF;
+        BC = other.BC;
+        DE = other.DE;
+        HL = other.HL;
+        PC = other.PC;
+        SP = other.SP;
+        _interruptEnabled = other._interruptEnabled;
+        _halted = other._halted;
+        _executeBios = other._executeBios;
+        _registersMap = other._registersMap;
+        return *this;
     }
 
     void Registers::reset()
@@ -180,9 +195,9 @@ namespace gasyboy
         uint8_t secondByte = static_cast<uint8_t>(address & 0xFF);
 
         SP--;
-        _mmu.writeRam(SP, firstByte);
+        _mmu->writeRam(SP, firstByte);
         SP--;
-        _mmu.writeRam(SP, secondByte);
+        _mmu->writeRam(SP, secondByte);
     }
 
     void Registers::setInterruptEnabled(const bool &value)

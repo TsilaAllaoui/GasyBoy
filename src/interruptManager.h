@@ -10,11 +10,12 @@ namespace gasyboy
     class InterruptManager
     {
         bool _masterInterrupt;
-        Mmu &_mmu;
-        Registers &_registers;
+        std::shared_ptr<Mmu> _mmu;
+        std::shared_ptr<Registers> _registers;
 
     public:
         InterruptManager();
+        InterruptManager &operator=(const InterruptManager &);
         ~InterruptManager() = default;
 
         enum class InterruptType

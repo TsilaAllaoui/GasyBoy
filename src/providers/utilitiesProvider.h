@@ -12,6 +12,7 @@ namespace gasyboy
         bool executeBios;
         std::string romFilePath;
         bool debugMode;
+        bool wasReset;
     };
 
     namespace provider
@@ -19,7 +20,7 @@ namespace gasyboy
         class UtilitiesProvider
         {
         private:
-            static std::unique_ptr<Utilities> _utilitiesInstance;
+            static std::shared_ptr<Utilities> _utilitiesInstance;
 
             UtilitiesProvider() = default;
 
@@ -29,7 +30,7 @@ namespace gasyboy
             UtilitiesProvider(const UtilitiesProvider &) = delete;
             UtilitiesProvider &operator=(const UtilitiesProvider &) = delete;
 
-            static Utilities &getInstance();
+            static std::shared_ptr<Utilities> getInstance();
 
             static void deleteInstance();
         };

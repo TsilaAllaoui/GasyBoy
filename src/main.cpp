@@ -22,7 +22,7 @@
 
 void main_loop()
 {
-    gasyboy::GameBoyProvider::getInstance().loop();
+    gasyboy::provider::GameBoyProvider::getInstance()->loop();
 }
 
 extern "C"
@@ -31,14 +31,14 @@ extern "C"
     {
         emscripten_cancel_main_loop();
 
-        gasyboy::provider::UtilitiesProvider::getInstance().romFilePath = filePath;
-        gasyboy::provider::GamepadProvider::getInstance().reset();
-        gasyboy::provider::MmuProvider::getInstance().reset();
-        gasyboy::provider::RegistersProvider::getInstance().reset();
-        gasyboy::provider::InterruptManagerProvider::getInstance().reset();
-        gasyboy::provider::CpuProvider::getInstance().reset();
-        gasyboy::provider::TimerProvider::getInstance().reset();
-        gasyboy::provider::PpuProvider::getInstance().reset();
+        gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
+        gasyboy::provider::GamepadProvider::getInstance()->reset();
+        gasyboy::provider::MmuProvider::getInstance()->reset();
+        gasyboy::provider::RegistersProvider::getInstance()->reset();
+        gasyboy::provider::InterruptManagerProvider::getInstance()->reset();
+        gasyboy::provider::CpuProvider::getInstance()->reset();
+        gasyboy::provider::TimerProvider::getInstance()->reset();
+        gasyboy::provider::PpuProvider::getInstance()->reset();
 
         emscripten_set_main_loop(main_loop, 0, true);
         return 1;
@@ -46,7 +46,7 @@ extern "C"
 
     EMSCRIPTEN_KEEPALIVE int toggle_bios(const bool value)
     {
-        gasyboy::provider::UtilitiesProvider::getInstance().executeBios = value;
+        gasyboy::provider::UtilitiesProvider::getInstance()->executeBios = value;
         std::cout << (value ? "Boot bios enabled\n" : "Boot bios disabled\n");
         return 1;
     }
@@ -62,15 +62,23 @@ int main()
 
 int main(int argc, char **argv)
 {
-    gasyboy::provider::UtilitiesProvider::getInstance().executeBios = true;
-    gasyboy::provider::UtilitiesProvider::getInstance().romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Pokemon Gold Version.gb"; // POKEMON_SILVER.gb"; // Legend of Zelda, The - Link's Awakening (USA) (Rev-B).gb"; // POKEMON_SILVER.gb";
-    auto &gb = gasyboy::GameBoyProvider::getInstance();
+    gasyboy::provider::UtilitiesProvider::getInstance()->executeBios = true;
+    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Tetris (USA) (Rev-A).gb";
+    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/POKEMON_SILVER.gb";
+    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Pokemon Gold Version.gb";
+    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Legend of Zelda, The - Link's Awakening (USA) (Rev-B).gb";
+    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Super Mario Land 2 - 6 Golden Coins (USA) (Rev-B).gb";
+    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Super Mario Land 3 - Wario Land (USA).gb";
+    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/dmg-acid2.gb";
+    gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/gb-test-roms-master/window_y_trigger.gb";
+
+    auto &gb = gasyboy::provider::GameBoyProvider::getInstance();
 
     // Boot default rom
     if (argc == 1)
     {
-        gb.setDebugMode(false);
-        gb.boot();
+        gb->setDebugMode(false);
+        gb->boot();
     }
 
     argparse::ArgumentParser program("gasyboy");
@@ -94,19 +102,19 @@ int main(int argc, char **argv)
     try
     {
         program.parse_args(argc, argv);
-        gasyboy::provider::UtilitiesProvider::getInstance().romFilePath = std::filesystem::path(program.get<std::string>("--rom")).make_preferred().string();
-        gasyboy::provider::UtilitiesProvider::getInstance().executeBios = !program.get<bool>("--skip_bios");
-        gasyboy::provider::UtilitiesProvider::getInstance().debugMode = program.get<bool>("--debug");
+        gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = std::filesystem::path(program.get<std::string>("--rom")).make_preferred().string();
+        gasyboy::provider::UtilitiesProvider::getInstance()->executeBios = !program.get<bool>("--skip_bios");
+        gasyboy::provider::UtilitiesProvider::getInstance()->debugMode = program.get<bool>("--debug");
 
         auto logger = gasyboy::utils::Logger::getInstance();
         logger->log(gasyboy::utils::Logger::LogType::FUNCTIONAL,
-                    "Rom file: " + gasyboy::provider::UtilitiesProvider::getInstance().romFilePath +
+                    "Rom file: " + gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath +
                         "\n\t - Use BIOS: " +
-                        (gasyboy::provider::UtilitiesProvider::getInstance().executeBios ? "true" : "false") +
+                        (gasyboy::provider::UtilitiesProvider::getInstance()->executeBios ? "true" : "false") +
                         "\n\t - Debug Mode: " +
-                        (gasyboy::provider::UtilitiesProvider::getInstance().debugMode ? "true" : "false"));
+                        (gasyboy::provider::UtilitiesProvider::getInstance()->debugMode ? "true" : "false"));
 
-        gb.boot();
+        gb->boot();
     }
     catch (const std::runtime_error &err)
     {

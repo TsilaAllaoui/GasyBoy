@@ -31,11 +31,11 @@ namespace gasyboy
 
         SDL_Texture *_viewportTexture;
 
-        Cpu &_cpu;
-        Ppu &_ppu;
-        Registers &_registers;
-        InterruptManager &_interruptManager;
-        Mmu &_mmu;
+        std::shared_ptr<Cpu> _cpu;
+        std::shared_ptr<Ppu> _ppu;
+        std::shared_ptr<Registers> _registers;
+        std::shared_ptr<InterruptManager> _interruptManager;
+        std::shared_ptr<Mmu> _mmu;
 
         // Viewport
         int _viewportWidth = 160;
@@ -54,12 +54,7 @@ namespace gasyboy
         void initWindow(int windowWidth, int windowHeight);
 
     public:
-        Renderer() = delete;
-        Renderer(Cpu &cpu,
-                 Ppu &ppu,
-                 Registers &registers,
-                 InterruptManager &interruptManager,
-                 Mmu &mmu);
+        Renderer();
 
         void render();
 

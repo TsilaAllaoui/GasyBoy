@@ -9,7 +9,7 @@ namespace gasyboy
 {
     class Registers
     {
-        Mmu &_mmu;
+        std::shared_ptr<Mmu> _mmu;
 
         std::map<std::string, Register> _registersMap;
 
@@ -25,6 +25,7 @@ namespace gasyboy
     public:
         // Constructors
         Registers();
+        Registers &operator=(const Registers &);
 
         // Reset registers
         void reset();

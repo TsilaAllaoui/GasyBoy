@@ -1,7 +1,8 @@
+#include "utilitiesProvider.h"
+#include "gameBoyProvider.h"
 #include "gamepad.h"
 #include "defs.h"
-// #include "SDL.h"
-#include <SDL2/SDL.h>
+#include "SDL.h"
 #ifdef EMSCRIPTEN
 #include <SDL2/SDL.h>
 #else
@@ -33,6 +34,18 @@ namespace gasyboy
             {
                 exit(ExitState::MANUAL_STOP);
             }
+            // else if (event.type == SDL_DROPFILE)
+            // {
+            //     char *droppedFile = event.drop.file;
+            //     if (droppedFile)
+            //     {
+            //         std::string filePath(droppedFile);
+            //         provider::UtilitiesProvider::getInstance().romFilePath = filePath;
+            //         provider::GameBoyProvider::deleteInstance();
+            //         // provider::GameBoyProvider::getInstance().reset();
+            //         SDL_free(droppedFile);
+            //     }
+            // }
             else if (event.type == SDL_KEYDOWN)
             {
                 switch (event.key.keysym.sym)

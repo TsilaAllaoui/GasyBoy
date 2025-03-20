@@ -11,7 +11,7 @@ namespace gasyboy
 {
     Mmu::Mmu(const uint8_t *bytes, const size_t &romSize)
         : _memory(0x10000, 0),
-          _biosEnabled(provider::UtilitiesProvider::getInstance().executeBios),
+          _biosEnabled(provider::UtilitiesProvider::getInstance()->executeBios),
           _gamepad(provider::GamepadProvider::getInstance()),
           _cartridge()
     {
@@ -32,9 +32,23 @@ namespace gasyboy
         }
     }
 
+    Mmu &Mmu::operator=(const gasyboy::Mmu &other)
+    {
+        {
+            for (int i = 0; i < 0x10000; i++)
+            {
+                _memory[i] = other._memory[i];
+            }
+            _biosEnabled = provider::UtilitiesProvider::getInstance()->executeBios;
+            _gamepad = other._gamepad;
+            _cartridge = other._cartridge;
+            return *this;
+        }
+    }
+
     Mmu::Mmu()
         : _memory(0x10000, 0),
-          _biosEnabled(provider::UtilitiesProvider::getInstance().executeBios),
+          _biosEnabled(provider::UtilitiesProvider::getInstance()->executeBios),
           _cartridge(),
           _gamepad(provider::GamepadProvider::getInstance())
 
@@ -52,15 +66,15 @@ namespace gasyboy
         // loading rom file
         try
         {
-            if (provider::UtilitiesProvider::getInstance().romFilePath.empty())
+            if (provider::UtilitiesProvider::getInstance()->romFilePath.empty())
             {
                 throw exception::GbException("Invalid rom file path");
             }
 
-            _cartridge.loadRom(provider::UtilitiesProvider::getInstance().romFilePath);
+            _cartridge.loadRom(provider::UtilitiesProvider::getInstance()->romFilePath);
             utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
                                               "Rom file : \"" +
-                                                  provider::UtilitiesProvider::getInstance().romFilePath + "\" loaded successfully");
+                                                  provider::UtilitiesProvider::getInstance()->romFilePath + "\" loaded successfully");
         }
         catch (const exception::GbException &e)
         {
@@ -71,9 +85,9 @@ namespace gasyboy
 
     void Mmu::reset()
     {
-        _biosEnabled = provider::UtilitiesProvider::getInstance().executeBios;
+        _biosEnabled = provider::UtilitiesProvider::getInstance()->executeBios;
         _cartridge.reset();
-        _memory.clear();
+        _memory.assign(0x10000, 0);
 
         if (!_biosEnabled)
         {
@@ -88,15 +102,15 @@ namespace gasyboy
         // loading rom file
         try
         {
-            if (provider::UtilitiesProvider::getInstance().romFilePath.empty())
+            if (provider::UtilitiesProvider::getInstance()->romFilePath.empty())
             {
                 throw exception::GbException("Invalid rom file path");
             }
 
-            _cartridge.loadRom(provider::UtilitiesProvider::getInstance().romFilePath);
+            _cartridge.loadRom(provider::UtilitiesProvider::getInstance()->romFilePath);
             utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
                                               "Rom file : \"" +
-                                                  provider::UtilitiesProvider::getInstance().romFilePath + "\" loaded successfully");
+                                                  provider::UtilitiesProvider::getInstance()->romFilePath + "\" loaded successfully");
         }
         catch (const exception::GbException &e)
         {
@@ -119,18 +133,18 @@ namespace gasyboy
     {
         if (address == 0xff00)
         {
-            return _gamepad.getState();
+            return _gamepad->getState();
         }
 
         // Timers
         else if (address == 0xff04)
-            return provider::TimerProvider::getInstance().DIV();
+            return provider::TimerProvider::getInstance()->DIV();
         else if (address == 0xff05)
-            return provider::TimerProvider::getInstance().TIMA();
+            return provider::TimerProvider::getInstance()->TIMA();
         else if (address == 0xff06)
-            return provider::TimerProvider::getInstance().TMA();
+            return provider::TimerProvider::getInstance()->TMA();
         else if (address == 0xff07)
-            return provider::TimerProvider::getInstance().TAC();
+            return provider::TimerProvider::getInstance()->TAC();
 
         if (address == 0xff0f)
             return _memory[0xFF0F];
@@ -202,7 +216,7 @@ namespace gasyboy
             // Joypad register
             else if (address == 0xFF00)
             {
-                _gamepad.setState(value);
+                _gamepad->setState(value);
             }
 
             // for Serial IN/OUT
@@ -218,25 +232,30 @@ namespace gasyboy
             // writing to DIV register reset its counter
             else if (address == 0xFF04)
             {
-                provider::TimerProvider::getInstance().setDIV(0);
+                provider::TimerProvider::getInstance()->setDIV(0);
             }
 
             // TIMA timer
             else if (address == 0xFF05)
             {
-                provider::TimerProvider::getInstance().setTIMA(value);
+                provider::TimerProvider::getInstance()->setTIMA(value);
             }
 
             // TMA timer
             else if (address == 0xFF06)
             {
-                provider::TimerProvider::getInstance().setTMA(value);
+                provider::TimerProvider::getInstance()->setTMA(value);
             }
 
             // TAC Timer control
             else if (address == 0xFF07)
             {
-                provider::TimerProvider::getInstance().setTAC(value);
+                provider::TimerProvider::getInstance()->setTAC(value);
+            }
+
+            else if (address == 0xFF42 || address == 0xFF43)
+            {
+                _memory[address] = value;
             }
 
             // writing to LY register reset it

@@ -16,10 +16,11 @@ namespace gasyboy
 
     public:
         Ppu();
+        Ppu &operator=(const Ppu &);
 
-        Registers &_registers;
-        Mmu &_mmu;
-        InterruptManager &_interruptManager;
+        std::shared_ptr<Registers> _registers;
+        std::shared_ptr<Mmu> _mmu;
+        std::shared_ptr<InterruptManager> _interruptManager;
 
         void reset();
 
@@ -30,7 +31,7 @@ namespace gasyboy
         uint8_t *LY;
         uint8_t *LCY;
 
-        enum class PpuMode
+        enum PpuMode
         {
             HBLANK = 0,
             VBLANK = 1,

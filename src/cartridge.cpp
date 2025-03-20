@@ -16,6 +16,23 @@ namespace gasyboy
 	{
 	}
 
+	Cartridge &Cartridge::operator=(const Cartridge &other)
+	{
+		_rom = other._rom;
+		_ram = other._ram;
+		_cartridgeType = other._cartridgeType;
+		_cartridgeHeader = other._cartridgeHeader;
+		if (other._mbc)
+		{
+			_mbc.reset(other._mbc.get());
+		}
+		else
+		{
+			_mbc.reset();
+		}
+		return *this;
+	}
+
 	void Cartridge::loadRom(const std::string &filename)
 	{
 		std::ifstream file(filename, std::ios::binary | std::ios::ate);

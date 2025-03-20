@@ -1,17 +1,18 @@
+#include "interruptManagerProvider.h"
+#include "registersProvider.h"
+#include "cpuProvider.h"
+#include "mmuProvider.h"
+#include "ppuProvider.h"
 #include "renderer.h"
 
 namespace gasyboy
 {
-    Renderer::Renderer(Cpu &cpu,
-                       Ppu &ppu,
-                       Registers &registers,
-                       InterruptManager &interruptManager,
-                       Mmu &mmu)
-        : _cpu(cpu),
-          _ppu(ppu),
-          _registers(registers),
-          _interruptManager(interruptManager),
-          _mmu(mmu)
+    Renderer::Renderer()
+        : _cpu(provider::CpuProvider::getInstance()),
+          _ppu(provider::PpuProvider::getInstance()),
+          _registers(provider::RegistersProvider::getInstance()),
+          _interruptManager(provider::InterruptManagerProvider::getInstance()),
+          _mmu(provider::MmuProvider::getInstance())
     {
     }
 
@@ -91,7 +92,7 @@ namespace gasyboy
     {
         for (int i = 0; i < 144 * 160; i++)
         {
-            Colour colour = _ppu._framebuffer[i];
+            Colour colour = _ppu->_framebuffer[i];
             std::copy(colour.colours, colour.colours + 4, _viewportPixels.begin() + i * 4);
         }
         SDL_UpdateTexture(_viewportTexture, NULL, _viewportPixels.data(), _viewportWidth * 4);
@@ -118,7 +119,7 @@ namespace gasyboy
     {
         for (int i = 0; i < 144 * 160; i++)
         {
-            Colour colour = _ppu._framebuffer[i];
+            Colour colour = _ppu->_framebuffer[i];
             std::copy(colour.colours, colour.colours + 4, _viewportPixels.begin() + i * 4);
         }
         SDL_UpdateTexture(_viewportTexture, NULL, _viewportPixels.data(), _viewportWidth * 4);
@@ -138,30 +139,30 @@ namespace gasyboy
     {
         for (uint16_t i = 0; i <= 1023; i++)
         {
-            uint16_t tile = _mmu.readRam(0x9800 + i);
-            if (!_ppu.LCDC->bgWindowDataSelect && tile < 128)
+            uint16_t tile = _mmu->readRam(0x9800 + i);
+            if (!_ppu->LCDC->bgWindowDataSelect && tile < 128)
                 tile += 256;
 
             for (int y = 0; y < 8; y++)
             {
                 for (int x = 0; x < 8; x++)
                 {
-                    uint8_t color = _mmu.tiles[tile].pixels[y][x];
+                    uint8_t color = _mmu->tiles[tile].pixels[y][x];
                     int xi = (i % 32) * 8 + x;
                     int yi = (i / 32) * 8 + y;
                     int offset = 4 * (yi * backgroundWidth + xi);
-                    Colour colour = _mmu.palette_BGP[color];
+                    Colour colour = _mmu->palette_BGP[color];
                     std::copy(colour.colours, colour.colours + 4, background_pixels.begin() + offset);
                 }
             }
         }
 
         // Draw sprites
-        for (auto sprite : _mmu.sprites)
+        for (auto sprite : _mmu->sprites)
         {
             if (!sprite.ready)
                 continue;
-            for (int tile_num = 0; tile_num < 1 + int(_ppu.LCDC->spriteSize); tile_num++)
+            for (int tile_num = 0; tile_num < 1 + int(_ppu->LCDC->spriteSize); tile_num++)
             {
                 int y_pos = sprite.y + tile_num * 8;
                 // Iterate over both tiles
@@ -172,13 +173,13 @@ namespace gasyboy
                         uint8_t xF = sprite.options.xFlip ? static_cast<uint8_t>(7 - x) : x;
                         uint8_t yF = sprite.options.yFlip ? static_cast<uint8_t>(7 - y) : y;
 
-                        int tile = sprite.tile & (_ppu.LCDC->spriteSize ? 0xFE : 0xFF);
-                        uint8_t colour_n = _mmu.tiles[tile + tile_num].pixels[yF][xF];
+                        int tile = sprite.tile & (_ppu->LCDC->spriteSize ? 0xFE : 0xFF);
+                        uint8_t colour_n = _mmu->tiles[tile + tile_num].pixels[yF][xF];
 
                         if (!colour_n)
                             continue;
-                        int xi = (_mmu.readRam(0xff43) + sprite.x + x) % 256;
-                        int yi = (_mmu.readRam(0xff42) + y_pos + y) % 256;
+                        int xi = (_mmu->readRam(0xff43) + sprite.x + x) % 256;
+                        int yi = (_mmu->readRam(0xff42) + y_pos + y) % 256;
                         int offset = 4 * (yi * backgroundWidth + xi);
 
                         if (offset >= background_pixels.size())
@@ -200,12 +201,12 @@ namespace gasyboy
             {
                 for (int x = 0; x < 8; x++)
                 {
-                    uint8_t colour_n = _mmu.tiles[i].pixels[y][x];
+                    uint8_t colour_n = _mmu->tiles[i].pixels[y][x];
                     int offsetX = ((i * 8 + x) % tilemapWidth);
                     int offsetY = y + (int(i / 16)) * 8;
                     int offset = 4 * (offsetY * tilemapWidth + offsetX);
 
-                    Colour colour = _mmu.palette_BGP[colour_n];
+                    Colour colour = _mmu->palette_BGP[colour_n];
                     std::copy(colour.colours, colour.colours + 4, tilemap_pixels.begin() + offset);
                 }
             }
@@ -226,16 +227,16 @@ namespace gasyboy
 
     void DebugRenderer::drawBackgroundOverflow()
     {
-        int overflowX = std::max(*_ppu.SCX + _viewportWidth - backgroundWidth, 0);
-        int overflowY = std::max(*_ppu.SCY + _viewportHeight - backgroundHeight, 0);
+        int overflowX = std::max(*_ppu->SCX + _viewportWidth - backgroundWidth, 0);
+        int overflowY = std::max(*_ppu->SCY + _viewportHeight - backgroundHeight, 0);
 
-        drawRectangle(background_rect.x + *_ppu.SCX, _viewportHeight + *_ppu.SCY, _viewportWidth - overflowX, _viewportHeight, {255, 255, 255, 100});
+        drawRectangle(background_rect.x + *_ppu->SCX, _viewportHeight + *_ppu->SCY, _viewportWidth - overflowX, _viewportHeight, {255, 255, 255, 100});
 
         if (overflowX)
-            drawRectangle(background_rect.x, _viewportHeight + *_ppu.SCY, overflowX, _viewportHeight, {255, 255, 255, 100});
+            drawRectangle(background_rect.x, _viewportHeight + *_ppu->SCY, overflowX, _viewportHeight, {255, 255, 255, 100});
 
         if (overflowY)
-            drawRectangle(background_rect.x + *_ppu.SCX, _viewportHeight, _viewportWidth - overflowX, overflowY, {255, 255, 255, 100});
+            drawRectangle(background_rect.x + *_ppu->SCX, _viewportHeight, _viewportWidth - overflowX, overflowY, {255, 255, 255, 100});
 
         if (overflowX && overflowY)
             drawRectangle(background_rect.x, _viewportHeight, overflowX, overflowY, {255, 255, 255, 100});
@@ -253,7 +254,7 @@ namespace gasyboy
                 for (uint8_t y = 0; y < 8; y++)
                 {
                     uint8_t yF = sprite.options.yFlip ? static_cast<uint8_t>(7 - y) : y;
-                    uint8_t colour_n = _mmu.tiles[sprite.tile + tile_off].pixels[yF][xF];
+                    uint8_t colour_n = _mmu->tiles[sprite.tile + tile_off].pixels[yF][xF];
                     int offsetX = ((off_x + x) % spritemapWidth);
                     int offsetY = y + off_y;
                     int offset = 4 * (offsetY * spritemapWidth + offsetX);
@@ -264,12 +265,12 @@ namespace gasyboy
             }
         };
 
-        if (_ppu.LCDC->spriteSize)
+        if (_ppu->LCDC->spriteSize)
         {
             for (int i = 0, row = 0; i < 20; i++)
             {
-                draw_sprite(_mmu.sprites[i], 0, i * 8, row * 8);
-                draw_sprite(_mmu.sprites[i], 1, i * 8, row * 8 + 8);
+                draw_sprite(_mmu->sprites[i], 0, i * 8, row * 8);
+                draw_sprite(_mmu->sprites[i], 1, i * 8, row * 8 + 8);
                 if (((i + 1) % 5) == 0)
                     row += 2;
             }
@@ -278,7 +279,7 @@ namespace gasyboy
         {
             for (int i = 0, row = 0; i < 40; i++)
             {
-                draw_sprite(_mmu.sprites[i], 0, i * 8, row * 8);
+                draw_sprite(_mmu->sprites[i], 0, i * 8, row * 8);
                 if (((i + 1) % 5) == 0)
                     row++;
             }

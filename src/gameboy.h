@@ -23,12 +23,13 @@ namespace gasyboy
 {
     class GameBoy
     {
-        Mmu &_mmu;
-        Cpu &_cpu;
-        Timer &_timer;
-        Gamepad &_gamepad;
-        InterruptManager &_interruptManager;
-        Ppu &_ppu;
+        std::shared_ptr<Mmu> _mmu;
+        std::shared_ptr<Registers> _registers;
+        std::shared_ptr<Cpu> _cpu;
+        std::shared_ptr<Timer> _timer;
+        std::shared_ptr<Gamepad> _gamepad;
+        std::shared_ptr<InterruptManager> _interruptManager;
+        std::shared_ptr<Ppu> _ppu;
         std::unique_ptr<Renderer> _renderer;
 
         int _cycleCounter;
@@ -41,11 +42,9 @@ namespace gasyboy
         bool _debugMode;
 
     public:
-        GameBoy();
-        GameBoy(const uint8_t *bytes, const size_t &romSize);
+        GameBoy(const bool &wasReset = false);
+        GameBoy(const uint8_t *bytes, const size_t &romSize, const bool &wasReset = false);
         ~GameBoy() = default;
-
-        Registers _registers;
 
         // Start the emulator
         void boot();
@@ -72,6 +71,9 @@ namespace gasyboy
 
         // Used for the main loop
         void loop();
+
+        // Reset the gameboy
+        void reset();
     };
 }
 

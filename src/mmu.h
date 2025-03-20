@@ -52,7 +52,7 @@ namespace gasyboy
         bool _biosEnabled;
 
         // context of the gamepad
-        Gamepad &_gamepad;
+        std::shared_ptr<Gamepad> _gamepad;
 
         // the actual cartridge
         Cartridge _cartridge;
@@ -64,6 +64,7 @@ namespace gasyboy
         // construcor/destructor
         Mmu();
         Mmu(const uint8_t *bytes, const size_t &romSize);
+        Mmu &operator=(const gasyboy::Mmu &);
         ~Mmu() = default;
 
         // Reset MMU

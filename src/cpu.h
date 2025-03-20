@@ -15,13 +15,13 @@ namespace gasyboy
 	{
 	private:
 		// Registers
-		Registers &_registers;
+		std::shared_ptr<Registers> _registers;
 
 		// MMU
-		Mmu &_mmu;
+		std::shared_ptr<Mmu> _mmu;
 
 		// Interrupt Manager
-		InterruptManager &_interruptManager;
+		std::shared_ptr<InterruptManager> _interruptManager;
 
 		// The current opcode pointed by the PC
 		uint8_t _currentOpcode;
@@ -33,6 +33,7 @@ namespace gasyboy
 	public:
 		// Contructor/destructor
 		Cpu();
+		Cpu &operator=(const Cpu &);
 		~Cpu() = default;
 
 		// Reset the cpu

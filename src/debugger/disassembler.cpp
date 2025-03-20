@@ -10,7 +10,7 @@ namespace gasyboy
 {
     Disassembler::Disassembler()
     {
-        _rom = provider::MmuProvider::getInstance().getCartridge().getRom();
+        _rom = provider::MmuProvider::getInstance()->getCartridge().getRom();
 
         opcodeTable = {
             {1, 0x00, "NOP"},
@@ -531,7 +531,7 @@ namespace gasyboy
             {2, 0xFF, "SET 7, A"},
         };
 
-        auto &cartridge = provider::MmuProvider::getInstance().getCartridge();
+        auto &cartridge = provider::MmuProvider::getInstance()->getCartridge();
         _rom = cartridge.getRom();
     }
 

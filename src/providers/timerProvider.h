@@ -11,7 +11,7 @@ namespace gasyboy
         class TimerProvider
         {
         private:
-            static std::unique_ptr<Timer> _timerInstance;
+            static std::shared_ptr<Timer> _timerInstance;
 
             TimerProvider() = default;
 
@@ -21,7 +21,7 @@ namespace gasyboy
             TimerProvider(const TimerProvider &) = delete;
             TimerProvider &operator=(const TimerProvider &) = delete;
 
-            static Timer &getInstance();
+            static std::shared_ptr<Timer> getInstance();
 
             static void deleteInstance();
         };

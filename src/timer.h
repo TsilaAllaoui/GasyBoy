@@ -9,10 +9,9 @@ namespace gasyboy
 
     class Timer
     {
-        InterruptManager &_interruptManager;
-
     public:
         Timer();
+        Timer &operator=(const Timer &);
         ~Timer() = default;
 
         void reset();

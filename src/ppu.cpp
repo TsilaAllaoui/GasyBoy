@@ -11,14 +11,34 @@ namespace gasyboy
           _interruptManager(provider::InterruptManagerProvider::getInstance()),
           _modeClock(0)
     {
-        LCDC = reinterpret_cast<Control *>(&_mmu._memory[0xff40]);
-        STAT = reinterpret_cast<Stat *>(&_mmu._memory[0xff41]);
-        SCY = &_mmu._memory[0xff42];
-        SCX = &_mmu._memory[0xff43];
-        LY = &_mmu._memory[0xff44];
-        LCY = &_mmu._memory[0xff45];
-        WY = &_mmu._memory[0xff4A];
-        WX = &_mmu._memory[0xff4B];
+        LCDC = reinterpret_cast<Control *>(&_mmu->_memory[0xff40]);
+        STAT = reinterpret_cast<Stat *>(&_mmu->_memory[0xff41]);
+        SCY = &_mmu->_memory[0xff42];
+        SCX = &_mmu->_memory[0xff43];
+        LY = &_mmu->_memory[0xff44];
+        LCY = &_mmu->_memory[0xff45];
+        WY = &_mmu->_memory[0xff4A];
+        WX = &_mmu->_memory[0xff4B];
+    }
+
+    Ppu &Ppu::operator=(const Ppu &other)
+    {
+        _mmu = other._mmu;
+        _registers = other._registers;
+        _interruptManager = other._interruptManager;
+        _modeClock = other._modeClock;
+        LCDC = other.LCDC;
+        STAT = other.STAT;
+        SCY = other.SCY;
+        SCX = other.SCX;
+        LY = other.LY;
+        LCY = other.LCY;
+        WY = other.WY;
+        WX = other.WX;
+        for (int i = 0; i < 160 * 144; i++)
+            _framebuffer[i] = other._framebuffer[i];
+        _canRender = other._canRender;
+        return *this;
     }
 
     void Ppu::step(const int &cycle)
@@ -60,7 +80,7 @@ namespace gasyboy
                 if (*LY == 144)
                 {
                     setMode(PpuMode::VBLANK);
-                    _interruptManager.requestInterrupt(InterruptManager::InterruptType::VBlank);
+                    _interruptManager->requestInterrupt(InterruptManager::InterruptType::VBlank);
                 }
                 else
                 {
@@ -94,7 +114,7 @@ namespace gasyboy
             STAT->coincidenceFlag = 1;
             if (STAT->coincidenceInterrupt)
             {
-                _interruptManager.requestInterrupt(InterruptManager::InterruptType::LCDStat);
+                _interruptManager->requestInterrupt(InterruptManager::InterruptType::LCDStat);
             }
         }
         else
@@ -107,19 +127,19 @@ namespace gasyboy
         case PpuMode::OAM_SEARCH:
             if (STAT->oamInterrupt)
             {
-                _interruptManager.requestInterrupt(InterruptManager::InterruptType::LCDStat);
+                _interruptManager->requestInterrupt(InterruptManager::InterruptType::LCDStat);
             }
             break;
         case PpuMode::HBLANK:
             if (STAT->hblankInterrupt)
             {
-                _interruptManager.requestInterrupt(InterruptManager::InterruptType::LCDStat);
+                _interruptManager->requestInterrupt(InterruptManager::InterruptType::LCDStat);
             }
             break;
         case PpuMode::VBLANK:
             if (STAT->vblankInterrupt)
             {
-                _interruptManager.requestInterrupt(InterruptManager::InterruptType::LCDStat);
+                _interruptManager->requestInterrupt(InterruptManager::InterruptType::LCDStat);
             }
             break;
         default:
@@ -135,7 +155,11 @@ namespace gasyboy
         if (LCDC->bgDisplay)
         {
             renderScanLineBackground(rowPixels);
-            renderScanLineWindow();
+
+            if (LCDC->windowEnable)
+            {
+                renderScanLineWindow();
+            }
         }
 
         if (LCDC->spriteDisplayEnable)
@@ -164,7 +188,7 @@ namespace gasyboy
             if (tile_address >= endRowAddress)
                 tile_address = startRowAddress + (tile_address % 32);
 
-            int tile = _mmu.readRam(tile_address);
+            int tile = _mmu->readRam(tile_address);
             if (!LCDC->bgWindowDataSelect && tile < 128)
                 tile += 256;
 
@@ -172,8 +196,8 @@ namespace gasyboy
             {
                 if (pixelOffset >= SCREEN_WIDTH * SCREEN_HEIGHT)
                     return;
-                int colour = _mmu.tiles[tile].pixels[y][x];
-                _framebuffer[pixelOffset++] = _mmu.palette_BGP[colour];
+                int colour = _mmu->tiles[tile].pixels[y][x];
+                _framebuffer[pixelOffset++] = _mmu->palette_BGP[colour];
                 if (colour > 0)
                     rowPixels[pixel] = true;
                 pixel++;
@@ -184,16 +208,15 @@ namespace gasyboy
 
     void Ppu::renderScanLineWindow()
     {
-        if (!LCDC->windowEnable)
-            return;
-        uint8_t windowY = _mmu.readRam(0xFF4A);
+
+        uint8_t windowY = _mmu->readRam(0xFF4A);
         if (windowY > *LY)
             return;
 
         uint16_t address = 0x9800;
         if (LCDC->windowDisplaySelect)
             address += 0x400;
-        uint8_t windowX = _mmu.readRam(0xFF4B) - 7;
+        uint8_t windowX = _mmu->readRam(0xFF4B) - 7;
         int y = (*LY - windowY) & 7;
         int pixelOffset = *LY * SCREEN_WIDTH;
         address += ((*LY - windowY) / 8) * 32;
@@ -201,7 +224,7 @@ namespace gasyboy
         for (uint16_t tileX = 0; tileX < 21; tileX++)
         {
             uint16_t tile_address = address + tileX;
-            int tile = _mmu.readRam(tile_address);
+            int tile = _mmu->readRam(tile_address);
             if (!LCDC->bgWindowDataSelect && tile < 128)
                 tile += 256;
 
@@ -210,10 +233,10 @@ namespace gasyboy
                 int windowPixelX = windowX + tileX * 8 + x;
                 if (windowPixelX < 0 || windowPixelX >= SCREEN_WIDTH)
                     continue;
-                int colour = _mmu.tiles[tile].pixels[y][x];
+                int colour = _mmu->tiles[tile].pixels[y][x];
                 if (pixelOffset + windowPixelX >= SCREEN_WIDTH * SCREEN_HEIGHT)
                     return;
-                _framebuffer[pixelOffset + windowPixelX] = _mmu.palette_BGP[colour];
+                _framebuffer[pixelOffset + windowPixelX] = _mmu->palette_BGP[colour];
             }
         }
     }
@@ -225,7 +248,7 @@ namespace gasyboy
 
         for (int i = 0; i < 40; i++)
         {
-            auto &sprite = _mmu.sprites[i];
+            auto &sprite = _mmu->sprites[i];
 
             // Check if the sprite is on the current scanline
             if ((*LY < sprite.y) || (*LY >= sprite.y + sprite_height))
@@ -251,9 +274,9 @@ namespace gasyboy
                 int tile_num = sprite.tile & (LCDC->spriteSize ? 0xFE : 0xFF);
                 int colour = 0;
                 if (LCDC->spriteSize && spriteY >= 8)
-                    colour = _mmu.tiles[tile_num + 1].pixels[spriteY - 8][spriteX];
+                    colour = _mmu->tiles[tile_num + 1].pixels[spriteY - 8][spriteX];
                 else
-                    colour = _mmu.tiles[tile_num].pixels[spriteY][spriteX];
+                    colour = _mmu->tiles[tile_num].pixels[spriteY][spriteX];
 
                 if (colour == 0)
                     continue;
@@ -273,10 +296,10 @@ namespace gasyboy
 
     void Ppu::reset()
     {
-        LCDC = (Control *)&_mmu._memory[0xff40];
-        STAT = (Stat *)&_mmu._memory[0xff41];
-        SCY = &_mmu._memory[0xff42];
-        SCX = &_mmu._memory[0xff43];
-        LY = &_mmu._memory[0xff44];
+        LCDC = (Control *)&_mmu->_memory[0xff40];
+        STAT = (Stat *)&_mmu->_memory[0xff41];
+        SCY = &_mmu->_memory[0xff42];
+        SCX = &_mmu->_memory[0xff43];
+        LY = &_mmu->_memory[0xff44];
     }
 }

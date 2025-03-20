@@ -32,7 +32,7 @@ namespace gasyboy
           _previewPos(ImVec2(845, 165)),
           _previewSprite(),
           _disassembler(),
-          _executeBios(provider::UtilitiesProvider::getInstance().executeBios)
+          _executeBios(provider::UtilitiesProvider::getInstance()->executeBios)
     {
         _bytesBuffers = {
             {"A", new char[2]},
@@ -220,52 +220,52 @@ namespace gasyboy
 
             ImGui::TableNextColumn();
             renderByte("A", [&]()
-                       { return _registers.AF.getLeftRegister(); }, [&](const uint8_t &val)
-                       { _registers.AF.setLeftRegister(val); });
+                       { return _registers->AF.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers->AF.setLeftRegister(val); });
             ImGui::SameLine();
             renderByte("F", [&]()
-                       { return _registers.AF.getRightRegister(); }, [&](const uint8_t &val)
-                       { _registers.AF.setRightRegister(val); });
+                       { return _registers->AF.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers->AF.setRightRegister(val); });
 
             renderByte("B", [&]()
-                       { return _registers.BC.getLeftRegister(); }, [&](const uint8_t &val)
-                       { _registers.BC.setLeftRegister(val); });
+                       { return _registers->BC.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers->BC.setLeftRegister(val); });
             ImGui::SameLine();
             renderByte("C", [&]()
-                       { return _registers.BC.getRightRegister(); }, [&](const uint8_t &val)
-                       { _registers.BC.setRightRegister(val); });
+                       { return _registers->BC.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers->BC.setRightRegister(val); });
 
             renderByte("D", [&]()
-                       { return _registers.DE.getLeftRegister(); }, [&](const uint8_t &val)
-                       { _registers.DE.setLeftRegister(val); });
+                       { return _registers->DE.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers->DE.setLeftRegister(val); });
             ImGui::SameLine();
             renderByte("E", [&]()
-                       { return _registers.DE.getRightRegister(); }, [&](const uint8_t &val)
-                       { _registers.DE.setRightRegister(val); });
+                       { return _registers->DE.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers->DE.setRightRegister(val); });
 
             renderByte("H", [&]()
-                       { return _registers.HL.getLeftRegister(); }, [&](const uint8_t &val)
-                       { _registers.HL.setLeftRegister(val); });
+                       { return _registers->HL.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers->HL.setLeftRegister(val); });
             ImGui::SameLine();
             renderByte("L", [&]()
-                       { return _registers.HL.getRightRegister(); }, [&](const uint8_t &val)
-                       { _registers.HL.setRightRegister(val); });
+                       { return _registers->HL.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers->HL.setRightRegister(val); });
 
             renderWord("SP", [&]()
-                       { return _registers.SP; }, [&](uint16_t val)
-                       { _registers.SP = val; });
+                       { return _registers->SP; }, [&](uint16_t val)
+                       { _registers->SP = val; });
 
             renderWord("PC", [&]()
-                       { return _registers.PC; }, [&](uint16_t val)
-                       { _registers.PC = val; });
+                       { return _registers->PC; }, [&](uint16_t val)
+                       { _registers->PC = val; });
 
             ImGui::TableNextColumn();
 
             ImGui::Text("Flags");
-            bool Z = _registers.AF.getFlag('Z');
-            bool N = _registers.AF.getFlag('N');
-            bool H = _registers.AF.getFlag('H');
-            bool C = _registers.AF.getFlag('C');
+            bool Z = _registers->AF.getFlag('Z');
+            bool N = _registers->AF.getFlag('N');
+            bool H = _registers->AF.getFlag('H');
+            bool C = _registers->AF.getFlag('C');
             ImGui::Checkbox("Zero", &Z);
             ImGui::Checkbox("Subtract", &N);
             ImGui::Checkbox("Half Carry", &H);
@@ -273,7 +273,7 @@ namespace gasyboy
 
             ImGui::Separator();
             ImGui::Text("State");
-            bool halted = _registers.getHalted();
+            bool halted = _registers->getHalted();
             ImGui::Checkbox("HALTED", &halted);
 
             ImGui::EndTable();
@@ -315,14 +315,14 @@ namespace gasyboy
             if (ImGuiFileDialog::Instance()->IsOk())
             {
                 Cpu::state = Cpu::State::PAUSED;
-                provider::UtilitiesProvider::getInstance().romFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
-                provider::GamepadProvider::getInstance().reset();
-                provider::MmuProvider::getInstance().reset();
-                provider::RegistersProvider::getInstance().reset();
-                provider::InterruptManagerProvider::getInstance().reset();
-                provider::CpuProvider::getInstance().reset();
-                provider::TimerProvider::getInstance().reset();
-                provider::PpuProvider::getInstance().reset();
+                provider::UtilitiesProvider::getInstance()->romFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
+                provider::GamepadProvider::getInstance()->reset();
+                provider::MmuProvider::getInstance()->reset();
+                provider::RegistersProvider::getInstance()->reset();
+                provider::InterruptManagerProvider::getInstance()->reset();
+                provider::CpuProvider::getInstance()->reset();
+                provider::TimerProvider::getInstance()->reset();
+                provider::PpuProvider::getInstance()->reset();
             }
 
             ImGuiFileDialog::Instance()->Close();
@@ -349,24 +349,24 @@ namespace gasyboy
             ImGui::TableNextColumn();
 
             renderByte("DIV", [&]()
-                       { return _timer.DIV(); }, [&](const uint8_t &value)
-                       { _timer.setDIV(value); });
+                       { return _timer->DIV(); }, [&](const uint8_t &value)
+                       { _timer->setDIV(value); });
 
             renderByte("TIMA", [&]()
-                       { return _timer.TIMA(); }, [&](const uint8_t &value)
-                       { _timer.setTIMA(value); });
+                       { return _timer->TIMA(); }, [&](const uint8_t &value)
+                       { _timer->setTIMA(value); });
             ImGui::SameLine();
             renderWord("TIMA_INCREMENT_RATE", [&]()
-                       { return _timer._timaIncrementRate; }, [&](const uint16_t &value)
-                       { _timer._timaIncrementRate = value; }, 10);
+                       { return _timer->_timaIncrementRate; }, [&](const uint16_t &value)
+                       { _timer->_timaIncrementRate = value; }, 10);
 
             renderByte("TMA", [&]()
-                       { return _timer.TMA(); }, [&](const uint8_t &value)
-                       { _timer.setTMA(value); });
+                       { return _timer->TMA(); }, [&](const uint8_t &value)
+                       { _timer->setTMA(value); });
 
             renderByte("TAC", [&]()
-                       { return _timer.TAC(); }, [&](const uint8_t &value)
-                       { _timer.setTAC(value); });
+                       { return _timer->TAC(); }, [&](const uint8_t &value)
+                       { _timer->setTAC(value); });
 
             ImGui::EndTable();
         }
@@ -387,7 +387,7 @@ namespace gasyboy
         {
             for (size_t i = 0; i < 4; i++)
             {
-                _directions[i].second = !(_mmu.readRam(0xFF00) & (1 << i));
+                _directions[i].second = !(_mmu->readRam(0xFF00) & (1 << i));
                 _buttons[i].second = false;
             }
         }
@@ -396,7 +396,7 @@ namespace gasyboy
             for (size_t i = 0; i < 4; i++)
             {
                 _directions[i].second = false;
-                _buttons[i].second = !(_mmu.readRam(0xFF00) & (1 << i));
+                _buttons[i].second = !(_mmu->readRam(0xFF00) & (1 << i));
             }
         }
 
@@ -434,11 +434,11 @@ namespace gasyboy
         // // Create the window
         // ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-        // auto cartridge = _mmu.getCartridge();
+        // auto cartridge = _mmu->getCartridge();
 
-        // auto romBanks = _mmu.getCartridge().getRomBanks();
+        // auto romBanks = _mmu->getCartridge().getRomBanks();
 
-        // auto ramBanks = _mmu.getCartridge().getRamBanks();
+        // auto ramBanks = _mmu->getCartridge().getRamBanks();
 
         // // Start the tab bar
         // if (ImGui::BeginTabBar("##Memory"))
@@ -464,7 +464,7 @@ namespace gasyboy
         //         ImGui::Text("ROM [0x4000 - 0x8000] (multiple banks)");
         //         ImGui::SameLine();
         //         ImGui::SetNextItemWidth(75);
-        //         showIntegerCombo(1, _mmu.getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
+        //         showIntegerCombo(1, _mmu->getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
         //         showByteArray(romBanks.at(_currentSelectedRomBank), 0x4000);
         //         ImGui::EndTabItem();
         //     }
@@ -540,7 +540,7 @@ namespace gasyboy
             {
                 int tileX = _previewSprite.options.xFlip ? (7 - px) : px;
                 int tileY = _previewSprite.options.yFlip ? (7 - py) : py;
-                uint8_t pixelValue = _mmu.tiles[_previewSprite.tile].pixels[tileY][tileX];
+                uint8_t pixelValue = _mmu->tiles[_previewSprite.tile].pixels[tileY][tileX];
                 ImU32 color = PixelToColor(pixelValue);
                 previewDrawList->AddRectFilled(
                     ImVec2(_previewPos.x + px * (pixelSize * 4), _previewPos.y + py * (pixelSize * 4)),
@@ -561,8 +561,8 @@ namespace gasyboy
         // Create the window
         ImGui::Begin("Disassembler", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-        uint16_t targetAddress = _registers.PC; // Assume we want to scroll to the current PC
-        static uint16_t previousPC = _registers.PC;
+        uint16_t targetAddress = _registers->PC; // Assume we want to scroll to the current PC
+        static uint16_t previousPC = _registers->PC;
         int targetIndex = -1;     // Will store the index of the target address
         int surroundingLines = 5; // Number of lines before/after to show for lazy loading
 
@@ -703,7 +703,7 @@ namespace gasyboy
         if (!sprite.ready)
             return; // Skip rendering if sprite is not ready
 
-        const Mmu::Tile &tile = _mmu.tiles[sprite.tile]; // Get the tile corresponding to the sprite
+        const Mmu::Tile &tile = _mmu->tiles[sprite.tile]; // Get the tile corresponding to the sprite
 
         // ImGui::GetWindowDrawList() returns the current drawing list to draw custom elements
         ImDrawList *drawList = ImGui::GetWindowDrawList();
@@ -761,7 +761,7 @@ namespace gasyboy
             {
                 ImGui::Text("Control Register");
 
-                uint8_t *controlByte = reinterpret_cast<uint8_t *>(_ppu.LCDC);
+                uint8_t *controlByte = reinterpret_cast<uint8_t *>(_ppu->LCDC);
 
                 _lcdEnable = (*controlByte & (1 << 7)) == 1;
                 ImGui::Checkbox("LCD Enable", &_lcdEnable);
@@ -821,22 +821,22 @@ namespace gasyboy
             {
                 ImGui::Text("Status Register");
 
-                _scx = _mmu.readRam(0xFF42);
+                _scx = _mmu->readRam(0xFF42);
                 ImGui::SliderInt("SCX", &_scx, 0, 255);
 
-                _scy = _mmu.readRam(0xFF43);
+                _scy = _mmu->readRam(0xFF43);
                 ImGui::SliderInt("SCY", &_scy, 0, 255);
 
-                _wx = _mmu.readRam(0xFF4A);
+                _wx = _mmu->readRam(0xFF4A);
                 ImGui::SliderInt("WX", &_wx, 0, 166);
 
-                _wy = _mmu.readRam(0xFF4B);
+                _wy = _mmu->readRam(0xFF4B);
                 ImGui::SliderInt("WY", &_wy, 0, 144);
 
-                _ly = _mmu.readRam(0xFF44);
+                _ly = _mmu->readRam(0xFF44);
                 ImGui::SliderInt("LY", &_ly, 0, 153);
 
-                _lyc = _mmu.readRam(0xFF45);
+                _lyc = _mmu->readRam(0xFF45);
                 ImGui::SliderInt("LYC", &_lyc, 0, 153);
 
                 ImGui::EndTabItem();
@@ -847,9 +847,9 @@ namespace gasyboy
             {
                 ImGui::Text("Palette");
 
-                showPalette("BGP", _mmu.palette_BGP);
-                showPalette("OBP0", _mmu.palette_OBP0);
-                showPalette("OBP1", _mmu.palette_OBP1);
+                showPalette("BGP", _mmu->palette_BGP);
+                showPalette("OBP0", _mmu->palette_OBP0);
+                showPalette("OBP1", _mmu->palette_OBP1);
 
                 ImGui::EndTabItem();
             }
@@ -878,7 +878,7 @@ namespace gasyboy
                     {
                         for (int x = 0; x < 8; ++x)
                         {
-                            uint8_t pixelValue = _mmu.tiles[tileIndex].pixels[y][x];
+                            uint8_t pixelValue = _mmu->tiles[tileIndex].pixels[y][x];
                             ImU32 color = PixelToColor(pixelValue); // Convert pixel value to color
 
                             // Draw a small square for each pixel
@@ -904,7 +904,7 @@ namespace gasyboy
                 int j = 0;
                 for (int i = 0; i < 40; ++i, j++)
                 {
-                    const Mmu::Sprite &sprite = _mmu.sprites[i];
+                    const Mmu::Sprite &sprite = _mmu->sprites[i];
 
                     // Only render if the sprite is ready
                     if (!sprite.ready)
@@ -1015,7 +1015,7 @@ namespace gasyboy
 
     ImU32 Debugger::PixelToColor(uint8_t pixelValue)
     {
-        const Colour &color = _mmu.palette_colours[pixelValue];
+        const Colour &color = _mmu->palette_colours[pixelValue];
 
         // Convert to ImGui color format (RGBA)
         return IM_COL32(color.r, color.g, color.b, color.a);
