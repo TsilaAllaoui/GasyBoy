@@ -55,12 +55,15 @@ namespace gasyboy
 
     public:
         Renderer();
+        ~Renderer();
 
         void render();
 
         virtual void init();
 
         virtual void draw();
+
+        void reset();
 
         enum class ColorMode : uint8_t
         {

@@ -133,6 +133,7 @@ namespace gasyboy
                 }
                 else if (event.type == SDL_DROPFILE)
                 {
+                    // Resetting gambeoy instance and loading new ROM
                     char *droppedFile = event.drop.file;
                     if (droppedFile)
                     {
@@ -163,6 +164,9 @@ namespace gasyboy
                         _timer = provider::TimerProvider::getInstance();
                         _cycleCounter = 0;
                         _ppu = provider::PpuProvider::getInstance();
+                        _cpu->state = Cpu::State::RUNNING;
+                        _cycleCounter = 0;
+                        _renderer->reset();
 
                         SDL_free(droppedFile);
                     }

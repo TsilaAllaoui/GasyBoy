@@ -16,6 +16,30 @@ namespace gasyboy
     {
     }
 
+    Renderer::~Renderer()
+    {
+        // Destroy viewport texture if allocated
+        if (_viewportTexture)
+        {
+            SDL_DestroyTexture(_viewportTexture);
+            _viewportTexture = nullptr;
+        }
+
+        // Destroy renderer if allocated
+        if (_renderer)
+        {
+            SDL_DestroyRenderer(_renderer);
+            _renderer = nullptr;
+        }
+
+        // Destroy window if allocated
+        if (_window)
+        {
+            SDL_DestroyWindow(_window);
+            _window = nullptr;
+        }
+    }
+
     void Renderer::init()
     {
         // Fill pixels to white
@@ -96,6 +120,49 @@ namespace gasyboy
             std::copy(colour.colours, colour.colours + 4, _viewportPixels.begin() + i * 4);
         }
         SDL_UpdateTexture(_viewportTexture, NULL, _viewportPixels.data(), _viewportWidth * 4);
+    }
+
+    void Renderer::reset()
+    {
+        // Reset viewport settings
+        _viewportWidth = 160;
+        _viewportHeight = 144;
+        _viewportRect = {0, 0, _viewportWidth, _viewportHeight};
+        _viewportPixels.fill(0);
+
+        // Reset framerate timing
+        _framerateTime = 1000 / 60;
+        _startFrame = std::chrono::steady_clock::now();
+        _endFrame = _startFrame;
+
+        // Clear the renderer
+        if (_renderer)
+        {
+            SDL_RenderClear(_renderer);
+        }
+
+        // Destroy the existing texture and recreate it
+        if (_viewportTexture)
+        {
+            SDL_DestroyTexture(_viewportTexture);
+            _viewportTexture = nullptr;
+        }
+
+        // Resetting the CPU, PPU, and memory components (if needed)
+        _cpu = provider::CpuProvider::getInstance();
+        _ppu = provider::PpuProvider::getInstance();
+        _mmu = provider::MmuProvider::getInstance();
+        _interruptManager = provider::InterruptManagerProvider::getInstance();
+
+        // Fill pixels to white
+        _viewportPixels.fill(0xFF);
+
+        // Recreate the viewport texture
+        _viewportTexture = SDL_CreateTexture(_renderer,
+                                             SDL_PIXELFORMAT_ARGB8888,
+                                             SDL_TEXTUREACCESS_STREAMING,
+                                             _viewportWidth,
+                                             _viewportHeight);
     }
 
     /*DEBUGGER*/
