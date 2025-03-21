@@ -208,7 +208,7 @@ namespace gasyboy
 
     void Ppu::renderScanLineWindow()
     {
-        if (*WY > *LY || *WX > 160 || *WX <= 0)
+        if (*WY > *LY || *WX > 160 || *WX < 0)
             return;
 
         uint16_t address = 0x9800;

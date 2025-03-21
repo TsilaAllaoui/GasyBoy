@@ -37,7 +37,7 @@ namespace gasyboy
         SDL_Window *_window;
         SDL_Rect _tile_map_pos, _bg_map_pos;
 #ifndef EMSCRIPTEN
-        std::unique_ptr<Debugger> _debugger;
+        std::shared_ptr<Debugger> _debugger;
 #endif
         bool _debugMode;
 

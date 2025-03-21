@@ -69,15 +69,16 @@ int main(int argc, char **argv)
     // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Legend of Zelda, The - Link's Awakening (USA) (Rev-B).gb";
     // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Super Mario Land 2 - 6 Golden Coins (USA) (Rev-B).gb";
     // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Super Mario Land 3 - Wario Land (USA).gb";
-    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/dmg-acid2.gb";
-    gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/gb-test-roms-master/window_y_trigger.gb";
+    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/gb-test-roms-master/dmg-acid2.gb";
+    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/gb-test-roms-master/window_y_trigger.gb";
+    gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Pokemon Red Version (USA) (SGB Enhanced).gb";
 
     auto &gb = gasyboy::provider::GameBoyProvider::getInstance();
 
     // Boot default rom
     if (argc == 1)
     {
-        gb->setDebugMode(false);
+        gb->setDebugMode(true);
         gb->boot();
     }
 

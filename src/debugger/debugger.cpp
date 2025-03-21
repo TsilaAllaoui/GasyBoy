@@ -10,6 +10,7 @@
 #include "registersProvider.h"
 #include "utilitiesProvider.h"
 #include "gamepadProvider.h"
+#include "gameBoyProvider.h"
 #include "timerProvider.h"
 #include "mmuProvider.h"
 #include "cpuProvider.h"
@@ -88,12 +89,21 @@ namespace gasyboy
         int debuggerWindowY = mainWindowY;
 
         // Create the debugger window next to the main window
-        _window = SDL_CreateWindow("Debugger",
-                                   debuggerWindowX,
-                                   debuggerWindowY,
-                                   1340, 765, // Width and height for the debugger window
-                                   SDL_WINDOW_SHOWN);
-        _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+        // _window = SDL_CreateWindow("Debugger",
+        //                            debuggerWindowX,
+        //                            debuggerWindowY,
+        //                            1340, 765, // Width and height for the debugger window
+        //                            SDL_WINDOW_SHOWN);
+
+        // if (!_window)
+        // {
+        //     SDL_Log("Failed to create debugger window: %s", SDL_GetError());
+        //     return; // Prevents renderer creation if window creation failed
+        // }
+
+        SDL_CreateWindowAndRenderer(1340, 765, SDL_WINDOW_SHOWN, &_window, &_renderer);
+
+        // _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -113,27 +123,127 @@ namespace gasyboy
         // _disassembler.disassemble();
     }
 
+    void gasyboy::Debugger::reset()
+    {
+        _breakPoints.clear();
+        _currentBreakPoint = -1;
+
+        _currentSelectedRomBank = 0;
+        _currentSelectedRamBank = 0;
+
+        // Reset PPU Control Register Flags
+        _lcdEnable = false;
+        _windowTimeMapArea = false;
+        _windowEnable = false;
+        _objSize8x8 = true;
+        _objSize8x16 = false;
+        _objEnabled = false;
+        _bgWindowEnablePriority = false;
+
+        // Reset PPU LCD Status
+        _ly = 0;
+        _lyc = 0;
+        _scx = 0;
+        _scy = 0;
+        _wx = 0;
+        _wy = 0;
+
+        // Reset PPU Palettes
+        _bgp = 0;
+        _obp0 = 0;
+        _obp1 = 0;
+
+        // Reset Preview Sprite Data
+        _previewPos = ImVec2(0, 0);
+        _previewSprite = Mmu::Sprite(); // Assuming Sprite has a default constructor
+        _previewSpriteXFlip = false;
+        _previewSpriteYFlip = false;
+        _previewSpritePriority = false;
+
+        // Reset Boot BIOS execution flag
+        _executeBios = false;
+
+        // Reset button states
+        for (auto &button : _buttons)
+            button.second = false;
+
+        for (auto &direction : _directions)
+            direction.second = false;
+
+        // Reset submodules
+        _mmu = provider::MmuProvider::getInstance();
+        _ppu = provider::PpuProvider::getInstance();
+        _registers = provider::RegistersProvider::getInstance();
+
+        _bytesBuffers = {
+            {"A", new char[2]},
+            {"F", new char[2]},
+            {"B", new char[2]},
+            {"C", new char[2]},
+            {"D", new char[2]},
+            {"E", new char[2]},
+            {"H", new char[2]},
+            {"L", new char[2]},
+            {"DIV", new char[2]},
+            {"TIMA", new char[2]},
+            {"TMA", new char[2]},
+            {"TAC", new char[2]},
+            {"BGP", new char[2]},
+            {"OBP0", new char[2]},
+            {"OBP1", new char[2]},
+            {"X", new char[2]},
+            {"Y", new char[2]},
+            {"Tile", new char[2]},
+            {"Palette", new char[2]},
+        };
+
+        _wordsBuffers = {
+            {"SP", new char[4]},
+            {"PC", new char[4]},
+            {"TIMA_INCREMENT_RATE", new char[4]},
+            {"WINDOW_TILE_MAP_AREA", new char[4]},
+            {"BG_WINDOW_TILE_DATA_MAP_AREA", new char[4]},
+        };
+
+        _buttons = {
+            {"A", false},
+            {"B", false},
+            {"SELECT", false},
+            {"START", false},
+        };
+
+        _directions = {
+            {"RIGHT", false},
+            {"LEFT", false},
+            {"UP", false},
+            {"DOWN", false},
+        };
+
+        ImGui::SetNextWindowFocus(); // Ensure debugger window gains focus
+    }
+
     Debugger::~Debugger()
     {
-        for (auto &buffer : _bytesBuffers)
-        {
-            if (!buffer.second)
-            {
-                delete buffer.second;
-            }
-        }
+        // for (auto &pair : _bytesBuffers)
+        // {
+        //     delete[] pair.second;
+        // }
+        // _bytesBuffers.clear();
 
-        for (auto &buffer : _wordsBuffers)
-        {
-            delete buffer.second;
-        }
+        // for (auto &pair : _wordsBuffers)
+        // {
+        //     delete[] pair.second;
+        // }
+        // _wordsBuffers.clear();
 
         ImGui_ImplSDLRenderer2_Shutdown();
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
         SDL_DestroyRenderer(_renderer);
+        _renderer = nullptr;
         SDL_DestroyWindow(_window);
-        SDL_Quit();
+        _window = nullptr;
+        // SDL_Quit();
     }
 
     void Debugger::render()
@@ -302,31 +412,35 @@ namespace gasyboy
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Open File Dialog"))
+        if (ImGui::Button("Open"))
         {
             Cpu::state = Cpu::State::PAUSED;
+
             IGFD::FileDialogConfig config;
             config.path = ".";
+            config.flags = ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering;
+
+            // Open the file dialog
             ImGuiFileDialog::Instance()->OpenDialog("ChooseRom", "Choose Rom File", ".gb", config);
+
+            ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(350, 235), ImGuiCond_Always);
         }
 
-        if (ImGuiFileDialog::Instance()->Display("ChooseRom", ImGuiWindowFlags_NoCollapse, ImVec2(640, 480)))
+        // Inside the main loop, make sure this runs every frame
+        if (ImGuiFileDialog::Instance()->Display("ChooseRom"))
         {
-            if (ImGuiFileDialog::Instance()->IsOk())
+            if (ImGuiFileDialog::Instance()->IsOk()) // Check if the user selected a file
             {
-                Cpu::state = Cpu::State::PAUSED;
-                provider::UtilitiesProvider::getInstance()->romFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
-                provider::GamepadProvider::getInstance()->reset();
-                provider::MmuProvider::getInstance()->reset();
-                provider::RegistersProvider::getInstance()->reset();
-                provider::InterruptManagerProvider::getInstance()->reset();
-                provider::CpuProvider::getInstance()->reset();
-                provider::TimerProvider::getInstance()->reset();
-                provider::PpuProvider::getInstance()->reset();
+                std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName(); // Get selected file
+
+                provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
+                provider::GameBoyProvider::getInstance()->reset();
+                reset();
             }
 
+            // Close the dialog to prevent reopening
             ImGuiFileDialog::Instance()->Close();
-            Cpu::state = Cpu::State::RUNNING;
         }
 
         ImGui::End();

@@ -35,7 +35,7 @@ namespace gasyboy
 #ifndef EMSCRIPTEN
         if (_debugMode)
         {
-            _debugger = std::make_unique<Debugger>(_renderer->_window);
+            _debugger = std::make_shared<Debugger>(_renderer->_window);
         }
 #endif
     }
@@ -83,7 +83,7 @@ namespace gasyboy
         _debugMode = debugMode;
         if (debugMode)
         {
-            _debugger = std::make_unique<Debugger>(_renderer->_window);
+            _debugger = std::make_shared<Debugger>(_renderer->_window);
         }
     }
 #endif
@@ -94,7 +94,6 @@ namespace gasyboy
 
         std::thread eventThread([&running, this]
                                 {
-            SDL_Event event;
             while (running)
             {
                _gamepad->handleEvent();
@@ -109,13 +108,6 @@ namespace gasyboy
         {
             while (running)
             {
-#ifndef EMSCRIPTEN
-                if (_debugMode)
-                {
-                    _debugger->render();
-                }
-#endif
-
                 loop();
             }
             eventThread.join();
@@ -141,6 +133,13 @@ namespace gasyboy
             }
         }
 
+#ifndef EMSCRIPTEN
+        if (_debugMode)
+        {
+            _debugger->render();
+        }
+#endif
+
         if (_ppu->_canRender)
         {
             _renderer->render();
@@ -157,6 +156,7 @@ namespace gasyboy
         gasyboy::provider::CpuProvider::deleteInstance();
         gasyboy::provider::TimerProvider::deleteInstance();
         gasyboy::provider::PpuProvider::deleteInstance();
+        // _debugger->reset();
 
         gasyboy::provider::GamepadProvider::getInstance()->reset();
         gasyboy::provider::MmuProvider::getInstance()->reset();
@@ -178,5 +178,6 @@ namespace gasyboy
         _cpu->state = Cpu::State::RUNNING;
         _cycleCounter = 0;
         _renderer->reset();
+        // _debugger = std::make_shared<Debugger>(_renderer->_window);
     }
 }

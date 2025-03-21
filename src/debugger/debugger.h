@@ -97,6 +97,8 @@ namespace gasyboy
         void RenderSprite(const Mmu::Sprite &sprite);
         void Debugger::renderPreviewSprite();
         void renderDisassemblerScreen();
+
+        void reset();
     };
 }
 
