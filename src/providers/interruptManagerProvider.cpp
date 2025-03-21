@@ -4,20 +4,20 @@ namespace gasyboy
 {
     namespace provider
     {
-        std::unique_ptr<InterruptManager> InterruptManagerProvider::_interruptManagerInstance = nullptr;
+        std::shared_ptr<InterruptManager> InterruptManagerProvider::_interruptManagerInstance = nullptr;
 
-        InterruptManager &InterruptManagerProvider::getInstance()
+        std::shared_ptr<InterruptManager> InterruptManagerProvider::getInstance()
         {
             if (!_interruptManagerInstance)
             {
-                _interruptManagerInstance = std::make_unique<InterruptManager>();
+                _interruptManagerInstance = std::make_shared<InterruptManager>();
             }
-            return *_interruptManagerInstance;
+            return _interruptManagerInstance;
         }
 
         void InterruptManagerProvider::deleteInstance()
         {
-            _interruptManagerInstance.reset(nullptr);
+            _interruptManagerInstance.reset();
         }
     }
 }

@@ -4,20 +4,20 @@ namespace gasyboy
 {
     namespace provider
     {
-        std::unique_ptr<Cpu> CpuProvider::_cpuInstance = nullptr;
+        std::shared_ptr<Cpu> CpuProvider::_cpuInstance = nullptr;
 
-        Cpu &CpuProvider::getInstance()
+        std::shared_ptr<Cpu> CpuProvider::getInstance()
         {
             if (!_cpuInstance)
             {
-                _cpuInstance = std::make_unique<Cpu>();
+                _cpuInstance = std::make_shared<Cpu>();
             }
-            return *_cpuInstance;
+            return _cpuInstance;
         }
 
         void CpuProvider::deleteInstance()
         {
-            _cpuInstance.reset(nullptr);
+            _cpuInstance.reset();
         }
     }
 }

@@ -1,18 +1,43 @@
+#include "interruptManagerProvider.h"
+#include "registersProvider.h"
+#include "cpuProvider.h"
+#include "mmuProvider.h"
+#include "ppuProvider.h"
 #include "renderer.h"
 
 namespace gasyboy
 {
-    Renderer::Renderer(Cpu &cpu,
-                       Ppu &ppu,
-                       Registers &registers,
-                       InterruptManager &interruptManager,
-                       Mmu &mmu)
-        : _cpu(cpu),
-          _ppu(ppu),
-          _registers(registers),
-          _interruptManager(interruptManager),
-          _mmu(mmu)
+    Renderer::Renderer()
+        : _cpu(provider::CpuProvider::getInstance()),
+          _ppu(provider::PpuProvider::getInstance()),
+          _registers(provider::RegistersProvider::getInstance()),
+          _interruptManager(provider::InterruptManagerProvider::getInstance()),
+          _mmu(provider::MmuProvider::getInstance())
     {
+    }
+
+    Renderer::~Renderer()
+    {
+        // Destroy viewport texture if allocated
+        if (_viewportTexture)
+        {
+            SDL_DestroyTexture(_viewportTexture);
+            _viewportTexture = nullptr;
+        }
+
+        // Destroy renderer if allocated
+        if (_renderer)
+        {
+            SDL_DestroyRenderer(_renderer);
+            _renderer = nullptr;
+        }
+
+        // Destroy window if allocated
+        if (_window)
+        {
+            SDL_DestroyWindow(_window);
+            _window = nullptr;
+        }
     }
 
     void Renderer::init()
@@ -91,199 +116,52 @@ namespace gasyboy
     {
         for (int i = 0; i < 144 * 160; i++)
         {
-            Colour colour = _ppu._framebuffer[i];
+            Colour colour = _ppu->_framebuffer[i];
             std::copy(colour.colours, colour.colours + 4, _viewportPixels.begin() + i * 4);
         }
         SDL_UpdateTexture(_viewportTexture, NULL, _viewportPixels.data(), _viewportWidth * 4);
     }
 
-    /*DEBUGGER*/
-
-    void DebugRenderer::init()
+    void Renderer::reset()
     {
+        // Reset viewport settings
+        _viewportWidth = 160;
+        _viewportHeight = 144;
+        _viewportRect = {0, 0, _viewportWidth, _viewportHeight};
+        _viewportPixels.fill(0);
+
+        // Reset framerate timing
+        _framerateTime = 1000 / 60;
+        _startFrame = std::chrono::steady_clock::now();
+        _endFrame = _startFrame;
+
+        // Clear the renderer
+        if (_renderer)
+        {
+            SDL_RenderClear(_renderer);
+        }
+
+        // Destroy the existing texture and recreate it
+        if (_viewportTexture)
+        {
+            SDL_DestroyTexture(_viewportTexture);
+            _viewportTexture = nullptr;
+        }
+
+        // Resetting the CPU, PPU, and memory components (if needed)
+        _cpu = provider::CpuProvider::getInstance();
+        _ppu = provider::PpuProvider::getInstance();
+        _mmu = provider::MmuProvider::getInstance();
+        _interruptManager = provider::InterruptManagerProvider::getInstance();
+
+        // Fill pixels to white
         _viewportPixels.fill(0xFF);
-        tilemap_pixels.fill(0xFF);
-        spritemap_pixels.fill(0xFF);
-        background_pixels.fill(0xFF);
 
-        initWindow(windowWidth, windowHeight);
-
-        _viewportTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, _viewportWidth, _viewportHeight);
-        backgroundTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, backgroundWidth, backgroundHeight);
-        spritemapTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, spritemapWidth, spritemapHeight);
-        tilemapTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, tilemapWidth, tilemapHeight);
-    }
-
-    void DebugRenderer::draw()
-    {
-        for (int i = 0; i < 144 * 160; i++)
-        {
-            Colour colour = _ppu._framebuffer[i];
-            std::copy(colour.colours, colour.colours + 4, _viewportPixels.begin() + i * 4);
-        }
-        SDL_UpdateTexture(_viewportTexture, NULL, _viewportPixels.data(), _viewportWidth * 4);
-
-        drawBackground();
-        drawTilemap();
-        drawSpritemap();
-
-        SDL_RenderCopy(_renderer, backgroundTexture, NULL, &background_rect);
-        SDL_RenderCopy(_renderer, tilemapTexture, NULL, &tilemapRect);
-        SDL_RenderCopy(_renderer, spritemapTexture, NULL, &spritemapRect);
-
-        drawBackgroundOverflow();
-    }
-
-    void DebugRenderer::drawBackground()
-    {
-        for (uint16_t i = 0; i <= 1023; i++)
-        {
-            uint16_t tile = _mmu.readRam(0x9800 + i);
-            if (!_ppu._control->bgWindowDataSelect && tile < 128)
-                tile += 256;
-
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    uint8_t color = _mmu.tiles[tile].pixels[y][x];
-                    int xi = (i % 32) * 8 + x;
-                    int yi = (i / 32) * 8 + y;
-                    int offset = 4 * (yi * backgroundWidth + xi);
-                    Colour colour = _mmu.palette_BGP[color];
-                    std::copy(colour.colours, colour.colours + 4, background_pixels.begin() + offset);
-                }
-            }
-        }
-
-        // Draw sprites
-        for (auto sprite : _mmu.sprites)
-        {
-            if (!sprite.ready)
-                continue;
-            for (int tile_num = 0; tile_num < 1 + int(_ppu._control->spriteSize); tile_num++)
-            {
-                int y_pos = sprite.y + tile_num * 8;
-                // Iterate over both tiles
-                for (uint8_t x = 0; x < 8; x++)
-                {
-                    for (uint8_t y = 0; y < 8; y++)
-                    {
-                        uint8_t xF = sprite.options.xFlip ? static_cast<uint8_t>(7 - x) : x;
-                        uint8_t yF = sprite.options.yFlip ? static_cast<uint8_t>(7 - y) : y;
-
-                        int tile = sprite.tile & (_ppu._control->spriteSize ? 0xFE : 0xFF);
-                        uint8_t colour_n = _mmu.tiles[tile + tile_num].pixels[yF][xF];
-
-                        if (!colour_n)
-                            continue;
-                        int xi = (_mmu.readRam(0xff43) + sprite.x + x) % 256;
-                        int yi = (_mmu.readRam(0xff42) + y_pos + y) % 256;
-                        int offset = 4 * (yi * backgroundWidth + xi);
-
-                        if (offset >= background_pixels.size())
-                            continue;
-                        Colour colour = sprite.colourPalette[colour_n];
-                        std::copy(colour.colours, colour.colours + 4, background_pixels.begin() + offset);
-                    }
-                }
-            }
-        }
-        SDL_UpdateTexture(backgroundTexture, NULL, background_pixels.data(), backgroundWidth * 4);
-    }
-
-    void DebugRenderer::drawTilemap()
-    {
-        for (int i = 0; i < 384; i++)
-        {
-            for (int y = 0; y < 8; y++)
-            {
-                for (int x = 0; x < 8; x++)
-                {
-                    uint8_t colour_n = _mmu.tiles[i].pixels[y][x];
-                    int offsetX = ((i * 8 + x) % tilemapWidth);
-                    int offsetY = y + (int(i / 16)) * 8;
-                    int offset = 4 * (offsetY * tilemapWidth + offsetX);
-
-                    Colour colour = _mmu.palette_BGP[colour_n];
-                    std::copy(colour.colours, colour.colours + 4, tilemap_pixels.begin() + offset);
-                }
-            }
-        }
-        SDL_UpdateTexture(tilemapTexture, NULL, tilemap_pixels.data(), tilemapWidth * 4);
-    }
-
-    void DebugRenderer::drawRectangle(int x, int y, int width, int height, Colour color)
-    {
-        SDL_Rect rect = {x, y, width, height};
-
-        SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(_renderer, color.r, color.g, color.b, color.a);
-        SDL_RenderFillRect(_renderer, &rect);
-        SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
-        SDL_RenderDrawRect(_renderer, &rect);
-    }
-
-    void DebugRenderer::drawBackgroundOverflow()
-    {
-        int overflowX = std::max(*_ppu._scrollX + _viewportWidth - backgroundWidth, 0);
-        int overflowY = std::max(*_ppu._scrollY + _viewportHeight - backgroundHeight, 0);
-
-        drawRectangle(background_rect.x + *_ppu._scrollX, _viewportHeight + *_ppu._scrollY, _viewportWidth - overflowX, _viewportHeight, {255, 255, 255, 100});
-
-        if (overflowX)
-            drawRectangle(background_rect.x, _viewportHeight + *_ppu._scrollY, overflowX, _viewportHeight, {255, 255, 255, 100});
-
-        if (overflowY)
-            drawRectangle(background_rect.x + *_ppu._scrollX, _viewportHeight, _viewportWidth - overflowX, overflowY, {255, 255, 255, 100});
-
-        if (overflowX && overflowY)
-            drawRectangle(background_rect.x, _viewportHeight, overflowX, overflowY, {255, 255, 255, 100});
-    }
-
-    void DebugRenderer::drawSpritemap()
-    {
-        auto draw_sprite = [this](Mmu::Sprite sprite, int tile_off, int off_x, int off_y)
-        {
-            if (!sprite.ready)
-                return;
-            for (uint8_t x = 0; x < 8; x++)
-            {
-                uint8_t xF = sprite.options.xFlip ? static_cast<uint8_t>(7 - x) : x;
-                for (uint8_t y = 0; y < 8; y++)
-                {
-                    uint8_t yF = sprite.options.yFlip ? static_cast<uint8_t>(7 - y) : y;
-                    uint8_t colour_n = _mmu.tiles[sprite.tile + tile_off].pixels[yF][xF];
-                    int offsetX = ((off_x + x) % spritemapWidth);
-                    int offsetY = y + off_y;
-                    int offset = 4 * (offsetY * spritemapWidth + offsetX);
-
-                    Colour colour = sprite.colourPalette[colour_n];
-                    std::copy(colour.colours, colour.colours + 4, spritemap_pixels.begin() + offset);
-                }
-            }
-        };
-
-        if (_ppu._control->spriteSize)
-        {
-            for (int i = 0, row = 0; i < 20; i++)
-            {
-                draw_sprite(_mmu.sprites[i], 0, i * 8, row * 8);
-                draw_sprite(_mmu.sprites[i], 1, i * 8, row * 8 + 8);
-                if (((i + 1) % 5) == 0)
-                    row += 2;
-            }
-        }
-        else
-        {
-            for (int i = 0, row = 0; i < 40; i++)
-            {
-                draw_sprite(_mmu.sprites[i], 0, i * 8, row * 8);
-                if (((i + 1) % 5) == 0)
-                    row++;
-            }
-        }
-
-        SDL_UpdateTexture(spritemapTexture, NULL, spritemap_pixels.data(), spritemapWidth * 4);
+        // Recreate the viewport texture
+        _viewportTexture = SDL_CreateTexture(_renderer,
+                                             SDL_PIXELFORMAT_ARGB8888,
+                                             SDL_TEXTUREACCESS_STREAMING,
+                                             _viewportWidth,
+                                             _viewportHeight);
     }
 }

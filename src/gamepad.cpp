@@ -1,7 +1,8 @@
+#include "utilitiesProvider.h"
+#include "gameBoyProvider.h"
 #include "gamepad.h"
 #include "defs.h"
-// #include "SDL.h"
-#include <SDL2/SDL.h>
+#include "SDL.h"
 #ifdef EMSCRIPTEN
 #include <SDL2/SDL.h>
 #else
@@ -29,16 +30,39 @@ namespace gasyboy
 
         while (SDL_PollEvent(&event) != 0)
         {
+            if (provider::UtilitiesProvider::getInstance()->debugMode)
+            {
+                ImGui_ImplSDL2_ProcessEvent(&event);
+            }
+
             if (event.type == SDL_QUIT)
             {
                 exit(ExitState::MANUAL_STOP);
             }
+            else if (event.type == SDL_DROPFILE)
+            {
+                // Resetting gambeoy instance and loading new ROM
+                char *droppedFile = event.drop.file;
+                if (droppedFile)
+                {
+                    std::string filePath(droppedFile);
+                    gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
+                    gasyboy::provider::UtilitiesProvider::getInstance()->wasReset = true;
+                    SDL_free(droppedFile);
+                }
+            }
+
             else if (event.type == SDL_KEYDOWN)
             {
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_ESCAPE:
                     exit(ExitState::MANUAL_STOP);
+                    break;
+
+                case SDLK_KP_MULTIPLY:
+                case SDLK_ASTERISK:
+                    gasyboy::provider::UtilitiesProvider::getInstance()->wasReset = true;
                     break;
 
                 case SDLK_UP:

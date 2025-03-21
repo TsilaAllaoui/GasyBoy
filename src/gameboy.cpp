@@ -9,6 +9,7 @@
 #include "gbException.h"
 #include "gameboy.h"
 #include "logger.h"
+#include <thread>
 #ifndef EMSCRIPTEN
 #include "imgui_impl_sdl2.h"
 #endif
@@ -18,7 +19,7 @@ namespace gasyboy
     GameBoy::State GameBoy::state = GameBoy::State::RUNNING;
 
     GameBoy::GameBoy()
-        : _debugMode(provider::UtilitiesProvider::getInstance().debugMode),
+        : _debugMode(provider::UtilitiesProvider::getInstance()->debugMode),
           _gamepad(provider::GamepadProvider::getInstance()),
           _mmu(provider::MmuProvider::getInstance()),
           _registers(provider::RegistersProvider::getInstance()),
@@ -28,20 +29,19 @@ namespace gasyboy
           _cycleCounter(0),
           _ppu(provider::PpuProvider::getInstance())
     {
-
-        _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
+        _renderer = std::make_unique<Renderer>();
         _renderer->init();
 
 #ifndef EMSCRIPTEN
         if (_debugMode)
         {
-            _debugger = std::make_unique<Debugger>(_renderer->_window);
+            _debugger = std::make_shared<Debugger>(_renderer->_window);
         }
 #endif
     }
 
     GameBoy::GameBoy(const uint8_t *bytes, const size_t &romSize)
-        : _debugMode(provider::UtilitiesProvider::getInstance().debugMode),
+        : _debugMode(provider::UtilitiesProvider::getInstance()->debugMode),
           _gamepad(provider::GamepadProvider::getInstance()),
           _mmu(provider::MmuProvider::create(bytes, romSize)),
           _registers(provider::RegistersProvider::getInstance()),
@@ -51,7 +51,7 @@ namespace gasyboy
           _cycleCounter(0),
           _ppu(provider::PpuProvider::getInstance())
     {
-        _renderer = std::make_unique<Renderer>(_cpu, _ppu, _registers, _interruptManager, _mmu);
+        _renderer = std::make_unique<Renderer>();
         _renderer->init();
 
 #ifndef EMSCRIPTEN
@@ -64,12 +64,12 @@ namespace gasyboy
 
     void GameBoy::step()
     {
-        const uint16_t cycle = static_cast<uint16_t>(_cpu.step());
+        const uint16_t cycle = static_cast<uint16_t>(_cpu->step());
         _cycleCounter += cycle;
-        _timer.update(cycle);
-        _gamepad.handleEvent();
-        _interruptManager.handleInterrupts();
-        _ppu.step(cycle);
+        _timer->update(cycle);
+        _gamepad->handleEvent();
+        _interruptManager->handleInterrupts();
+        _ppu->step(cycle);
     }
 
     void GameBoy::stop()
@@ -77,34 +77,31 @@ namespace gasyboy
         state = State::STOPPED;
     }
 
-#ifndef EMSCRIPTEN
-    void GameBoy::setDebugMode(const bool &debugMode)
-    {
-        _debugMode = debugMode;
-        if (debugMode)
-        {
-            _debugger = std::make_unique<Debugger>(_renderer->_window);
-        }
-    }
-#endif
-
     void GameBoy::boot()
     {
         bool running = true;
+
+        std::thread eventThread([&running, this]
+                                {
+            while (running)
+            {
+               _gamepad->handleEvent();
+               if (provider::UtilitiesProvider::getInstance()->wasReset)
+               {
+                reset();
+                provider::UtilitiesProvider::getInstance()->wasReset = false;
+               }
+            } });
+
         try
         {
             while (running)
             {
-#ifndef EMSCRIPTEN
-                if (_debugMode)
-                {
-                    _debugger->render();
-                }
-#endif
-
                 loop();
             }
+            eventThread.join();
         }
+
         catch (const exception::GbException &e)
         {
             utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL, e.what());
@@ -118,6 +115,7 @@ namespace gasyboy
         while ((Cpu::state == Cpu::State::RUNNING && _cycleCounter <= MAXCYCLE) ||
                Cpu::state == Cpu::State::STEPPING)
         {
+            _interruptManager->handleInterrupts();
             step();
             if (Cpu::state == Cpu::State::STEPPING)
             {
@@ -125,10 +123,50 @@ namespace gasyboy
             }
         }
 
-        if (_ppu._canRender)
+#ifndef EMSCRIPTEN
+        if (_debugMode)
+        {
+            _debugger->render();
+        }
+#endif
+
+        if (_ppu->_canRender)
         {
             _renderer->render();
-            _ppu._canRender = false;
+            _ppu->_canRender = false;
         }
+    }
+
+    void GameBoy::reset()
+    {
+        gasyboy::provider::GamepadProvider::deleteInstance();
+        gasyboy::provider::MmuProvider::deleteInstance();
+        gasyboy::provider::RegistersProvider::deleteInstance();
+        gasyboy::provider::InterruptManagerProvider::deleteInstance();
+        gasyboy::provider::CpuProvider::deleteInstance();
+        gasyboy::provider::TimerProvider::deleteInstance();
+        gasyboy::provider::PpuProvider::deleteInstance();
+        _debugger->reset();
+
+        gasyboy::provider::GamepadProvider::getInstance()->reset();
+        gasyboy::provider::MmuProvider::getInstance()->reset();
+        gasyboy::provider::RegistersProvider::getInstance()->reset();
+        gasyboy::provider::InterruptManagerProvider::getInstance()->reset();
+        gasyboy::provider::CpuProvider::getInstance()->reset();
+        gasyboy::provider::TimerProvider::getInstance()->reset();
+        gasyboy::provider::PpuProvider::getInstance()->reset();
+
+        _debugMode = provider::UtilitiesProvider::getInstance()->debugMode;
+        _gamepad = provider::GamepadProvider::getInstance();
+        _mmu = provider::MmuProvider::getInstance();
+        _registers = provider::RegistersProvider::getInstance();
+        _interruptManager = provider::InterruptManagerProvider::getInstance();
+        _cpu = provider::CpuProvider::getInstance();
+        _timer = provider::TimerProvider::getInstance();
+        _cycleCounter = 0;
+        _ppu = provider::PpuProvider::getInstance();
+        _cpu->state = Cpu::State::RUNNING;
+        _cycleCounter = 0;
+        _renderer->reset();
     }
 }

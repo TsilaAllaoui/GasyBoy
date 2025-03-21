@@ -16,17 +16,28 @@ namespace gasyboy
 
     public:
         Ppu();
+        Ppu &operator=(const Ppu &);
 
-        Registers &_registers;
-        Mmu &_mmu;
-        InterruptManager &_interruptManager;
+        std::shared_ptr<Registers> _registers;
+        std::shared_ptr<Mmu> _mmu;
+        std::shared_ptr<InterruptManager> _interruptManager;
 
         void reset();
 
-        uint8_t *_scrollX;
-        uint8_t *_scrollY;
-        uint8_t *_scanline;
-        uint32_t _tick;
+        uint8_t *SCX;
+        uint8_t *SCY;
+        uint8_t *WX;
+        uint8_t *WY;
+        uint8_t *LY;
+        uint8_t *LCY;
+
+        enum PpuMode
+        {
+            HBLANK = 0,
+            VBLANK = 1,
+            OAM_SEARCH = 2,
+            DRAWING = 3
+        };
 
         struct Control
         {
@@ -44,7 +55,7 @@ namespace gasyboy
                     uint8_t lcdEnable : 1;
                 };
             };
-        } *_control;
+        } *LCDC;
 
         struct Stat
         {
@@ -60,20 +71,17 @@ namespace gasyboy
                     uint8_t coincidenceInterrupt : 1;
                 };
             };
-        } *_lcdStat;
+        } *STAT;
 
         Colour _framebuffer[160 * 144];
-        // WTF: This variable is unused, but removing her breaks some games
-        uint8_t _background[32 * 32];
 
-        int _mode = 0;
         int _modeClock = 0;
 
         bool _canRender = false;
 
         void step(const int &cycle);
 
-        void compareLyAndLyc();
+        void setMode(PpuMode mode);
     };
 }
 

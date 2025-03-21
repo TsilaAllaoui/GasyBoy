@@ -73,12 +73,14 @@ namespace gasyboy
 
         std::thread _disassemblerThread;
 
+        void reset();
+
     private:
         SDL_Renderer *_renderer;
-        Registers &_registers;
-        Mmu &_mmu;
-        Timer _timer;
-        Ppu &_ppu;
+        std::shared_ptr<Registers> _registers;
+        std::shared_ptr<Mmu> _mmu;
+        std::shared_ptr<Timer> _timer;
+        std::shared_ptr<Ppu> _ppu;
         Disassembler _disassembler;
 
         std::map<std::string, char *> _bytesBuffers;

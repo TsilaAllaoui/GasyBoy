@@ -26,6 +26,7 @@ namespace gasyboy
     public:
         // Constructor/destructor
         Cartridge();
+        Cartridge &operator=(const Cartridge &);
         ~Cartridge() = default;
 
         // MBC type

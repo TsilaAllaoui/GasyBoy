@@ -6,27 +6,27 @@ namespace gasyboy
 {
     namespace provider
     {
-        std::unique_ptr<Mmu> MmuProvider::_mmuInstance = nullptr;
+        std::shared_ptr<Mmu> MmuProvider::_mmuInstance = nullptr;
 
-        Mmu &MmuProvider::getInstance()
+        std::shared_ptr<Mmu> MmuProvider::getInstance()
         {
             if (!_mmuInstance)
             {
-                _mmuInstance = std::make_unique<Mmu>();
+                _mmuInstance = std::make_shared<Mmu>();
             }
-            return *_mmuInstance;
+            return _mmuInstance;
         }
 
-        Mmu &MmuProvider::create(const uint8_t *bytes, const size_t &romSize)
+        std::shared_ptr<Mmu> MmuProvider::create(const uint8_t *bytes, const size_t &romSize)
         {
-            _mmuInstance.reset(nullptr);
-            _mmuInstance = std::make_unique<Mmu>(bytes, romSize);
-            return *_mmuInstance;
+            _mmuInstance.reset();
+            _mmuInstance = std::make_shared<Mmu>(bytes, romSize);
+            return _mmuInstance;
         }
 
         void MmuProvider::deleteInstance()
         {
-            _mmuInstance.reset(nullptr);
+            _mmuInstance.reset();
         }
     }
 }

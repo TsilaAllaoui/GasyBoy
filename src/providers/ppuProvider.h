@@ -11,7 +11,7 @@ namespace gasyboy
         class PpuProvider
         {
         private:
-            static std::unique_ptr<Ppu> _ppuInstance;
+            static std::shared_ptr<Ppu> _ppuInstance;
 
             PpuProvider() = default;
 
@@ -21,7 +21,7 @@ namespace gasyboy
             PpuProvider(const PpuProvider &) = delete;
             PpuProvider &operator=(const PpuProvider &) = delete;
 
-            static Ppu &getInstance();
+            static std::shared_ptr<Ppu> getInstance();
 
             static void deleteInstance();
         };

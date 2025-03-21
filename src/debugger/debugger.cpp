@@ -10,6 +10,7 @@
 #include "registersProvider.h"
 #include "utilitiesProvider.h"
 #include "gamepadProvider.h"
+#include "gameBoyProvider.h"
 #include "timerProvider.h"
 #include "mmuProvider.h"
 #include "cpuProvider.h"
@@ -32,7 +33,7 @@ namespace gasyboy
           _previewPos(ImVec2(845, 165)),
           _previewSprite(),
           _disassembler(),
-          _executeBios(provider::UtilitiesProvider::getInstance().executeBios)
+          _executeBios(provider::UtilitiesProvider::getInstance()->executeBios)
     {
         _bytesBuffers = {
             {"A", new char[2]},
@@ -87,13 +88,7 @@ namespace gasyboy
         int debuggerWindowX = mainWindowX + mainWindowWidth + 10; // 10 pixels to the right
         int debuggerWindowY = mainWindowY;
 
-        // Create the debugger window next to the main window
-        _window = SDL_CreateWindow("Debugger",
-                                   debuggerWindowX,
-                                   debuggerWindowY,
-                                   1340, 765, // Width and height for the debugger window
-                                   SDL_WINDOW_SHOWN);
-        _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+        SDL_CreateWindowAndRenderer(1340, 765, SDL_WINDOW_SHOWN, &_window, &_renderer);
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -113,37 +108,128 @@ namespace gasyboy
         // _disassembler.disassemble();
     }
 
+    void Debugger::reset()
+    {
+        _breakPoints.clear();
+        _currentBreakPoint = -1;
+
+        _currentSelectedRomBank = 0;
+        _currentSelectedRamBank = 0;
+
+        // Reset PPU Control Register Flags
+        _lcdEnable = false;
+        _windowTimeMapArea = false;
+        _windowEnable = false;
+        _objSize8x8 = true;
+        _objSize8x16 = false;
+        _objEnabled = false;
+        _bgWindowEnablePriority = false;
+
+        // Reset PPU LCD Status
+        _ly = 0;
+        _lyc = 0;
+        _scx = 0;
+        _scy = 0;
+        _wx = 0;
+        _wy = 0;
+
+        // Reset PPU Palettes
+        _bgp = 0;
+        _obp0 = 0;
+        _obp1 = 0;
+
+        // Reset Preview Sprite Data
+        _previewPos = ImVec2(0, 0);
+        _previewSprite = Mmu::Sprite(); // Assuming Sprite has a default constructor
+        _previewSpriteXFlip = false;
+        _previewSpriteYFlip = false;
+        _previewSpritePriority = false;
+
+        // Reset Boot BIOS execution flag
+        _executeBios = false;
+
+        // Reset button states
+        for (auto &button : _buttons)
+            button.second = false;
+
+        for (auto &direction : _directions)
+            direction.second = false;
+
+        // Reset submodules
+        _mmu = provider::MmuProvider::getInstance();
+        _ppu = provider::PpuProvider::getInstance();
+        _registers = provider::RegistersProvider::getInstance();
+
+        // _bytesBuffers = {
+        //     {"A", new char[2]},
+        //     {"F", new char[2]},
+        //     {"B", new char[2]},
+        //     {"C", new char[2]},
+        //     {"D", new char[2]},
+        //     {"E", new char[2]},
+        //     {"H", new char[2]},
+        //     {"L", new char[2]},
+        //     {"DIV", new char[2]},
+        //     {"TIMA", new char[2]},
+        //     {"TMA", new char[2]},
+        //     {"TAC", new char[2]},
+        //     {"BGP", new char[2]},
+        //     {"OBP0", new char[2]},
+        //     {"OBP1", new char[2]},
+        //     {"X", new char[2]},
+        //     {"Y", new char[2]},
+        //     {"Tile", new char[2]},
+        //     {"Palette", new char[2]},
+        // };
+
+        // _wordsBuffers = {
+        //     {"SP", new char[4]},
+        //     {"PC", new char[4]},
+        //     {"TIMA_INCREMENT_RATE", new char[4]},
+        //     {"WINDOW_TILE_MAP_AREA", new char[4]},
+        //     {"BG_WINDOW_TILE_DATA_MAP_AREA", new char[4]},
+        // };
+
+        // _buttons = {
+        //     {"A", false},
+        //     {"B", false},
+        //     {"SELECT", false},
+        //     {"START", false},
+        // };
+
+        // _directions = {
+        //     {"RIGHT", false},
+        //     {"LEFT", false},
+        //     {"UP", false},
+        //     {"DOWN", false},
+        // };
+    }
+
     Debugger::~Debugger()
     {
-        for (auto &buffer : _bytesBuffers)
-        {
-            if (!buffer.second)
-            {
-                delete buffer.second;
-            }
-        }
+        // for (auto &pair : _bytesBuffers)
+        // {
+        //     delete[] pair.second;
+        // }
+        // _bytesBuffers.clear();
 
-        for (auto &buffer : _wordsBuffers)
-        {
-            delete buffer.second;
-        }
+        // for (auto &pair : _wordsBuffers)
+        // {
+        //     delete[] pair.second;
+        // }
+        // _wordsBuffers.clear();
 
         ImGui_ImplSDLRenderer2_Shutdown();
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
         SDL_DestroyRenderer(_renderer);
+        _renderer = nullptr;
         SDL_DestroyWindow(_window);
-        SDL_Quit();
+        _window = nullptr;
     }
 
     void Debugger::render()
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            ImGui_ImplSDL2_ProcessEvent(&event);
-        }
-
         // Start ImGui frame
         ImGui_ImplSDL2_NewFrame();
         ImGui_ImplSDLRenderer2_NewFrame();
@@ -220,52 +306,52 @@ namespace gasyboy
 
             ImGui::TableNextColumn();
             renderByte("A", [&]()
-                       { return _registers.AF.getLeftRegister(); }, [&](const uint8_t &val)
-                       { _registers.AF.setLeftRegister(val); });
+                       { return _registers->AF.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers->AF.setLeftRegister(val); });
             ImGui::SameLine();
             renderByte("F", [&]()
-                       { return _registers.AF.getRightRegister(); }, [&](const uint8_t &val)
-                       { _registers.AF.setRightRegister(val); });
+                       { return _registers->AF.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers->AF.setRightRegister(val); });
 
             renderByte("B", [&]()
-                       { return _registers.BC.getLeftRegister(); }, [&](const uint8_t &val)
-                       { _registers.BC.setLeftRegister(val); });
+                       { return _registers->BC.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers->BC.setLeftRegister(val); });
             ImGui::SameLine();
             renderByte("C", [&]()
-                       { return _registers.BC.getRightRegister(); }, [&](const uint8_t &val)
-                       { _registers.BC.setRightRegister(val); });
+                       { return _registers->BC.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers->BC.setRightRegister(val); });
 
             renderByte("D", [&]()
-                       { return _registers.DE.getLeftRegister(); }, [&](const uint8_t &val)
-                       { _registers.DE.setLeftRegister(val); });
+                       { return _registers->DE.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers->DE.setLeftRegister(val); });
             ImGui::SameLine();
             renderByte("E", [&]()
-                       { return _registers.DE.getRightRegister(); }, [&](const uint8_t &val)
-                       { _registers.DE.setRightRegister(val); });
+                       { return _registers->DE.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers->DE.setRightRegister(val); });
 
             renderByte("H", [&]()
-                       { return _registers.HL.getLeftRegister(); }, [&](const uint8_t &val)
-                       { _registers.HL.setLeftRegister(val); });
+                       { return _registers->HL.getLeftRegister(); }, [&](const uint8_t &val)
+                       { _registers->HL.setLeftRegister(val); });
             ImGui::SameLine();
             renderByte("L", [&]()
-                       { return _registers.HL.getRightRegister(); }, [&](const uint8_t &val)
-                       { _registers.HL.setRightRegister(val); });
+                       { return _registers->HL.getRightRegister(); }, [&](const uint8_t &val)
+                       { _registers->HL.setRightRegister(val); });
 
             renderWord("SP", [&]()
-                       { return _registers.SP; }, [&](uint16_t val)
-                       { _registers.SP = val; });
+                       { return _registers->SP; }, [&](uint16_t val)
+                       { _registers->SP = val; });
 
             renderWord("PC", [&]()
-                       { return _registers.PC; }, [&](uint16_t val)
-                       { _registers.PC = val; });
+                       { return _registers->PC; }, [&](uint16_t val)
+                       { _registers->PC = val; });
 
             ImGui::TableNextColumn();
 
             ImGui::Text("Flags");
-            bool Z = _registers.AF.getFlag('Z');
-            bool N = _registers.AF.getFlag('N');
-            bool H = _registers.AF.getFlag('H');
-            bool C = _registers.AF.getFlag('C');
+            bool Z = _registers->AF.getFlag('Z');
+            bool N = _registers->AF.getFlag('N');
+            bool H = _registers->AF.getFlag('H');
+            bool C = _registers->AF.getFlag('C');
             ImGui::Checkbox("Zero", &Z);
             ImGui::Checkbox("Subtract", &N);
             ImGui::Checkbox("Half Carry", &H);
@@ -273,8 +359,12 @@ namespace gasyboy
 
             ImGui::Separator();
             ImGui::Text("State");
-            bool halted = _registers.getHalted();
+            bool halted = _registers->getHalted();
             ImGui::Checkbox("HALTED", &halted);
+            _registers->setHalted(halted);
+            bool stopped = _registers->getStopMode();
+            ImGui::Checkbox("STOPPED", &stopped);
+            _registers->setStopMode(stopped);
 
             ImGui::EndTable();
         }
@@ -302,31 +392,35 @@ namespace gasyboy
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Open File Dialog"))
+        if (ImGui::Button("Open"))
         {
             Cpu::state = Cpu::State::PAUSED;
+
             IGFD::FileDialogConfig config;
             config.path = ".";
+            config.flags = ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering;
+
+            // Open the file dialog
             ImGuiFileDialog::Instance()->OpenDialog("ChooseRom", "Choose Rom File", ".gb", config);
+
+            ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(350, 235), ImGuiCond_Always);
         }
 
-        if (ImGuiFileDialog::Instance()->Display("ChooseRom", ImGuiWindowFlags_NoCollapse, ImVec2(640, 480)))
+        // Inside the main loop, make sure this runs every frame
+        if (ImGuiFileDialog::Instance()->Display("ChooseRom"))
         {
-            if (ImGuiFileDialog::Instance()->IsOk())
+            if (ImGuiFileDialog::Instance()->IsOk()) // Check if the user selected a file
             {
-                Cpu::state = Cpu::State::PAUSED;
-                provider::UtilitiesProvider::getInstance().romFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
-                provider::GamepadProvider::getInstance().reset();
-                provider::MmuProvider::getInstance().reset();
-                provider::RegistersProvider::getInstance().reset();
-                provider::InterruptManagerProvider::getInstance().reset();
-                provider::CpuProvider::getInstance().reset();
-                provider::TimerProvider::getInstance().reset();
-                provider::PpuProvider::getInstance().reset();
+                std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName(); // Get selected file
+
+                provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
+                provider::GameBoyProvider::getInstance()->reset();
+                reset();
             }
 
+            // Close the dialog to prevent reopening
             ImGuiFileDialog::Instance()->Close();
-            Cpu::state = Cpu::State::RUNNING;
         }
 
         ImGui::End();
@@ -349,24 +443,24 @@ namespace gasyboy
             ImGui::TableNextColumn();
 
             renderByte("DIV", [&]()
-                       { return _timer.DIV(); }, [&](const uint8_t &value)
-                       { _timer.setDIV(value); });
+                       { return _timer->DIV(); }, [&](const uint8_t &value)
+                       { _timer->setDIV(value); });
 
             renderByte("TIMA", [&]()
-                       { return _timer.TIMA(); }, [&](const uint8_t &value)
-                       { _timer.setTIMA(value); });
+                       { return _timer->TIMA(); }, [&](const uint8_t &value)
+                       { _timer->setTIMA(value); });
             ImGui::SameLine();
             renderWord("TIMA_INCREMENT_RATE", [&]()
-                       { return _timer._timaIncrementRate; }, [&](const uint16_t &value)
-                       { _timer._timaIncrementRate = value; }, 10);
+                       { return _timer->_timaIncrementRate; }, [&](const uint16_t &value)
+                       { _timer->_timaIncrementRate = value; }, 10);
 
             renderByte("TMA", [&]()
-                       { return _timer.TMA(); }, [&](const uint8_t &value)
-                       { _timer.setTMA(value); });
+                       { return _timer->TMA(); }, [&](const uint8_t &value)
+                       { _timer->setTMA(value); });
 
             renderByte("TAC", [&]()
-                       { return _timer.TAC(); }, [&](const uint8_t &value)
-                       { _timer.setTAC(value); });
+                       { return _timer->TAC(); }, [&](const uint8_t &value)
+                       { _timer->setTAC(value); });
 
             ImGui::EndTable();
         }
@@ -387,7 +481,7 @@ namespace gasyboy
         {
             for (size_t i = 0; i < 4; i++)
             {
-                _directions[i].second = !(_mmu.readRam(0xFF00) & (1 << i));
+                _directions[i].second = !(_mmu->readRam(0xFF00) & (1 << i));
                 _buttons[i].second = false;
             }
         }
@@ -396,7 +490,7 @@ namespace gasyboy
             for (size_t i = 0; i < 4; i++)
             {
                 _directions[i].second = false;
-                _buttons[i].second = !(_mmu.readRam(0xFF00) & (1 << i));
+                _buttons[i].second = !(_mmu->readRam(0xFF00) & (1 << i));
             }
         }
 
@@ -434,11 +528,11 @@ namespace gasyboy
         // // Create the window
         // ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-        // auto cartridge = _mmu.getCartridge();
+        // auto cartridge = _mmu->getCartridge();
 
-        // auto romBanks = _mmu.getCartridge().getRomBanks();
+        // auto romBanks = _mmu->getCartridge().getRomBanks();
 
-        // auto ramBanks = _mmu.getCartridge().getRamBanks();
+        // auto ramBanks = _mmu->getCartridge().getRamBanks();
 
         // // Start the tab bar
         // if (ImGui::BeginTabBar("##Memory"))
@@ -464,7 +558,7 @@ namespace gasyboy
         //         ImGui::Text("ROM [0x4000 - 0x8000] (multiple banks)");
         //         ImGui::SameLine();
         //         ImGui::SetNextItemWidth(75);
-        //         showIntegerCombo(1, _mmu.getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
+        //         showIntegerCombo(1, _mmu->getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
         //         showByteArray(romBanks.at(_currentSelectedRomBank), 0x4000);
         //         ImGui::EndTabItem();
         //     }
@@ -540,7 +634,7 @@ namespace gasyboy
             {
                 int tileX = _previewSprite.options.xFlip ? (7 - px) : px;
                 int tileY = _previewSprite.options.yFlip ? (7 - py) : py;
-                uint8_t pixelValue = _mmu.tiles[_previewSprite.tile].pixels[tileY][tileX];
+                uint8_t pixelValue = _mmu->tiles[_previewSprite.tile].pixels[tileY][tileX];
                 ImU32 color = PixelToColor(pixelValue);
                 previewDrawList->AddRectFilled(
                     ImVec2(_previewPos.x + px * (pixelSize * 4), _previewPos.y + py * (pixelSize * 4)),
@@ -561,8 +655,8 @@ namespace gasyboy
         // Create the window
         ImGui::Begin("Disassembler", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-        uint16_t targetAddress = _registers.PC; // Assume we want to scroll to the current PC
-        static uint16_t previousPC = _registers.PC;
+        uint16_t targetAddress = _registers->PC; // Assume we want to scroll to the current PC
+        static uint16_t previousPC = _registers->PC;
         int targetIndex = -1;     // Will store the index of the target address
         int surroundingLines = 5; // Number of lines before/after to show for lazy loading
 
@@ -703,7 +797,7 @@ namespace gasyboy
         if (!sprite.ready)
             return; // Skip rendering if sprite is not ready
 
-        const Mmu::Tile &tile = _mmu.tiles[sprite.tile]; // Get the tile corresponding to the sprite
+        const Mmu::Tile &tile = _mmu->tiles[sprite.tile]; // Get the tile corresponding to the sprite
 
         // ImGui::GetWindowDrawList() returns the current drawing list to draw custom elements
         ImDrawList *drawList = ImGui::GetWindowDrawList();
@@ -761,57 +855,62 @@ namespace gasyboy
             {
                 ImGui::Text("Control Register");
 
-                uint8_t *controlByte = reinterpret_cast<uint8_t *>(_ppu._control);
-
-                _lcdEnable = (*controlByte & (1 << 7)) == 1;
+                _lcdEnable = _ppu->LCDC->lcdEnable == 1;
                 ImGui::Checkbox("LCD Enable", &_lcdEnable);
+                if (_lcdEnable != _ppu->LCDC->lcdEnable)
+                {
+                    _ppu->LCDC->lcdEnable = _lcdEnable;
+                }
 
-                renderWord("WINDOW_TILE_MAP_AREA", [&]()
-                           { return static_cast<uint16_t>((*controlByte & (1 << 6)) == 0 ? 0x9800 : 0x9C00); }, [&](const uint16_t &value)
-                           {
-                            if (value == 0x9800)
-                            {
-                                _windowTimeMapArea = 0;
-                            }
-                            else if (value == 0x9C00)
-                            {
-                                _windowTimeMapArea = 1;
-                            }
-                            else 
-                            {
-                               utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "Invalid Window Time Map Area!");
-                            } });
-
-                _windowEnable = (*controlByte & (1 << 5)) == 1;
-                ImGui::Checkbox("Window Enable", &_windowEnable);
-
-                renderWord("BG_WINDOW_TILE_DATA_MAP_AREA", [&]()
-                           { return static_cast<uint16_t>((*controlByte & (1 << 4)) == 0 ? 0x9800 : 0x9C00); }, [&](const uint16_t &value)
-                           {
-                            if (value == 0x9800)
-                            {
-                                _windowTimeMapArea = 0;
-                            }
-                            else if (value == 0x9C00)
-                            {
-                                _windowTimeMapArea = 1;
-                            }
-                            else 
-                            {
-                               utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "Invalid Window Time Map Area!");
-                            } });
-
-                _objSize8x8 = (*controlByte & (1 << 3)) == 1;
-                ImGui::Checkbox("OBJ Size 8x8", &_objSize8x8);
+                ImGui::Text("WINDOW_TILE_MAP_AREA");
                 ImGui::SameLine();
-                _objSize8x16 = (*controlByte & (1 << 3)) == 0;
-                ImGui::Checkbox("OBJ Size 8x16", &_objSize8x16);
+                ImGui::SetNextItemWidth(100);
+                static const char *windowDisplaySelectValues[] = {"0x9800", "0x9C00"};
+                static int windowDisplaySelectValue = 0;
+                if (ImGui::Combo("##WINDOW_TILE_MAP_AREA", &windowDisplaySelectValue, windowDisplaySelectValues, IM_ARRAYSIZE(windowDisplaySelectValues)))
+                {
+                    printf("Selected: %s\n", windowDisplaySelectValues[windowDisplaySelectValue]);
+                    _ppu->LCDC->windowDisplaySelect = (windowDisplaySelectValue == 0) ? 0 : 1;
+                }
 
-                _objEnabled = (*controlByte & (1 << 2)) == 1;
+                _windowEnable = _ppu->LCDC->windowEnable == 1;
+                ImGui::Checkbox("Window Enable", &_windowEnable);
+                if (_windowEnable != _ppu->LCDC->windowEnable)
+                {
+                    _ppu->LCDC->windowEnable = _windowEnable;
+                }
+
+                ImGui::Text("BG_WINDOW_TILE_DATA_MAP_AREA");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(100);
+                static const char *bgDisplaySelectValues[] = {"0x9800", "0x9C00"};
+                static int bgDisplaySelectValue = 0;
+                if (ImGui::Combo("##BG_WINDOW_TILE_DATA_MAP_AREA", &bgDisplaySelectValue, bgDisplaySelectValues, IM_ARRAYSIZE(bgDisplaySelectValues)))
+                {
+                    printf("Selected: %s\n", bgDisplaySelectValues[bgDisplaySelectValue]);
+                    _ppu->LCDC->bgDisplaySelect = (bgDisplaySelectValue == 0) ? 0 : 1;
+                }
+
+                _objSize8x8 = _ppu->LCDC->spriteSize == 1;
+                ImGui::Checkbox("OBJ Size 8x8", &_objSize8x8);
+                if (_objSize8x8 != _ppu->LCDC->spriteSize)
+                {
+                    _ppu->LCDC->spriteSize = _objSize8x8;
+                }
+
+                _objEnabled = _ppu->LCDC->spriteDisplayEnable == 1;
                 ImGui::Checkbox("OBJ Enabled", &_objEnabled);
+                if (_objEnabled != _ppu->LCDC->spriteDisplayEnable)
+                {
+                    _ppu->LCDC->spriteDisplayEnable = _objEnabled;
+                }
 
-                _bgWindowEnablePriority = (*controlByte & 0x1) == 1;
+                _bgWindowEnablePriority = _ppu->LCDC->bgDisplay == 1;
                 ImGui::Checkbox("BG & Window Enable Priority", &_bgWindowEnablePriority);
+                if (_bgWindowEnablePriority != _ppu->LCDC->bgDisplay)
+                {
+                    _ppu->LCDC->bgDisplay = _bgWindowEnablePriority;
+                }
 
                 ImGui::EndTabItem();
             }
@@ -821,22 +920,37 @@ namespace gasyboy
             {
                 ImGui::Text("Status Register");
 
-                _scx = _mmu.readRam(0xFF42);
+                static bool manual = false;
+                ImGui::Checkbox("Manual", &manual);
+
+                if (!manual)
+                {
+                    _scy = _mmu->readRam(0xFF42);
+                    _scx = _mmu->readRam(0xFF43);
+                    _wy = _mmu->readRam(0xFF4A);
+                    if (_wx > 144)
+                        _wx = 144;
+                    _wx = _mmu->readRam(0xFF4B);
+                    if (_wx > 166)
+                        _wx = 166;
+                    _ly = _mmu->readRam(0xFF44);
+                    _lyc = _mmu->readRam(0xFF45);
+                }
+                else
+                {
+                    _mmu->writeRam(0xFF42, _scy);
+                    _mmu->writeRam(0xFF43, _scx);
+                    _mmu->writeRam(0xFF4A, _wy);
+                    _mmu->writeRam(0xFF4B, _wx);
+                    _mmu->writeRam(0xFF44, _ly);
+                    _mmu->writeRam(0xFF45, _lyc);
+                }
+
                 ImGui::SliderInt("SCX", &_scx, 0, 255);
-
-                _scy = _mmu.readRam(0xFF43);
                 ImGui::SliderInt("SCY", &_scy, 0, 255);
-
-                _wx = _mmu.readRam(0xFF4A);
                 ImGui::SliderInt("WX", &_wx, 0, 166);
-
-                _wy = _mmu.readRam(0xFF4B);
                 ImGui::SliderInt("WY", &_wy, 0, 144);
-
-                _ly = _mmu.readRam(0xFF44);
                 ImGui::SliderInt("LY", &_ly, 0, 153);
-
-                _lyc = _mmu.readRam(0xFF45);
                 ImGui::SliderInt("LYC", &_lyc, 0, 153);
 
                 ImGui::EndTabItem();
@@ -847,9 +961,9 @@ namespace gasyboy
             {
                 ImGui::Text("Palette");
 
-                showPalette("BGP", _mmu.palette_BGP);
-                showPalette("OBP0", _mmu.palette_OBP0);
-                showPalette("OBP1", _mmu.palette_OBP1);
+                showPalette("BGP", _mmu->palette_BGP);
+                showPalette("OBP0", _mmu->palette_OBP0);
+                showPalette("OBP1", _mmu->palette_OBP1);
 
                 ImGui::EndTabItem();
             }
@@ -878,7 +992,7 @@ namespace gasyboy
                     {
                         for (int x = 0; x < 8; ++x)
                         {
-                            uint8_t pixelValue = _mmu.tiles[tileIndex].pixels[y][x];
+                            uint8_t pixelValue = _mmu->tiles[tileIndex].pixels[y][x];
                             ImU32 color = PixelToColor(pixelValue); // Convert pixel value to color
 
                             // Draw a small square for each pixel
@@ -904,7 +1018,7 @@ namespace gasyboy
                 int j = 0;
                 for (int i = 0; i < 40; ++i, j++)
                 {
-                    const Mmu::Sprite &sprite = _mmu.sprites[i];
+                    const Mmu::Sprite &sprite = _mmu->sprites[i];
 
                     // Only render if the sprite is ready
                     if (!sprite.ready)
@@ -1005,7 +1119,7 @@ namespace gasyboy
             ImVec4 color = ImVec4(palette[i].r / 255.0f, palette[i].g / 255.0f, palette[i].b / 255.0f, palette[i].a / 255.0f);
 
             // Display a color button for each palette color
-            ImGui::ColorButton("##color", color, ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(w, h));
+            ImGui::ColorButton((std::string("##color") + std::to_string(i + rand() % 255)).c_str(), color, ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(w, h));
 
             // Add some space between the buttons
             if (i < 3)
@@ -1015,7 +1129,7 @@ namespace gasyboy
 
     ImU32 Debugger::PixelToColor(uint8_t pixelValue)
     {
-        const Colour &color = _mmu.palette_colours[pixelValue];
+        const Colour &color = _mmu->palette_colours[pixelValue];
 
         // Convert to ImGui color format (RGBA)
         return IM_COL32(color.r, color.g, color.b, color.a);

@@ -4,20 +4,20 @@ namespace gasyboy
 {
     namespace provider
     {
-        std::unique_ptr<Gamepad> GamepadProvider::_gamepadInstance = nullptr;
+        std::shared_ptr<Gamepad> GamepadProvider::_gamepadInstance = nullptr;
 
-        Gamepad &GamepadProvider::getInstance()
+        std::shared_ptr<Gamepad> GamepadProvider::getInstance()
         {
             if (!_gamepadInstance)
             {
-                _gamepadInstance = std::make_unique<Gamepad>();
+                _gamepadInstance = std::make_shared<Gamepad>();
             }
-            return *_gamepadInstance;
+            return _gamepadInstance;
         }
 
         void GamepadProvider::deleteInstance()
         {
-            _gamepadInstance.reset(nullptr);
+            _gamepadInstance.reset();
         }
     }
 }
