@@ -9,7 +9,7 @@ namespace gasyboy
 {
     class Registers
     {
-        Mmu &_mmu;
+        std::shared_ptr<Mmu> _mmu;
 
         std::map<std::string, Register> _registersMap;
 
@@ -22,9 +22,13 @@ namespace gasyboy
         // If booting bios
         bool _executeBios;
 
+        // If cpu is in stop mode
+        bool _stopMode;
+
     public:
         // Constructors
         Registers();
+        Registers &operator=(const Registers &);
 
         // Reset registers
         void reset();
@@ -59,6 +63,10 @@ namespace gasyboy
         // Set/Get _halted
         void setHalted(const bool &value);
         bool getHalted();
+
+        // Set/Get _stopMode
+        void setStopMode(const bool &value);
+        bool getStopMode();
     };
 }
 

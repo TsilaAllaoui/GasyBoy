@@ -1,5 +1,4 @@
 #include "interruptManagerProvider.h"
-#include "interruptManager.h"
 #include "timer.h"
 
 namespace gasyboy
@@ -13,7 +12,6 @@ namespace gasyboy
 	int Timer::_timaIncrementRate = 1024;
 
 	Timer::Timer()
-		: _interruptManager(provider::InterruptManagerProvider::getInstance())
 	{
 		_div = 0;
 		_tima = 0;
@@ -21,6 +19,17 @@ namespace gasyboy
 		_tac = 0;
 		_divIncrementRate = 255;
 		_timaIncrementRate = 1024;
+	}
+
+	Timer &Timer::operator=(const Timer &other)
+	{
+		_div = other._div;
+		_tima = other._tima;
+		_tma = other._tma;
+		_tac = other._tac;
+		_divIncrementRate = other._divIncrementRate;
+		_timaIncrementRate = other._timaIncrementRate;
+		return *this;
 	}
 
 	void Timer::reset()
@@ -101,7 +110,7 @@ namespace gasyboy
 				if (_tima > 0xFF)
 				{
 					_tima = _tma;
-					provider::InterruptManagerProvider::getInstance().requestInterrupt(InterruptManager::InterruptType::Timer);
+					provider::InterruptManagerProvider::getInstance()->requestInterrupt(InterruptManager::InterruptType::Timer);
 				}
 			}
 		}

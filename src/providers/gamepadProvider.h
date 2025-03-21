@@ -11,7 +11,7 @@ namespace gasyboy
         class GamepadProvider
         {
         private:
-            static std::unique_ptr<Gamepad> _gamepadInstance;
+            static std::shared_ptr<Gamepad> _gamepadInstance;
 
             GamepadProvider() = default;
 
@@ -21,7 +21,7 @@ namespace gasyboy
             GamepadProvider(const GamepadProvider &) = delete;
             GamepadProvider &operator=(const GamepadProvider &) = delete;
 
-            static Gamepad &getInstance();
+            static std::shared_ptr<Gamepad> getInstance();
 
             static void deleteInstance();
         };

@@ -31,11 +31,11 @@ namespace gasyboy
 
         SDL_Texture *_viewportTexture;
 
-        Cpu &_cpu;
-        Ppu &_ppu;
-        Registers &_registers;
-        InterruptManager &_interruptManager;
-        Mmu &_mmu;
+        std::shared_ptr<Cpu> _cpu;
+        std::shared_ptr<Ppu> _ppu;
+        std::shared_ptr<Registers> _registers;
+        std::shared_ptr<InterruptManager> _interruptManager;
+        std::shared_ptr<Mmu> _mmu;
 
         // Viewport
         int _viewportWidth = 160;
@@ -54,12 +54,8 @@ namespace gasyboy
         void initWindow(int windowWidth, int windowHeight);
 
     public:
-        Renderer() = delete;
-        Renderer(Cpu &cpu,
-                 Ppu &ppu,
-                 Registers &registers,
-                 InterruptManager &interruptManager,
-                 Mmu &mmu);
+        Renderer();
+        ~Renderer();
 
         void render();
 
@@ -67,58 +63,13 @@ namespace gasyboy
 
         virtual void draw();
 
+        void reset();
+
         enum class ColorMode : uint8_t
         {
             NORMAL,
             RETRO,
             GREY
         };
-    };
-
-    class DebugRenderer : public Renderer
-    {
-    private:
-        SDL_Texture *debugTexture;
-        SDL_Texture *backgroundTexture;
-        SDL_Texture *tilemapTexture;
-        SDL_Texture *spritemapTexture;
-
-        // Tilemap
-        int tilemapWidth = 128;
-        int tilemapHeight = 256;
-        std::array<uint8_t, 128 * 256 * 4> tilemap_pixels;
-        SDL_Rect tilemapRect = {0, _viewportHeight, tilemapWidth, tilemapHeight};
-
-        // Spritemap
-        int spritemapHeight = 64;
-        int spritemapWidth = 40;
-        std::array<uint8_t, 64 * 40 * 4> spritemap_pixels;
-        SDL_Rect spritemapRect = {tilemapWidth, _viewportHeight,
-                                  spritemapWidth * 2, spritemapHeight * 2};
-
-        // VRAM
-        int backgroundWidth = 256;
-        int backgroundHeight = 256;
-        std::array<uint8_t, 256 * 256 * 4> background_pixels;
-        SDL_Rect background_rect = {tilemapWidth + spritemapWidth * 2,
-                                    _viewportHeight, backgroundWidth,
-                                    backgroundHeight};
-
-        int windowHeight = _viewportHeight + backgroundHeight;
-        int windowWidth = backgroundWidth + tilemapWidth + spritemapWidth * 2;
-
-        void draw() override;
-        void drawBackground();
-        void drawTilemap();
-        void drawSpritemap();
-        void drawBackgroundOverflow();
-
-        // Helper functions
-        void drawRectangle(int x, int y, int width, int height, Colour color);
-
-    public:
-        using Renderer::Renderer;
-
-        void init() override;
     };
 }

@@ -10,7 +10,7 @@ namespace gasyboy
     {
         class CpuProvider
         {
-            static std::unique_ptr<Cpu> _cpuInstance;
+            static std::shared_ptr<Cpu> _cpuInstance;
 
             CpuProvider() = default;
 
@@ -20,7 +20,7 @@ namespace gasyboy
             CpuProvider(const CpuProvider &) = delete;
             CpuProvider &operator=(const CpuProvider &) = delete;
 
-            static Cpu &getInstance();
+            static std::shared_ptr<Cpu> getInstance();
 
             static void deleteInstance();
         };

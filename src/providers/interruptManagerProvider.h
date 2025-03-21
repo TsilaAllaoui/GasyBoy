@@ -10,7 +10,7 @@ namespace gasyboy
     {
         class InterruptManagerProvider
         {
-            static std::unique_ptr<InterruptManager> _interruptManagerInstance;
+            static std::shared_ptr<InterruptManager> _interruptManagerInstance;
 
             InterruptManagerProvider() = default;
 
@@ -20,7 +20,7 @@ namespace gasyboy
             InterruptManagerProvider(const InterruptManagerProvider &) = delete;
             InterruptManagerProvider &operator=(const InterruptManagerProvider &) = delete;
 
-            static InterruptManager &getInstance();
+            static std::shared_ptr<InterruptManager> getInstance();
 
             static void deleteInstance();
         };

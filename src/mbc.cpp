@@ -1,4 +1,4 @@
-#include "MBC.h"
+#include "mbc.h"
 
 namespace gasyboy
 {
@@ -140,7 +140,7 @@ namespace gasyboy
             _ramEnabled = (value & 0x0f) == 0x0a;
         else if (address < 0x4000)
         {
-            _romBank = value & 0x7f;
+            _romBank = value;
             if (_romBank == 0x00)
                 _romBank = 0x01;
         }

@@ -4,20 +4,20 @@ namespace gasyboy
 {
     namespace provider
     {
-        std::unique_ptr<Registers> RegistersProvider::_registersInstance = nullptr;
+        std::shared_ptr<Registers> RegistersProvider::_registersInstance = nullptr;
 
-        Registers &RegistersProvider::getInstance()
+        std::shared_ptr<Registers> RegistersProvider::getInstance()
         {
             if (!_registersInstance)
             {
-                _registersInstance = std::make_unique<Registers>();
+                _registersInstance = std::make_shared<Registers>();
             }
-            return *_registersInstance;
+            return _registersInstance;
         }
 
         void RegistersProvider::deleteInstance()
         {
-            _registersInstance.reset(nullptr);
+            _registersInstance.reset();
         }
     }
 }

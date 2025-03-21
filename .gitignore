@@ -5,6 +5,7 @@ build/
 roms/
 build_wasm/
 wasm/
+gb-test-roms-master/
 
 # Files
 *.gb

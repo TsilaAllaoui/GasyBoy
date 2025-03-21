@@ -11,7 +11,7 @@ namespace gasyboy
         class MmuProvider
         {
         private:
-            static std::unique_ptr<Mmu> _mmuInstance;
+            static std::shared_ptr<Mmu> _mmuInstance;
 
             MmuProvider() = default;
 
@@ -21,8 +21,8 @@ namespace gasyboy
             MmuProvider(const MmuProvider &) = delete;
             MmuProvider &operator=(const MmuProvider &) = delete;
 
-            static Mmu &getInstance();
-            static Mmu &create(const uint8_t *bytes, const size_t &romSize);
+            static std::shared_ptr<Mmu> getInstance();
+            static std::shared_ptr<Mmu> create(const uint8_t *bytes, const size_t &romSize);
 
             static void deleteInstance();
         };

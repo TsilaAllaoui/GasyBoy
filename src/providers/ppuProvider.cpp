@@ -6,20 +6,20 @@ namespace gasyboy
 {
     namespace provider
     {
-        std::unique_ptr<Ppu> PpuProvider::_ppuInstance = nullptr;
+        std::shared_ptr<Ppu> PpuProvider::_ppuInstance = nullptr;
 
-        Ppu &PpuProvider::getInstance()
+        std::shared_ptr<Ppu> PpuProvider::getInstance()
         {
             if (!_ppuInstance)
             {
-                _ppuInstance = std::make_unique<Ppu>();
+                _ppuInstance = std::make_shared<Ppu>();
             }
-            return *_ppuInstance;
+            return _ppuInstance;
         }
 
         void PpuProvider::deleteInstance()
         {
-            _ppuInstance.reset(nullptr);
+            _ppuInstance.reset();
         }
     }
 }

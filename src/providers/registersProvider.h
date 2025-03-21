@@ -11,7 +11,7 @@ namespace gasyboy
     {
         class RegistersProvider
         {
-            static std::unique_ptr<Registers> _registersInstance;
+            static std::shared_ptr<Registers> _registersInstance;
 
             RegistersProvider() = default;
 
@@ -21,7 +21,7 @@ namespace gasyboy
             RegistersProvider(const RegistersProvider &) = delete;
             RegistersProvider &operator=(const RegistersProvider &) = delete;
 
-            static Registers &getInstance();
+            static std::shared_ptr<Registers> getInstance();
 
             static void deleteInstance();
         };
