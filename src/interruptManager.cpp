@@ -36,18 +36,20 @@ namespace gasyboy
 
     void InterruptManager::handleInterrupts()
     {
+        if (!_masterInterrupt)
+            return; // Ensure master interrupt is enabled
+
         if (_registers->getInterruptEnabled())
         {
             uint8_t req = _mmu->readRam(0xFF0F);
             uint8_t enable = _mmu->readRam(0xFFFF);
 
-            if (req > 0)
+            for (int i = 0; i < 5; i++)
             {
-                for (int i = 0; i < 5; i++)
+                if ((req & (1 << i)) && (enable & (1 << i))) // Check request & enable bit
                 {
-                    if (req & (1 << i))
-                        if (enable & (1 << i))
-                            serviceInterrupt(static_cast<InterruptType>(i));
+                    serviceInterrupt(static_cast<InterruptType>(i));
+                    break; // The CPU only handles one interrupt at a time
                 }
             }
         }
@@ -62,15 +64,17 @@ namespace gasyboy
 
     void InterruptManager::serviceInterrupt(const InterruptType &interrupt)
     {
+        if (!_registers->getInterruptEnabled())
+            return;
+
         _masterInterrupt = false;
+
         uint8_t req = _mmu->readRam(0xFF0F);
         req &= ~(1 << static_cast<uint8_t>(interrupt));
-
         _mmu->writeRam(0xFF0F, req);
 
-        _registers->pushSP(_registers->PC);
-
-        _registers->setHalted(false);
+        _registers->pushSP(_registers->PC); // Save current PC
+        _registers->setHalted(false);       // Wake up CPU
 
         _registers->PC = static_cast<uint16_t>(_interruptAddressMap[interrupt]);
     }

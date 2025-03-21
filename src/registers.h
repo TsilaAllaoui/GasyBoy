@@ -22,6 +22,9 @@ namespace gasyboy
         // If booting bios
         bool _executeBios;
 
+        // If cpu is in stop mode
+        bool _stopMode;
+
     public:
         // Constructors
         Registers();
@@ -60,6 +63,10 @@ namespace gasyboy
         // Set/Get _halted
         void setHalted(const bool &value);
         bool getHalted();
+
+        // Set/Get _stopMode
+        void setStopMode(const bool &value);
+        bool getStopMode();
     };
 }
 

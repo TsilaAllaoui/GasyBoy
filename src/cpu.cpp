@@ -1084,7 +1084,16 @@ namespace gasyboy
 
 	void Cpu::HALT()
 	{
-		_registers->setHalted(true);
+		bool interruptPending = (_mmu->readRam(0xFF0F) & _mmu->readRam(0xFFFF) & 0x1F) > 0;
+		if (!_interruptManager->isMasterInterruptEnabled() && interruptPending)
+		{
+			// HALT Bug: CPU does not halt, but skips the next opcode fetch
+			_haltBug = true;
+		}
+		else
+		{
+			_registers->setHalted(true);
+		}
 	}
 
 	void Cpu::DI()
@@ -2346,10 +2355,20 @@ namespace gasyboy
 
 	long Cpu::step()
 	{
+		if (_registers->getStopMode())
+		{
+			return 4; // While in STOP mode, the CPU does nothing
+		}
+
 		if (state == State::RUNNING || state == State::STEPPING)
 		{
-			if (_mmu->isInBios() && _mmu->readRam(0xFF50) == 0x1)
-				_mmu->disableBios();
+			if (_haltBug)
+			{
+				_haltBug = false; // Clear the bug flag
+				fetch();		  // Skip the usual fetch and directly execute next instruction
+				execute();
+				return _cycle;
+			}
 
 			if (!_registers->getHalted())
 			{
@@ -2359,16 +2378,15 @@ namespace gasyboy
 			}
 			else
 			{
-				if ((_mmu->readRam(0xFF0F) & 0xF) > 0)
+				// Check if an interrupt can wake the CPU
+				if ((_mmu->readRam(0xFF0F) & _mmu->readRam(0xFFFF) & 0x1F) > 0)
 				{
 					_registers->setHalted(false);
-					_registers->PC++;
+					_registers->PC++; // Wake up from HALT
 				}
-				return 4;
+				return 4; // Halt state takes 4 cycles per iteration
 			}
 		}
-
-		return 0;
 	}
 
 	void Cpu::fetch()
@@ -2446,7 +2464,7 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0x10:
-			_registers->setHalted(true);
+			_registers->setStopMode(true); // Mark CPU as stopped
 			_registers->PC++;
 			Timer::resetDIV();
 			break;

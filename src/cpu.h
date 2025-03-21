@@ -30,6 +30,9 @@ namespace gasyboy
 		// The cycle counter of the cpu
 		long _cycle;
 
+		// If HALT bug is occuring
+		bool _haltBug;
+
 	public:
 		// Contructor/destructor
 		Cpu();

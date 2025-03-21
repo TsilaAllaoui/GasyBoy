@@ -17,6 +17,7 @@ namespace gasyboy
           SP(0),
           _interruptEnabled(false),
           _halted(false),
+          _stopMode(false),
           _executeBios(provider::UtilitiesProvider::getInstance()->executeBios)
     {
         if (!_executeBios)
@@ -218,5 +219,15 @@ namespace gasyboy
     bool Registers::getHalted()
     {
         return _halted;
+    }
+
+    void Registers::setStopMode(const bool &value)
+    {
+        _stopMode = value;
+    }
+
+    bool Registers::getStopMode()
+    {
+        return _stopMode;
     }
 }

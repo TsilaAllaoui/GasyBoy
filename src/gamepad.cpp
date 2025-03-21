@@ -30,7 +30,10 @@ namespace gasyboy
 
         while (SDL_PollEvent(&event) != 0)
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (provider::UtilitiesProvider::getInstance()->debugMode)
+            {
+                ImGui_ImplSDL2_ProcessEvent(&event);
+            }
 
             if (event.type == SDL_QUIT)
             {
@@ -55,6 +58,11 @@ namespace gasyboy
                 {
                 case SDLK_ESCAPE:
                     exit(ExitState::MANUAL_STOP);
+                    break;
+
+                case SDLK_KP_MULTIPLY:
+                case SDLK_ASTERISK:
+                    gasyboy::provider::UtilitiesProvider::getInstance()->wasReset = true;
                     break;
 
                 case SDLK_UP:

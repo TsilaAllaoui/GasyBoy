@@ -253,11 +253,6 @@ namespace gasyboy
                 provider::TimerProvider::getInstance()->setTAC(value);
             }
 
-            else if (address == 0xFF42 || address == 0xFF43)
-            {
-                _memory[address] = value;
-            }
-
             // writing to LY register reset it
             else if (address == 0xFF44)
             {

@@ -77,17 +77,6 @@ namespace gasyboy
         state = State::STOPPED;
     }
 
-#ifndef EMSCRIPTEN
-    void GameBoy::setDebugMode(const bool &debugMode)
-    {
-        _debugMode = debugMode;
-        if (debugMode)
-        {
-            _debugger = std::make_shared<Debugger>(_renderer->_window);
-        }
-    }
-#endif
-
     void GameBoy::boot()
     {
         bool running = true;
@@ -126,6 +115,7 @@ namespace gasyboy
         while ((Cpu::state == Cpu::State::RUNNING && _cycleCounter <= MAXCYCLE) ||
                Cpu::state == Cpu::State::STEPPING)
         {
+            _interruptManager->handleInterrupts();
             step();
             if (Cpu::state == Cpu::State::STEPPING)
             {
@@ -156,7 +146,7 @@ namespace gasyboy
         gasyboy::provider::CpuProvider::deleteInstance();
         gasyboy::provider::TimerProvider::deleteInstance();
         gasyboy::provider::PpuProvider::deleteInstance();
-        // _debugger->reset();
+        _debugger->reset();
 
         gasyboy::provider::GamepadProvider::getInstance()->reset();
         gasyboy::provider::MmuProvider::getInstance()->reset();
@@ -178,6 +168,5 @@ namespace gasyboy
         _cpu->state = Cpu::State::RUNNING;
         _cycleCounter = 0;
         _renderer->reset();
-        // _debugger = std::make_shared<Debugger>(_renderer->_window);
     }
 }

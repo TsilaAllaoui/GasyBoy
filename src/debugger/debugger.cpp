@@ -88,22 +88,7 @@ namespace gasyboy
         int debuggerWindowX = mainWindowX + mainWindowWidth + 10; // 10 pixels to the right
         int debuggerWindowY = mainWindowY;
 
-        // Create the debugger window next to the main window
-        // _window = SDL_CreateWindow("Debugger",
-        //                            debuggerWindowX,
-        //                            debuggerWindowY,
-        //                            1340, 765, // Width and height for the debugger window
-        //                            SDL_WINDOW_SHOWN);
-
-        // if (!_window)
-        // {
-        //     SDL_Log("Failed to create debugger window: %s", SDL_GetError());
-        //     return; // Prevents renderer creation if window creation failed
-        // }
-
         SDL_CreateWindowAndRenderer(1340, 765, SDL_WINDOW_SHOWN, &_window, &_renderer);
-
-        // _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -123,7 +108,7 @@ namespace gasyboy
         // _disassembler.disassemble();
     }
 
-    void gasyboy::Debugger::reset()
+    void Debugger::reset()
     {
         _breakPoints.clear();
         _currentBreakPoint = -1;
@@ -175,51 +160,49 @@ namespace gasyboy
         _ppu = provider::PpuProvider::getInstance();
         _registers = provider::RegistersProvider::getInstance();
 
-        _bytesBuffers = {
-            {"A", new char[2]},
-            {"F", new char[2]},
-            {"B", new char[2]},
-            {"C", new char[2]},
-            {"D", new char[2]},
-            {"E", new char[2]},
-            {"H", new char[2]},
-            {"L", new char[2]},
-            {"DIV", new char[2]},
-            {"TIMA", new char[2]},
-            {"TMA", new char[2]},
-            {"TAC", new char[2]},
-            {"BGP", new char[2]},
-            {"OBP0", new char[2]},
-            {"OBP1", new char[2]},
-            {"X", new char[2]},
-            {"Y", new char[2]},
-            {"Tile", new char[2]},
-            {"Palette", new char[2]},
-        };
+        // _bytesBuffers = {
+        //     {"A", new char[2]},
+        //     {"F", new char[2]},
+        //     {"B", new char[2]},
+        //     {"C", new char[2]},
+        //     {"D", new char[2]},
+        //     {"E", new char[2]},
+        //     {"H", new char[2]},
+        //     {"L", new char[2]},
+        //     {"DIV", new char[2]},
+        //     {"TIMA", new char[2]},
+        //     {"TMA", new char[2]},
+        //     {"TAC", new char[2]},
+        //     {"BGP", new char[2]},
+        //     {"OBP0", new char[2]},
+        //     {"OBP1", new char[2]},
+        //     {"X", new char[2]},
+        //     {"Y", new char[2]},
+        //     {"Tile", new char[2]},
+        //     {"Palette", new char[2]},
+        // };
 
-        _wordsBuffers = {
-            {"SP", new char[4]},
-            {"PC", new char[4]},
-            {"TIMA_INCREMENT_RATE", new char[4]},
-            {"WINDOW_TILE_MAP_AREA", new char[4]},
-            {"BG_WINDOW_TILE_DATA_MAP_AREA", new char[4]},
-        };
+        // _wordsBuffers = {
+        //     {"SP", new char[4]},
+        //     {"PC", new char[4]},
+        //     {"TIMA_INCREMENT_RATE", new char[4]},
+        //     {"WINDOW_TILE_MAP_AREA", new char[4]},
+        //     {"BG_WINDOW_TILE_DATA_MAP_AREA", new char[4]},
+        // };
 
-        _buttons = {
-            {"A", false},
-            {"B", false},
-            {"SELECT", false},
-            {"START", false},
-        };
+        // _buttons = {
+        //     {"A", false},
+        //     {"B", false},
+        //     {"SELECT", false},
+        //     {"START", false},
+        // };
 
-        _directions = {
-            {"RIGHT", false},
-            {"LEFT", false},
-            {"UP", false},
-            {"DOWN", false},
-        };
-
-        ImGui::SetNextWindowFocus(); // Ensure debugger window gains focus
+        // _directions = {
+        //     {"RIGHT", false},
+        //     {"LEFT", false},
+        //     {"UP", false},
+        //     {"DOWN", false},
+        // };
     }
 
     Debugger::~Debugger()
@@ -243,17 +226,10 @@ namespace gasyboy
         _renderer = nullptr;
         SDL_DestroyWindow(_window);
         _window = nullptr;
-        // SDL_Quit();
     }
 
     void Debugger::render()
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            ImGui_ImplSDL2_ProcessEvent(&event);
-        }
-
         // Start ImGui frame
         ImGui_ImplSDL2_NewFrame();
         ImGui_ImplSDLRenderer2_NewFrame();
@@ -385,6 +361,10 @@ namespace gasyboy
             ImGui::Text("State");
             bool halted = _registers->getHalted();
             ImGui::Checkbox("HALTED", &halted);
+            _registers->setHalted(halted);
+            bool stopped = _registers->getStopMode();
+            ImGui::Checkbox("STOPPED", &stopped);
+            _registers->setStopMode(stopped);
 
             ImGui::EndTable();
         }
@@ -875,57 +855,62 @@ namespace gasyboy
             {
                 ImGui::Text("Control Register");
 
-                uint8_t *controlByte = reinterpret_cast<uint8_t *>(_ppu->LCDC);
-
-                _lcdEnable = (*controlByte & (1 << 7)) == 1;
+                _lcdEnable = _ppu->LCDC->lcdEnable == 1;
                 ImGui::Checkbox("LCD Enable", &_lcdEnable);
+                if (_lcdEnable != _ppu->LCDC->lcdEnable)
+                {
+                    _ppu->LCDC->lcdEnable = _lcdEnable;
+                }
 
-                renderWord("WINDOW_TILE_MAP_AREA", [&]()
-                           { return static_cast<uint16_t>((*controlByte & (1 << 6)) == 0 ? 0x9800 : 0x9C00); }, [&](const uint16_t &value)
-                           {
-                            if (value == 0x9800)
-                            {
-                                _windowTimeMapArea = 0;
-                            }
-                            else if (value == 0x9C00)
-                            {
-                                _windowTimeMapArea = 1;
-                            }
-                            else 
-                            {
-                               utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "Invalid Window Time Map Area!");
-                            } });
-
-                _windowEnable = (*controlByte & (1 << 5)) == 1;
-                ImGui::Checkbox("Window Enable", &_windowEnable);
-
-                renderWord("BG_WINDOW_TILE_DATA_MAP_AREA", [&]()
-                           { return static_cast<uint16_t>((*controlByte & (1 << 4)) == 0 ? 0x9800 : 0x9C00); }, [&](const uint16_t &value)
-                           {
-                            if (value == 0x9800)
-                            {
-                                _windowTimeMapArea = 0;
-                            }
-                            else if (value == 0x9C00)
-                            {
-                                _windowTimeMapArea = 1;
-                            }
-                            else 
-                            {
-                               utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "Invalid Window Time Map Area!");
-                            } });
-
-                _objSize8x8 = (*controlByte & (1 << 3)) == 1;
-                ImGui::Checkbox("OBJ Size 8x8", &_objSize8x8);
+                ImGui::Text("WINDOW_TILE_MAP_AREA");
                 ImGui::SameLine();
-                _objSize8x16 = (*controlByte & (1 << 3)) == 0;
-                ImGui::Checkbox("OBJ Size 8x16", &_objSize8x16);
+                ImGui::SetNextItemWidth(100);
+                static const char *windowDisplaySelectValues[] = {"0x9800", "0x9C00"};
+                static int windowDisplaySelectValue = 0;
+                if (ImGui::Combo("##WINDOW_TILE_MAP_AREA", &windowDisplaySelectValue, windowDisplaySelectValues, IM_ARRAYSIZE(windowDisplaySelectValues)))
+                {
+                    printf("Selected: %s\n", windowDisplaySelectValues[windowDisplaySelectValue]);
+                    _ppu->LCDC->windowDisplaySelect = (windowDisplaySelectValue == 0) ? 0 : 1;
+                }
 
-                _objEnabled = (*controlByte & (1 << 2)) == 1;
+                _windowEnable = _ppu->LCDC->windowEnable == 1;
+                ImGui::Checkbox("Window Enable", &_windowEnable);
+                if (_windowEnable != _ppu->LCDC->windowEnable)
+                {
+                    _ppu->LCDC->windowEnable = _windowEnable;
+                }
+
+                ImGui::Text("BG_WINDOW_TILE_DATA_MAP_AREA");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(100);
+                static const char *bgDisplaySelectValues[] = {"0x9800", "0x9C00"};
+                static int bgDisplaySelectValue = 0;
+                if (ImGui::Combo("##BG_WINDOW_TILE_DATA_MAP_AREA", &bgDisplaySelectValue, bgDisplaySelectValues, IM_ARRAYSIZE(bgDisplaySelectValues)))
+                {
+                    printf("Selected: %s\n", bgDisplaySelectValues[bgDisplaySelectValue]);
+                    _ppu->LCDC->bgDisplaySelect = (bgDisplaySelectValue == 0) ? 0 : 1;
+                }
+
+                _objSize8x8 = _ppu->LCDC->spriteSize == 1;
+                ImGui::Checkbox("OBJ Size 8x8", &_objSize8x8);
+                if (_objSize8x8 != _ppu->LCDC->spriteSize)
+                {
+                    _ppu->LCDC->spriteSize = _objSize8x8;
+                }
+
+                _objEnabled = _ppu->LCDC->spriteDisplayEnable == 1;
                 ImGui::Checkbox("OBJ Enabled", &_objEnabled);
+                if (_objEnabled != _ppu->LCDC->spriteDisplayEnable)
+                {
+                    _ppu->LCDC->spriteDisplayEnable = _objEnabled;
+                }
 
-                _bgWindowEnablePriority = (*controlByte & 0x1) == 1;
+                _bgWindowEnablePriority = _ppu->LCDC->bgDisplay == 1;
                 ImGui::Checkbox("BG & Window Enable Priority", &_bgWindowEnablePriority);
+                if (_bgWindowEnablePriority != _ppu->LCDC->bgDisplay)
+                {
+                    _ppu->LCDC->bgDisplay = _bgWindowEnablePriority;
+                }
 
                 ImGui::EndTabItem();
             }
@@ -935,22 +920,37 @@ namespace gasyboy
             {
                 ImGui::Text("Status Register");
 
-                _scx = _mmu->readRam(0xFF42);
+                static bool manual = false;
+                ImGui::Checkbox("Manual", &manual);
+
+                if (!manual)
+                {
+                    _scy = _mmu->readRam(0xFF42);
+                    _scx = _mmu->readRam(0xFF43);
+                    _wy = _mmu->readRam(0xFF4A);
+                    if (_wx > 144)
+                        _wx = 144;
+                    _wx = _mmu->readRam(0xFF4B);
+                    if (_wx > 166)
+                        _wx = 166;
+                    _ly = _mmu->readRam(0xFF44);
+                    _lyc = _mmu->readRam(0xFF45);
+                }
+                else
+                {
+                    _mmu->writeRam(0xFF42, _scy);
+                    _mmu->writeRam(0xFF43, _scx);
+                    _mmu->writeRam(0xFF4A, _wy);
+                    _mmu->writeRam(0xFF4B, _wx);
+                    _mmu->writeRam(0xFF44, _ly);
+                    _mmu->writeRam(0xFF45, _lyc);
+                }
+
                 ImGui::SliderInt("SCX", &_scx, 0, 255);
-
-                _scy = _mmu->readRam(0xFF43);
                 ImGui::SliderInt("SCY", &_scy, 0, 255);
-
-                _wx = _mmu->readRam(0xFF4A);
                 ImGui::SliderInt("WX", &_wx, 0, 166);
-
-                _wy = _mmu->readRam(0xFF4B);
                 ImGui::SliderInt("WY", &_wy, 0, 144);
-
-                _ly = _mmu->readRam(0xFF44);
                 ImGui::SliderInt("LY", &_ly, 0, 153);
-
-                _lyc = _mmu->readRam(0xFF45);
                 ImGui::SliderInt("LYC", &_lyc, 0, 153);
 
                 ImGui::EndTabItem();
@@ -1119,7 +1119,7 @@ namespace gasyboy
             ImVec4 color = ImVec4(palette[i].r / 255.0f, palette[i].g / 255.0f, palette[i].b / 255.0f, palette[i].a / 255.0f);
 
             // Display a color button for each palette color
-            ImGui::ColorButton("##color", color, ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(w, h));
+            ImGui::ColorButton((std::string("##color") + std::to_string(i + rand() % 255)).c_str(), color, ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(w, h));
 
             // Add some space between the buttons
             if (i < 3)

@@ -73,6 +73,8 @@ namespace gasyboy
 
         std::thread _disassemblerThread;
 
+        void reset();
+
     private:
         SDL_Renderer *_renderer;
         std::shared_ptr<Registers> _registers;
@@ -97,8 +99,6 @@ namespace gasyboy
         void RenderSprite(const Mmu::Sprite &sprite);
         void Debugger::renderPreviewSprite();
         void renderDisassemblerScreen();
-
-        void reset();
     };
 }
 

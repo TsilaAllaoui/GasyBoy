@@ -55,11 +55,6 @@ namespace gasyboy
         // Stop the emulator
         void stop();
 
-#ifndef EMSCRIPTEN
-        // Set debug mode
-        void setDebugMode(const bool &debugMode);
-#endif
-
         enum class State
         {
             RUNNING,
