@@ -147,7 +147,10 @@ namespace gasyboy
         gasyboy::provider::TimerProvider::deleteInstance();
         gasyboy::provider::PpuProvider::deleteInstance();
 #ifndef EMSCRIPTEN
-        _debugger->reset();
+        if (_debugMode)
+        {
+            _debugger->reset();
+        }
 #endif
         gasyboy::provider::GamepadProvider::getInstance()->reset();
         gasyboy::provider::MmuProvider::getInstance()->reset();
