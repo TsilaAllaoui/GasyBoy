@@ -2,10 +2,10 @@
 #include "gameBoyProvider.h"
 #include "gamepad.h"
 #include "defs.h"
-#include "SDL.h"
 #ifdef EMSCRIPTEN
 #include <SDL2/SDL.h>
 #else
+#include "SDL.h"
 #endif
 
 namespace gasyboy
@@ -30,10 +30,12 @@ namespace gasyboy
 
         while (SDL_PollEvent(&event) != 0)
         {
+#ifndef EMSCRIPTEN
             if (provider::UtilitiesProvider::getInstance()->debugMode)
             {
                 ImGui_ImplSDL2_ProcessEvent(&event);
             }
+#endif
 
             if (event.type == SDL_QUIT)
             {

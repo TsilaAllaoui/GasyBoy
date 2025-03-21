@@ -1,4 +1,4 @@
-#include "MBC.h"
+#include "mbc.h"
 
 namespace gasyboy
 {

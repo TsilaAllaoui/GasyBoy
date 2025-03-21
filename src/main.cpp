@@ -32,13 +32,7 @@ extern "C"
         emscripten_cancel_main_loop();
 
         gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
-        gasyboy::provider::GamepadProvider::getInstance()->reset();
-        gasyboy::provider::MmuProvider::getInstance()->reset();
-        gasyboy::provider::RegistersProvider::getInstance()->reset();
-        gasyboy::provider::InterruptManagerProvider::getInstance()->reset();
-        gasyboy::provider::CpuProvider::getInstance()->reset();
-        gasyboy::provider::TimerProvider::getInstance()->reset();
-        gasyboy::provider::PpuProvider::getInstance()->reset();
+        gasyboy::provider::GameBoyProvider::getInstance()->reset();
 
         emscripten_set_main_loop(main_loop, 0, true);
         return 1;
@@ -63,22 +57,12 @@ int main()
 int main(int argc, char **argv)
 {
     gasyboy::provider::UtilitiesProvider::getInstance()->executeBios = true;
-    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Tetris (USA) (Rev-A).gb";
-    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/POKEMON_SILVER.gb";
-    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Pokemon Gold Version.gb";
-    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Legend of Zelda, The - Link's Awakening (USA) (Rev-B).gb";
-    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Super Mario Land 2 - 6 Golden Coins (USA) (Rev-B).gb";
-    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Super Mario Land 3 - Wario Land (USA).gb";
-    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/gb-test-roms-master/dmg-acid2.gb";
-    // gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/gb-test-roms-master/window_y_trigger.gb";
-    gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/Allaoui/Desktop/GasyBoy/game-boy-collection/Pokemon Red Version (USA) (SGB Enhanced).gb";
 
     auto &gb = gasyboy::provider::GameBoyProvider::getInstance();
 
     // Boot default rom
     if (argc == 1)
     {
-        gb->setDebugMode(true);
         gb->boot();
     }
 

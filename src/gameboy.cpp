@@ -146,8 +146,9 @@ namespace gasyboy
         gasyboy::provider::CpuProvider::deleteInstance();
         gasyboy::provider::TimerProvider::deleteInstance();
         gasyboy::provider::PpuProvider::deleteInstance();
+#ifndef EMSCRIPTEN
         _debugger->reset();
-
+#endif
         gasyboy::provider::GamepadProvider::getInstance()->reset();
         gasyboy::provider::MmuProvider::getInstance()->reset();
         gasyboy::provider::RegistersProvider::getInstance()->reset();
