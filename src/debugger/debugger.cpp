@@ -36,33 +36,33 @@ namespace gasyboy
           _executeBios(provider::UtilitiesProvider::getInstance()->executeBios)
     {
         _bytesBuffers = {
-            {"A", new char[2]},
-            {"F", new char[2]},
-            {"B", new char[2]},
-            {"C", new char[2]},
-            {"D", new char[2]},
-            {"E", new char[2]},
-            {"H", new char[2]},
-            {"L", new char[2]},
-            {"DIV", new char[2]},
-            {"TIMA", new char[2]},
-            {"TMA", new char[2]},
-            {"TAC", new char[2]},
-            {"BGP", new char[2]},
-            {"OBP0", new char[2]},
-            {"OBP1", new char[2]},
-            {"X", new char[2]},
-            {"Y", new char[2]},
-            {"Tile", new char[2]},
-            {"Palette", new char[2]},
+            {"A", ""},
+            {"F", ""},
+            {"B", ""},
+            {"C", ""},
+            {"D", ""},
+            {"E", ""},
+            {"H", ""},
+            {"L", ""},
+            {"DIV", ""},
+            {"TIMA", ""},
+            {"TMA", ""},
+            {"TAC", ""},
+            {"BGP", ""},
+            {"OBP0", ""},
+            {"OBP1", ""},
+            {"X", ""},
+            {"Y", ""},
+            {"Tile", ""},
+            {"Palette", ""},
         };
 
         _wordsBuffers = {
-            {"SP", new char[4]},
-            {"PC", new char[4]},
-            {"TIMA_INCREMENT_RATE", new char[4]},
-            {"WINDOW_TILE_MAP_AREA", new char[4]},
-            {"BG_WINDOW_TILE_DATA_MAP_AREA", new char[4]},
+            {"SP", ""},
+            {"PC", ""},
+            {"TIMA_INCREMENT_RATE", ""},
+            {"WINDOW_TILE_MAP_AREA", ""},
+            {"BG_WINDOW_TILE_DATA_MAP_AREA", ""},
         };
 
         _buttons = {
@@ -105,7 +105,7 @@ namespace gasyboy
         // Disassembling rom
         // _disassemblerThread = std::thread([&]()
         //                                   { _disassembler.disassemble(); });
-        // _disassembler.disassemble();
+        _disassembler.disassemble();
     }
 
     void Debugger::reset()
@@ -160,65 +160,53 @@ namespace gasyboy
         _ppu = provider::PpuProvider::getInstance();
         _registers = provider::RegistersProvider::getInstance();
 
-        // _bytesBuffers = {
-        //     {"A", new char[2]},
-        //     {"F", new char[2]},
-        //     {"B", new char[2]},
-        //     {"C", new char[2]},
-        //     {"D", new char[2]},
-        //     {"E", new char[2]},
-        //     {"H", new char[2]},
-        //     {"L", new char[2]},
-        //     {"DIV", new char[2]},
-        //     {"TIMA", new char[2]},
-        //     {"TMA", new char[2]},
-        //     {"TAC", new char[2]},
-        //     {"BGP", new char[2]},
-        //     {"OBP0", new char[2]},
-        //     {"OBP1", new char[2]},
-        //     {"X", new char[2]},
-        //     {"Y", new char[2]},
-        //     {"Tile", new char[2]},
-        //     {"Palette", new char[2]},
-        // };
+        _bytesBuffers = {
+            {"A", ""},
+            {"F", ""},
+            {"B", ""},
+            {"C", ""},
+            {"D", ""},
+            {"E", ""},
+            {"H", ""},
+            {"L", ""},
+            {"DIV", ""},
+            {"TIMA", ""},
+            {"TMA", ""},
+            {"TAC", ""},
+            {"BGP", ""},
+            {"OBP0", ""},
+            {"OBP1", ""},
+            {"X", ""},
+            {"Y", ""},
+            {"Tile", ""},
+            {"Palette", ""},
+        };
 
-        // _wordsBuffers = {
-        //     {"SP", new char[4]},
-        //     {"PC", new char[4]},
-        //     {"TIMA_INCREMENT_RATE", new char[4]},
-        //     {"WINDOW_TILE_MAP_AREA", new char[4]},
-        //     {"BG_WINDOW_TILE_DATA_MAP_AREA", new char[4]},
-        // };
+        _wordsBuffers = {
+            {"SP", ""},
+            {"PC", ""},
+            {"TIMA_INCREMENT_RATE", ""},
+            {"WINDOW_TILE_MAP_AREA", ""},
+            {"BG_WINDOW_TILE_DATA_MAP_AREA", ""},
+        };
 
-        // _buttons = {
-        //     {"A", false},
-        //     {"B", false},
-        //     {"SELECT", false},
-        //     {"START", false},
-        // };
+        _buttons = {
+            {"A", false},
+            {"B", false},
+            {"SELECT", false},
+            {"START", false},
+        };
 
-        // _directions = {
-        //     {"RIGHT", false},
-        //     {"LEFT", false},
-        //     {"UP", false},
-        //     {"DOWN", false},
-        // };
+        _directions = {
+            {"RIGHT", false},
+            {"LEFT", false},
+            {"UP", false},
+            {"DOWN", false},
+        };
     }
 
     Debugger::~Debugger()
     {
-        // for (auto &pair : _bytesBuffers)
-        // {
-        //     delete[] pair.second;
-        // }
-        // _bytesBuffers.clear();
-
-        // for (auto &pair : _wordsBuffers)
-        // {
-        //     delete[] pair.second;
-        // }
-        // _wordsBuffers.clear();
-
         ImGui_ImplSDLRenderer2_Shutdown();
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
@@ -261,14 +249,14 @@ namespace gasyboy
 
     void Debugger::renderByte(const std::string &reg, std::function<uint8_t()> get, std::function<void(uint8_t)> set)
     {
-        snprintf(_bytesBuffers[reg], sizeof(_bytesBuffers[reg]) + 2, "0x%02X", get());
+        snprintf(const_cast<char *>(_bytesBuffers[reg].c_str()), sizeof(_bytesBuffers[reg]) + 2, "0x%02X", get());
         std::string regStr = reg;
         regStr += ": ";
         ImGui::Text("%s", regStr.c_str());
         ImGui::SameLine();
         ImGui::SetNextItemWidth(50.0f);
         std::string label = "##" + reg;
-        if (ImGui::InputText(label.c_str(), _bytesBuffers[reg], sizeof(_bytesBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputText(label.c_str(), const_cast<char *>(_bytesBuffers[reg].c_str()), sizeof(_bytesBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
         {
             auto newValue = static_cast<uint8_t>(std::stoi(_bytesBuffers[reg], nullptr, 16));
             set(newValue);
@@ -277,11 +265,11 @@ namespace gasyboy
 
     void Debugger::renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(const uint16_t &value)> set, const size_t &base)
     {
-        snprintf(_wordsBuffers[reg], sizeof(_wordsBuffers[reg]) + 2, base == 16 ? "0x%04X" : "%d", get());
+        snprintf(const_cast<char *>(_wordsBuffers[reg].c_str()), sizeof(_wordsBuffers[reg]) + 2, base == 16 ? "0x%04X" : "%d", get());
         ImGui::Text("%s : ", reg.c_str());
         ImGui::SameLine();
         ImGui::SetNextItemWidth(50.0f);
-        if (ImGui::InputText(("##" + reg).c_str(), _wordsBuffers[reg], sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputText(("##" + reg).c_str(), const_cast<char *>(_wordsBuffers[reg].c_str()), sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
         {
             auto newValue = static_cast<uint16_t>(std::stoi(_wordsBuffers[reg], nullptr, 16));
             set(newValue);
@@ -416,8 +404,8 @@ namespace gasyboy
                 std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName(); // Get selected file
 
                 provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
+                provider::UtilitiesProvider::getInstance()->newRomFilePath = filePath;
                 provider::GameBoyProvider::getInstance()->reset();
-                reset();
             }
 
             // Close the dialog to prevent reopening
