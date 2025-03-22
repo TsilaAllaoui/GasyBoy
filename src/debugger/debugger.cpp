@@ -362,6 +362,7 @@ namespace gasyboy
             bool halted = _registers->getHalted();
             ImGui::Checkbox("HALTED", &halted);
             _registers->setHalted(halted);
+            ImGui::SameLine();
             bool stopped = _registers->getStopMode();
             ImGui::Checkbox("STOPPED", &stopped);
             _registers->setStopMode(stopped);

@@ -88,9 +88,9 @@ namespace gasyboy
                 value = getRightRegister() & (1 << 4);
                 break;
             default:
-                std::string message("Invalid register: \"");
-                message += reg + "\"";
-                throw exception::GbException(message);
+                std::stringstream message;
+                message << "Invalid register: \"" << reg << "\"";
+                throw exception::GbException(message.str());
             }
             return value;
         }
@@ -122,9 +122,9 @@ namespace gasyboy
                 bit = 0x10;
                 break;
             default:
-                std::string message("Invalid register: \"");
-                message += reg + "\"";
-                throw exception::GbException(message);
+                std::stringstream message;
+                message << "Invalid register: \"" << reg << "\"";
+                throw exception::GbException(message.str());
             }
             bit |= getRightRegister();
             setRightRegister(bit);
@@ -157,9 +157,9 @@ namespace gasyboy
                 bit = (~0x10);
                 break;
             default:
-                std::string message("Invalid register: \"");
-                message += reg + "\"";
-                throw exception::GbException(message);
+                std::stringstream message;
+                message << "Invalid register: \"" << reg << "\"";
+                throw exception::GbException(message.str());
             }
 
             bit = getRightRegister() & bit;
