@@ -97,7 +97,7 @@ namespace gasyboy
         void showPalette(const char *label, Colour palette[4], const uint8_t &w = 50, const uint8_t &h = 50);
         ImU32 PixelToColor(uint8_t pixelValue);
         void RenderSprite(const Mmu::Sprite &sprite);
-        void Debugger::renderPreviewSprite();
+        void renderPreviewSprite();
         void renderDisassemblerScreen();
     };
 }

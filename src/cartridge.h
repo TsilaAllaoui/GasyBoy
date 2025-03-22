@@ -8,6 +8,7 @@
 #include <map>
 #include <mbc.h>
 #include <vector>
+#include <memory>
 
 namespace gasyboy
 {

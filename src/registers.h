@@ -4,6 +4,7 @@
 #include "register.h"
 #include "mmu.h"
 #include <map>
+#include <memory>
 
 namespace gasyboy
 {

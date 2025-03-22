@@ -2,6 +2,7 @@
 #include "register.h"
 #include "logger.h"
 #include "defs.h"
+#include <iostream>
 
 namespace gasyboy
 {

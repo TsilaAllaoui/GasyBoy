@@ -1,13 +1,14 @@
-#include "cartridge.h"
-#include "defs.h"
-#include "gbException.h"
-#include "logger.h"
-#include "mbc.h"
 #include "utilitiesProvider.h"
+#include "gbException.h"
+#include "cartridge.h"
+#include "logger.h"
 #include "utils.h"
+#include "defs.h"
+#include "mbc.h"
+#include <iostream>
+#include <cstdint>
 #include <bitset>
 #include <cmath>
-#include <iostream>
 
 namespace gasyboy
 {

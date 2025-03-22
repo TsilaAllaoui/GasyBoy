@@ -3,6 +3,24 @@ cmake_minimum_required(VERSION 3.20)
 # Project info setup
 project(gasyboy VERSION 2.0 LANGUAGES CXX)
 
+# Default to Release if no build type is specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
+endif()
+
+# Print build type for confirmation
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+# Set compiler flags for different build types
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")       # Debug: No optimizations, full debugging info
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")  # Release: Optimized, disable asserts
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g") # Release with debug info
+set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG") # Minimized binary size
+
+# Apply flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
+
+
 # Compiler norm to use
 set(CMAKE_CXX_STANDARD 17)
 
