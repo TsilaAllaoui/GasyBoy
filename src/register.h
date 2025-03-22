@@ -1,6 +1,7 @@
-#pragma once
+#ifndef _REGISTER_H_
+#define _REGISTER_H_
 
-#include <iostream>
+#include <memory>
 
 using namespace std;
 
@@ -57,3 +58,5 @@ namespace gasyboy
         void clearFlag(const char &reg);
     };
 }
+
+#endif

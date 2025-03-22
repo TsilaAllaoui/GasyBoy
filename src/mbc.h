@@ -2,6 +2,7 @@
 #define MBC_H
 
 #include <iostream>
+#include <cstdint>
 #include <vector>
 #include "gbException.h"
 

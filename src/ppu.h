@@ -1,9 +1,10 @@
 #ifndef _PPU_H_
 #define _PPU_H_
 
+#include <memory>
+#include "interruptManager.h"
 #include "registers.h"
 #include "mmu.h"
-#include "interruptManager.h"
 
 namespace gasyboy
 {

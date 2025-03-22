@@ -262,6 +262,14 @@ namespace gasyboy
                 provider::TimerProvider::getInstance()->setTAC(value);
             }
 
+            // TODO: fix for LCD remaining disabled by games
+            if (address == 0xFF40)
+            {
+                if (value >> 7 == 0)
+                    return;
+                _memory[address] = value;
+            }
+
             // writing to LY register reset it
             else if (address == 0xFF44)
             {

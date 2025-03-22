@@ -264,7 +264,7 @@ namespace gasyboy
         snprintf(_bytesBuffers[reg], sizeof(_bytesBuffers[reg]) + 2, "0x%02X", get());
         std::string regStr = reg;
         regStr += ": ";
-        ImGui::Text(regStr.c_str());
+        ImGui::Text("%s", regStr.c_str());
         ImGui::SameLine();
         ImGui::SetNextItemWidth(50.0f);
         std::string label = "##" + reg;
@@ -278,7 +278,7 @@ namespace gasyboy
     void Debugger::renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(const uint16_t &value)> set, const size_t &base)
     {
         snprintf(_wordsBuffers[reg], sizeof(_wordsBuffers[reg]) + 2, base == 16 ? "0x%04X" : "%d", get());
-        ImGui::Text((reg + ": ").c_str());
+        ImGui::Text("%s : ", reg.c_str());
         ImGui::SameLine();
         ImGui::SetNextItemWidth(50.0f);
         if (ImGui::InputText(("##" + reg).c_str(), _wordsBuffers[reg], sizeof(_wordsBuffers[reg]), ImGuiInputTextFlags_EnterReturnsTrue))
@@ -362,6 +362,7 @@ namespace gasyboy
             bool halted = _registers->getHalted();
             ImGui::Checkbox("HALTED", &halted);
             _registers->setHalted(halted);
+            ImGui::SameLine();
             bool stopped = _registers->getStopMode();
             ImGui::Checkbox("STOPPED", &stopped);
             _registers->setStopMode(stopped);
@@ -766,7 +767,7 @@ namespace gasyboy
                     ImGui::TableSetColumnIndex(0);
                     std::stringstream ssAddress;
                     ssAddress << "0x" << std::hex << (int)address;
-                    ImGui::Text(ssAddress.str().c_str());
+                    ImGui::Text("%s", ssAddress.str().c_str());
 
                     // Column 1: Opcode byte(s) in hexadecimal format
                     ImGui::TableSetColumnIndex(1);
@@ -777,11 +778,11 @@ namespace gasyboy
                         ss << std::hex << "0x" << (int)byte << " ";
                     }
                     ss << std::endl;
-                    ImGui::Text(ss.str().c_str());
+                    ImGui::Text("%s", ss.str().c_str());
 
                     // Column 2: Mnemonic
                     ImGui::TableSetColumnIndex(2);
-                    ImGui::Text(opcode.mnemonic.c_str());
+                    ImGui::Text("%s", opcode.mnemonic.c_str());
                 }
             }
 

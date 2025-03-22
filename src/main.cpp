@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     // Boot default rom
     if (argc == 1)
     {
-        auto &gb = gasyboy::provider::GameBoyProvider::getInstance();
+        auto gb = gasyboy::provider::GameBoyProvider::getInstance();
         gb->boot();
         return 0;
     }
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
                         "\n\t - Debug Mode: " +
                         (gasyboy::provider::UtilitiesProvider::getInstance()->debugMode ? "true" : "false"));
 
-        auto &gb = gasyboy::provider::GameBoyProvider::getInstance();
+        auto gb = gasyboy::provider::GameBoyProvider::getInstance();
         gb->boot();
     }
     catch (const std::runtime_error &err)
