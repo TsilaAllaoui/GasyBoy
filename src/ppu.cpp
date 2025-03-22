@@ -46,7 +46,6 @@ namespace gasyboy
         if (!LCDC->lcdEnable)
         {
             *LY = 0;
-            setMode(PpuMode::HBLANK);
             _modeClock = 0;
             return;
         }
