@@ -30,6 +30,9 @@ namespace gasyboy
             utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
                                               e.what());
         }
+
+        // Load RAM file to ram
+        this->loadRam();
     }
 
     Mmu &Mmu::operator=(const gasyboy::Mmu &other)
@@ -81,6 +84,9 @@ namespace gasyboy
             utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
                                               e.what());
         }
+
+        // Load RAM file to ram
+        this->loadRam();
     }
 
     void Mmu::reset()
@@ -117,6 +123,9 @@ namespace gasyboy
             utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
                                               e.what());
         }
+
+        // Load RAM file to ram
+        this->loadRam();
     }
 
     void Mmu::disableBios()
@@ -186,7 +195,7 @@ namespace gasyboy
         // writing to _extRam
         else if (address >= 0xA000 && address < 0xC000)
         {
-            _cartridge.mbcRomWrite(address, value);
+            _cartridge.mbcRamWrite(address, value);
         }
 
         // writing to _memory && HighRAM
@@ -324,6 +333,16 @@ namespace gasyboy
     Cartridge &Mmu::getCartridge()
     {
         return _cartridge;
+    }
+
+    void Mmu::saveRam()
+    {
+        _cartridge.saveRam();
+    }
+
+    void Mmu::loadRam()
+    {
+        _cartridge.loadRam();
     }
 
     void Mmu::updateTile(const uint16_t &laddress)

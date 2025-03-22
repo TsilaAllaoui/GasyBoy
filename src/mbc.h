@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include "gbException.h"
 
 namespace gasyboy
 {
@@ -11,6 +12,8 @@ namespace gasyboy
     public:
         virtual uint8_t readByte(const uint16_t &address) = 0;
         virtual void writeByte(const uint16_t &address, const uint8_t &value) = 0;
+        virtual std::vector<uint8_t> &getRom() = 0;
+        virtual std::vector<uint8_t> &getRam() = 0;
         virtual ~IMBC() = default;
     };
 
@@ -19,9 +22,11 @@ namespace gasyboy
     public:
         std::vector<uint8_t> _rom;
 
-        MBC0(std::vector<uint8_t> rom);
+        MBC0(const std::vector<uint8_t> &rom);
         virtual uint8_t readByte(const uint16_t &address) override;
         virtual void writeByte(const uint16_t &address, const uint8_t &value) override {}
+        virtual std::vector<uint8_t> &getRom() { return _rom; }
+        virtual std::vector<uint8_t> &getRam() { throw exception::GbException("MBC0 does not have RAM"); }
     };
 
     class MBC1 : public IMBC
@@ -39,6 +44,8 @@ namespace gasyboy
         MBC1(const std::vector<uint8_t> &rom, const std::vector<uint8_t> &ram, int romBanksCount, int ramBanksCount);
         virtual uint8_t readByte(const uint16_t &address) override;
         virtual void writeByte(const uint16_t &address, const uint8_t &value) override;
+        virtual std::vector<uint8_t> &getRom() { return _rom; }
+        virtual std::vector<uint8_t> &getRam() { return _ram; }
     };
 
     class MBC2 : public MBC1

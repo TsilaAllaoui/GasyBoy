@@ -1,13 +1,13 @@
 #ifndef _CARTRIDGE_H_
 #define _CARTRIDGE_H_
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <vector>
 #include <cmath>
-#include <mbc.h>
+#include <cstring>
+#include <fstream>
+#include <iostream>
 #include <map>
+#include <mbc.h>
+#include <vector>
 
 namespace gasyboy
 {
@@ -16,12 +16,6 @@ namespace gasyboy
     private:
         // MBC
         std::unique_ptr<IMBC> _mbc;
-
-        // Rom
-        std::vector<uint8_t> _rom;
-
-        // Ram
-        std::vector<uint8_t> _ram;
 
     public:
         // Constructor/destructor
@@ -302,7 +296,10 @@ namespace gasyboy
         void loadRomFromByteArray(const size_t &size, uint8_t *mem);
 
         // Set MBC type
-        void setMBC(const uint8_t &value);
+        void setMBC(const std::vector<uint8_t> &rom, const std::vector<uint8_t> &ram);
+
+        // Get ROM
+        const std::vector<uint8_t> &getRom();
 
         // ROM/RAM reading from MBC
         uint8_t mbcRomRead(const uint16_t &adrr);
@@ -311,18 +308,6 @@ namespace gasyboy
         // ROM/RAM writing from MBC
         void mbcRomWrite(const uint16_t &adrr, const uint8_t &value);
         void mbcRamWrite(const uint16_t &adrr, const uint8_t &value);
-
-        // Set ROM
-        void setRom(const std::vector<uint8_t> &rom);
-
-        // Set RAM
-        void setRam(const std::vector<uint8_t> &ram);
-
-        // Get ROM
-        const std::vector<uint8_t> &getRom();
-
-        // Get RAM
-        const std::vector<uint8_t> &getRam();
 
         // Get cartridge header infos
         void getCartridgeHeaderInfos();
@@ -343,7 +328,13 @@ namespace gasyboy
         void reset();
 
         // Getting RAM banks count
-        int getRamBanksCount();
+        int getRamBanksCount(const uint8_t &value);
+
+        // Save RAM to file
+        void saveRam();
+
+        // Load RAM from file
+        void loadRam();
     };
 
     struct RtcState

@@ -2387,6 +2387,7 @@ namespace gasyboy
 				return 4; // Halt state takes 4 cycles per iteration
 			}
 		}
+		throw exception::GbException("Invalid cpu flow");
 	}
 
 	void Cpu::fetch()
