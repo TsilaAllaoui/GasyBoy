@@ -154,8 +154,8 @@ namespace gasyboy
         {
             _debugger->reset();
         }
-#endif
         provider::UtilitiesProvider::getInstance()->romFilePath = provider::UtilitiesProvider::getInstance()->newRomFilePath;
+#endif
 
         gasyboy::provider::GamepadProvider::getInstance()->reset();
         gasyboy::provider::MmuProvider::getInstance()->reset();
