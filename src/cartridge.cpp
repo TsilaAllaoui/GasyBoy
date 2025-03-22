@@ -1,25 +1,22 @@
-#include <iostream>
+#include "cartridge.h"
+#include "defs.h"
+#include "gbException.h"
+#include "logger.h"
+#include "mbc.h"
+#include "utilitiesProvider.h"
+#include "utils.h"
 #include <bitset>
 #include <cmath>
-#include "gbException.h"
-#include "cartridge.h"
-#include "logger.h"
-#include "utils.h"
-#include "defs.h"
-#include "mbc.h"
+#include <iostream>
 
 namespace gasyboy
 {
 
-	Cartridge::Cartridge()
-		: _cartridgeType(CartridgeType::ROM_ONLY)
-	{
-	}
+	Cartridge::Cartridge() : _cartridgeType(CartridgeType::ROM_ONLY) {}
 
 	Cartridge &Cartridge::operator=(const Cartridge &other)
 	{
-		_rom = other._rom;
-		_ram = other._ram;
+		_mbc.reset(other._mbc.get());
 		_cartridgeType = other._cartridgeType;
 		_cartridgeHeader = other._cartridgeHeader;
 		if (other._mbc)
@@ -52,13 +49,15 @@ namespace gasyboy
 		}
 
 		// Setting up ROM
-		_rom = std::vector<uint8_t>(buffer, buffer + size);
+		auto rom = std::vector<uint8_t>(buffer, buffer + size);
+
+		auto ramBankOffset = rom[0x149];
 
 		// Setting up RAM
-		_ram = std::vector<uint8_t>(getRamBanksCount() * 0x2000, 0);
+		auto ram = std::vector<uint8_t>(getRamBanksCount(ramBankOffset) * 0x2000, 0);
 
 		// Setting up MBC
-		setMBC(_rom[0x147]);
+		setMBC(rom, ram);
 
 		// Get cartridge header infos
 		getCartridgeHeaderInfos();
@@ -70,13 +69,15 @@ namespace gasyboy
 	void Cartridge::loadRomFromByteArray(const size_t &size, uint8_t *mem)
 	{
 		// Setting up ROM
-		_rom = std::vector<uint8_t>(mem, mem + size);
+		auto rom = std::vector<uint8_t>(mem, mem + size);
+
+		auto ramBankOffset = rom[0x149];
 
 		// Setting up RAM
-		_ram = std::vector<uint8_t>(getRamBanksCount() * 0x2000, 0);
+		auto ram = std::vector<uint8_t>(getRamBanksCount(ramBankOffset) * 0x2000, 0);
 
 		// Setting up MBC
-		setMBC(_rom[0x147]);
+		setMBC(rom, ram);
 
 		// Get cartridge header infos
 		getCartridgeHeaderInfos();
@@ -85,46 +86,36 @@ namespace gasyboy
 		logCartridgeHeaderInfos();
 	}
 
-	const std::vector<uint8_t> &Cartridge::getRom()
+	void Cartridge::setMBC(const std::vector<uint8_t> &rom, const std::vector<uint8_t> &ram)
 	{
-		return _rom;
-	}
+		_cartridgeType = utils::uint8ToCartridgeType(rom[0x147]);
 
-	const std::vector<uint8_t> &Cartridge::getRam()
-	{
-		return _ram;
-	}
+		int ramBanksCount = getRamBanksCount(rom[0x149]);
 
-	void Cartridge::setMBC(const uint8_t &value)
-	{
-		_cartridgeType = utils::uint8ToCartridgeType(value);
+		int romBanksCount = rom.size() / 0x4000;
 
-		int ramBanksCount = getRamBanksCount();
-
-		int romBanksCount = _rom.size() / 0x4000;
-
-		switch (value)
+		switch (rom[0x147])
 		{
 		case 0x00:
 		case 0x08:
 		case 0x09:
-			_mbc = std::make_unique<MBC0>(_rom);
+			_mbc = std::make_unique<MBC0>(rom);
 			break;
 		case 0x01:
 		case 0x02:
 		case 0x03:
-			_mbc = std::make_unique<MBC1>(_rom, _ram, romBanksCount, ramBanksCount);
+			_mbc = std::make_unique<MBC1>(rom, ram, romBanksCount, ramBanksCount);
 			break;
 		case 0x05:
 		case 0x06:
-			_mbc = std::make_unique<MBC2>(_rom, _ram, romBanksCount, ramBanksCount);
+			_mbc = std::make_unique<MBC2>(rom, ram, romBanksCount, ramBanksCount);
 			break;
 		case 0x0F:
 		case 0x10:
 		case 0x11:
 		case 0x12:
 		case 0x13:
-			_mbc = std::make_unique<MBC3>(_rom, _ram, romBanksCount, ramBanksCount);
+			_mbc = std::make_unique<MBC3>(rom, ram, romBanksCount, ramBanksCount);
 			break;
 		case 0x19:
 		case 0x1A:
@@ -132,11 +123,11 @@ namespace gasyboy
 		case 0x1C:
 		case 0x1D:
 		case 0x1E:
-			_mbc = std::make_unique<MBC5>(_rom, _ram, romBanksCount, ramBanksCount);
+			_mbc = std::make_unique<MBC5>(rom, ram, romBanksCount, ramBanksCount);
 			break;
 		default:
 			std::stringstream ss;
-			ss << "\nIncorrect MBC type: " << std::hex << (int)value << "\n";
+			ss << "\nIncorrect MBC type: " << std::hex << (int)rom[0x14] << "\n";
 			throw exception::GbException(ss.str());
 		}
 	}
@@ -144,6 +135,11 @@ namespace gasyboy
 	uint8_t Cartridge::mbcRomRead(const uint16_t &addr)
 	{
 		return _mbc->readByte(addr);
+	}
+
+	const std::vector<uint8_t> &Cartridge::getRom()
+	{
+		return _mbc->getRom();
 	}
 
 	void Cartridge::mbcRomWrite(const uint16_t &addr, const uint8_t &value)
@@ -159,16 +155,6 @@ namespace gasyboy
 	void Cartridge::mbcRamWrite(const uint16_t &addr, const uint8_t &value)
 	{
 		_mbc->writeByte(addr, value);
-	}
-
-	void Cartridge::setRom(const std::vector<uint8_t> &rom)
-	{
-		_rom = rom;
-	}
-
-	void Cartridge::setRam(const std::vector<uint8_t> &ram)
-	{
-		_ram = ram;
 	}
 
 	std::string Cartridge::cartridgeTypeStr(const uint8_t &byte)
@@ -282,17 +268,16 @@ namespace gasyboy
 
 	void Cartridge::reset()
 	{
-		_rom.clear();
-		_ram.clear();
 		_cartridgeType = CartridgeType::ROM_ONLY;
 		_cartridgeHeader = CartridgeHeader();
+		_mbc.reset();
 	}
 
 	void Cartridge::getCartridgeHeaderInfos()
 	{
 		for (int i = 0x134; i < 0x143; i++)
 		{
-			uint8_t byte = static_cast<char>(_rom[i]);
+			uint8_t byte = static_cast<char>(_mbc->readByte(i));
 			if (byte != 0)
 			{
 				_cartridgeHeader.name += byte;
@@ -304,57 +289,75 @@ namespace gasyboy
 			}
 		}
 
-		uint8_t cgbSupportByte = _rom[0x143];
+		uint8_t cgbSupportByte = _mbc->readByte(0x143);
 		_cartridgeHeader.cgbSupport =
-			cgbSupportByte == 0xC0 ? "Yes (No DMG support)" : (cgbSupportByte == 0x80 ? "Yes (DMG support)" : "No");
+			cgbSupportByte == 0xC0
+				? "Yes (No DMG support)"
+				: (cgbSupportByte == 0x80 ? "Yes (DMG support)" : "No");
 
-		_cartridgeHeader.sgbSupport = _rom[0x143] == 0x03 ? "Yes" : "No";
+		_cartridgeHeader.sgbSupport = _mbc->readByte(0x143) == 0x03 ? "Yes" : "No";
 
-		uint8_t oldLicenseeCodeByte = _rom[0x14B];
+		uint8_t oldLicenseeCodeByte = _mbc->readByte(0x14B);
 		if (oldLicenseeCodeByte == 0x33)
 		{
 			std::string newLicenseeStr;
-			newLicenseeStr.push_back(static_cast<char>(_rom[0x144]));
-			newLicenseeStr.push_back(static_cast<char>(_rom[0x145]));
+			newLicenseeStr.push_back(static_cast<char>(_mbc->readByte(0x144)));
+			newLicenseeStr.push_back(static_cast<char>(_mbc->readByte(0x145)));
 
 			auto code = newLicenseeCodes.find(newLicenseeStr);
-			_cartridgeHeader.licenseeCode = code == newLicenseeCodes.end() ? "Unknown" : code->second;
+			_cartridgeHeader.licenseeCode =
+				code == newLicenseeCodes.end() ? "Unknown" : code->second;
 		}
 		else
 		{
 			auto code = oldLicenseeCodes.find(oldLicenseeCodeByte);
-			_cartridgeHeader.licenseeCode = code == oldLicenseeCodes.end() ? "Unknown" : code->second;
+			_cartridgeHeader.licenseeCode =
+				code == oldLicenseeCodes.end() ? "Unknown" : code->second;
 		}
 
-		_cartridgeHeader.cartridgeType = cartridgeTypeStr(_rom[0x147]);
-		_cartridgeHeader.romSize = romSizeStr(_rom[0x148]);
-		_cartridgeHeader.ramSize = ramSizeStr(_rom[0x149]);
-		_cartridgeHeader.isJapaneseCartridge = (_rom[0x14A] & 0x1);
-		_cartridgeHeader.maskRomVersion = _rom[0x14C];
+		_cartridgeHeader.cartridgeType = cartridgeTypeStr(_mbc->readByte(0x147));
+		_cartridgeHeader.romSize = romSizeStr(_mbc->readByte(0x148));
+		_cartridgeHeader.ramSize = ramSizeStr(_mbc->readByte(0x149));
+		_cartridgeHeader.isJapaneseCartridge = (_mbc->readByte(0x14A) & 0x1);
+		_cartridgeHeader.maskRomVersion = _mbc->readByte(0x14C);
 	}
 
 	void Cartridge::logCartridgeHeaderInfos()
 	{
 		std::stringstream cartridgeHeaderInfo;
 
-		cartridgeHeaderInfo << "ROM Name:        	 " << _cartridgeHeader.name << std::endl;
-		cartridgeHeaderInfo << "Manufacturer:    	 " << (_cartridgeHeader.manufacturer.empty() ? "N/A" : _cartridgeHeader.manufacturer) << std::endl;
-		cartridgeHeaderInfo << "CGB Support:      	 " << _cartridgeHeader.cgbSupport << std::endl;
-		cartridgeHeaderInfo << "SGB Support:      	 " << (_cartridgeHeader.sgbSupport ? "Yes" : "No") << std::endl;
-		cartridgeHeaderInfo << "Cartridge Type:  	 " << _cartridgeHeader.cartridgeType << std::endl;
-		cartridgeHeaderInfo << "Rom Size:        	 " << _cartridgeHeader.romSize << std::endl;
-		cartridgeHeaderInfo << "RAM Size:        	 " << _cartridgeHeader.ramSize << std::endl;
-		cartridgeHeaderInfo << "Japanese Cartridge:  " << (_cartridgeHeader.isJapaneseCartridge ? "No" : "Yes") << std::endl;
-		cartridgeHeaderInfo << "Mask Rom Version:    " << std::hex << static_cast<int>(_cartridgeHeader.maskRomVersion) << std::endl;
+		cartridgeHeaderInfo << "ROM Name:        	 " << _cartridgeHeader.name
+							<< std::endl;
+		cartridgeHeaderInfo << "Manufacturer:    	 "
+							<< (_cartridgeHeader.manufacturer.empty()
+									? "N/A"
+									: _cartridgeHeader.manufacturer)
+							<< std::endl;
+		cartridgeHeaderInfo << "CGB Support:      	 "
+							<< _cartridgeHeader.cgbSupport << std::endl;
+		cartridgeHeaderInfo << "SGB Support:      	 "
+							<< (_cartridgeHeader.sgbSupport ? "Yes" : "No")
+							<< std::endl;
+		cartridgeHeaderInfo << "Cartridge Type:  	 "
+							<< _cartridgeHeader.cartridgeType << std::endl;
+		cartridgeHeaderInfo << "Rom Size:        	 " << _cartridgeHeader.romSize
+							<< std::endl;
+		cartridgeHeaderInfo << "RAM Size:        	 " << _cartridgeHeader.ramSize
+							<< std::endl;
+		cartridgeHeaderInfo << "Japanese Cartridge:  "
+							<< (_cartridgeHeader.isJapaneseCartridge ? "No" : "Yes")
+							<< std::endl;
+		cartridgeHeaderInfo << "Mask Rom Version:    " << std::hex
+							<< static_cast<int>(_cartridgeHeader.maskRomVersion)
+							<< std::endl;
 
-		utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG, "\n" + cartridgeHeaderInfo.str());
+		utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+										  "\n" + cartridgeHeaderInfo.str());
 	}
 
-	int Cartridge::getRamBanksCount()
+	int Cartridge::getRamBanksCount(const uint8_t &value)
 	{
-		uint8_t type = _rom[0x149];
-
-		switch (type)
+		switch (value)
 		{
 		case 0x00:
 			return 0;
@@ -376,8 +379,49 @@ namespace gasyboy
 			break;
 		default:
 			std::stringstream ss;
-			ss << "\nIncorrect RAM type: " << std::hex << (int)type << "\n";
+			ss << "\nIncorrect RAM type: " << std::hex << (int)value << "\n";
 			throw exception::GbException(ss.str());
 		}
 	}
-}
+
+	void Cartridge::saveRam()
+	{
+		if (_cartridgeType == CartridgeType::ROM_ONLY)
+		{
+			return;
+		}
+
+		auto fileName = provider::UtilitiesProvider::getInstance()->romFilePath;
+		fileName = fileName.substr(0, fileName.find("."));
+		std::ofstream file(fileName + ".sav", std::ios::binary);
+		if (!file.is_open())
+		{
+			utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+											  "Unable save RAM to file.");
+			return;
+		}
+		file.write(reinterpret_cast<char *>(_mbc->getRam().data()), _mbc->getRam().size());
+	}
+
+	void Cartridge::loadRam()
+	{
+		if (_cartridgeType == CartridgeType::ROM_ONLY)
+		{
+			return;
+		}
+
+		auto fileName = provider::UtilitiesProvider::getInstance()->romFilePath;
+		fileName = fileName.substr(0, fileName.find("."));
+		std::ifstream file(fileName + ".sav", std::ios::binary | std::ios::ate);
+		if (!file.is_open())
+		{
+			utils::Logger::getInstance()->log(utils::Logger::LogType::DEBUG,
+											  "Unable to open RAM file.");
+			return;
+		}
+		auto size = file.tellg();
+		file.seekg(0, std::ios::beg);
+		_mbc->getRam().resize(size);
+		file.read(reinterpret_cast<char *>(_mbc->getRam().data()), size);
+	}
+} // namespace gasyboy

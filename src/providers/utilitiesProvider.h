@@ -11,6 +11,7 @@ namespace gasyboy
     {
         bool executeBios;
         std::string romFilePath;
+        std::string newRomFilePath;
         bool debugMode;
         bool wasReset;
     };

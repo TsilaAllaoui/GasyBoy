@@ -139,6 +139,9 @@ namespace gasyboy
 
     void GameBoy::reset()
     {
+        // Saving RAM to file
+        gasyboy::provider::MmuProvider::getInstance()->saveRam();
+
         gasyboy::provider::GamepadProvider::deleteInstance();
         gasyboy::provider::MmuProvider::deleteInstance();
         gasyboy::provider::RegistersProvider::deleteInstance();
@@ -147,8 +150,13 @@ namespace gasyboy
         gasyboy::provider::TimerProvider::deleteInstance();
         gasyboy::provider::PpuProvider::deleteInstance();
 #ifndef EMSCRIPTEN
-        _debugger->reset();
+        if (_debugMode)
+        {
+            _debugger->reset();
+        }
 #endif
+        provider::UtilitiesProvider::getInstance()->romFilePath = provider::UtilitiesProvider::getInstance()->newRomFilePath;
+
         gasyboy::provider::GamepadProvider::getInstance()->reset();
         gasyboy::provider::MmuProvider::getInstance()->reset();
         gasyboy::provider::RegistersProvider::getInstance()->reset();

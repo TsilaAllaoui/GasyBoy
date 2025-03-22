@@ -208,16 +208,21 @@ namespace gasyboy
 
     void Ppu::renderScanLineWindow()
     {
-        if (*WY > *LY)
+        if (*WY > *LY) // Window only starts rendering when LY >= WY
             return;
+
+        uint8_t wx = *WX; // Do not modify the actual WX register
 
         uint16_t address = 0x9800;
         if (LCDC->windowDisplaySelect)
             address += 0x400;
-        *WX = -7;
+
         int y = (*LY - *WY) & 7;
         int pixelOffset = *LY * SCREEN_WIDTH;
         address += ((*LY - *WY) / 8) * 32;
+
+        // Adjust for off-screen WX values correctly
+        int startX = wx - 7; // The actual starting X position of the window
 
         for (uint16_t tileX = 0; tileX < 21; tileX++)
         {
@@ -228,13 +233,15 @@ namespace gasyboy
 
             for (int x = 0; x < 8; x++)
             {
-                int windowPixelX = *WX + tileX * 8 + x;
-                if (windowPixelX < 0 || windowPixelX >= SCREEN_WIDTH)
-                    continue;
-                int colour = _mmu->tiles[tile].pixels[y][x];
-                if (pixelOffset + windowPixelX >= SCREEN_WIDTH * SCREEN_HEIGHT)
-                    return;
-                _framebuffer[pixelOffset + windowPixelX] = _mmu->palette_BGP[colour];
+                int windowPixelX = startX + tileX * 8 + x;
+                if (windowPixelX >= SCREEN_WIDTH)
+                    break; // Stop rendering if out of screen bounds
+
+                if (windowPixelX >= 0) // Only render if within valid screen bounds
+                {
+                    int colour = _mmu->tiles[tile].pixels[y][x];
+                    _framebuffer[pixelOffset + windowPixelX] = _mmu->palette_BGP[colour];
+                }
             }
         }
     }

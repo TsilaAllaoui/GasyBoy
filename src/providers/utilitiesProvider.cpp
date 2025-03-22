@@ -10,7 +10,13 @@ namespace gasyboy
         {
             if (!_utilitiesInstance)
             {
-                Utilities utilities = {true, "", false, false};
+                Utilities utilities = {
+                    true,
+                    "",
+                    "",
+                    false,
+                    false,
+                };
                 _utilitiesInstance = std::make_shared<Utilities>(utilities);
             }
             return _utilitiesInstance;

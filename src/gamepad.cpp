@@ -1,5 +1,6 @@
 #include "utilitiesProvider.h"
 #include "gameBoyProvider.h"
+#include "registersProvider.h"
 #include "gamepad.h"
 #include "defs.h"
 #ifdef EMSCRIPTEN
@@ -48,7 +49,7 @@ namespace gasyboy
                 if (droppedFile)
                 {
                     std::string filePath(droppedFile);
-                    gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
+                    gasyboy::provider::UtilitiesProvider::getInstance()->newRomFilePath = filePath;
                     gasyboy::provider::UtilitiesProvider::getInstance()->wasReset = true;
                     SDL_free(droppedFile);
                 }
@@ -56,6 +57,8 @@ namespace gasyboy
 
             else if (event.type == SDL_KEYDOWN)
             {
+                provider::RegistersProvider::getInstance()->setStopMode(false);
+
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_ESCAPE:
