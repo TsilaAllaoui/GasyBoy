@@ -27,24 +27,33 @@ echo Entering build folder...
 cd "%BUILD_DIR%" || exit /b 1
 
 echo ******************************
-echo Generating CMake files...
+echo Checking for GCC...
 
-:: Check if MSVC is being used (Multi-Config Generator)
-cmake --version | findstr /C:"Visual Studio" >nul
+where gcc >nul 2>&1
 if %ERRORLEVEL% == 0 (
-    cmake -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ..
+    echo GCC found! Using MinGW Makefiles.
+    cmake .. -G "MinGW Makefiles" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 ) else (
-    cmake -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ..
+    echo GCC not found, checking for MSVC...
+
+    cmake --version | findstr /C:"Visual Studio" >nul
+    if %ERRORLEVEL% == 0 (
+        echo Visual Studio detected! Using MSVC generator.
+        cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+    ) else (
+        echo No GCC or MSVC detected! Exiting.
+        exit /b 1
+    )
 )
 
 echo ******************************
 echo Building project...
 
-:: Check if MSVC (Multi-Config)
+where gcc >nul 2>&1
 if %ERRORLEVEL% == 0 (
-    cmake --build . --config %BUILD_TYPE%
+    mingw32-make
 ) else (
-    cmake --build .
+    cmake --build . --config %BUILD_TYPE%
 )
 
 echo ******************************

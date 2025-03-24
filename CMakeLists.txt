@@ -17,15 +17,15 @@ file(MAKE_DIRECTORY ${BUILD_DIR})
 message(STATUS "Build directory: ${BUILD_DIR}")
 
 # Set compiler flags based on compiler
-if (MSVC)
+if(MSVC)
     # MSVC flags
-    set(CMAKE_CXX_FLAGS_DEBUG "/Zi /Od")     # Debug: Generate debug symbols, disable optimization
+    set(CMAKE_CXX_FLAGS_DEBUG "/Zi /Od") # Debug: Generate debug symbols, disable optimization
     set(CMAKE_CXX_FLAGS_RELEASE "/O2 /DNDEBUG") # Release: Optimize, disable asserts
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /Zi") # Release with debug info
     set(CMAKE_CXX_FLAGS_MINSIZEREL "/O1 /DNDEBUG") # Minimized binary size
 else()
     # GCC/Clang flags
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")        # Debug: No optimizations, full debugging info
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0") # Debug: No optimizations, full debugging info
     set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG") # Release: Optimized, disable asserts
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g") # Release with debug info
     set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG") # Minimized binary size
@@ -48,7 +48,7 @@ file(GLOB GASYBOY_SOURCES_FILES src/*.cpp src/providers/*.cpp)
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
 
 # Check if using Emscripten
-if(USE_EMSCRIPTEN_SDL2 OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
     # Add include directories
     set(GASYBOY_HEADERS_DIR
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -121,9 +121,10 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_BINARY_DIR}/externals/SDL/$<CONFIG>/$<IF:$<CONFIG:Debug>,SDL2d.dll,SDL2.dll>"
         "${CMAKE_BINARY_DIR}/$<CONFIG>/$<IF:$<CONFIG:Debug>,SDL2d.dll,SDL2.dll>"
-        COMMENT "Copying SDL2 DLL to the build folder"
+        || exit 0
+        COMMENT "Copying SDL2 DLL to the build folder (non-fatal)"
     )
-elseif(USE_EMSCRIPTEN_SDL2 OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+elseif(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
     # WebAssembly: Copy generated wasm/js to docs folder
     add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD

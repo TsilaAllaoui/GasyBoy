@@ -46,6 +46,7 @@ namespace gasyboy
         if (!LCDC->lcdEnable)
         {
             *LY = 0;
+            STAT->modeFlag = PpuMode::HBLANK;
             _modeClock = 0;
             return;
         }
@@ -136,6 +137,12 @@ namespace gasyboy
     void Ppu::updateLY()
     {
         (*LY)++;
+        if (*LY == 144)
+        {
+            setMode(PpuMode::VBLANK);
+            _interruptManager->requestInterrupt(InterruptManager::InterruptType::VBlank);
+        }
+
         if (*LY == *LCY)
         {
             STAT->coincidenceFlag = 1;
