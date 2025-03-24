@@ -46,7 +46,6 @@ namespace gasyboy
         if (!LCDC->lcdEnable)
         {
             *LY = 0;
-            setMode(PpuMode::HBLANK);
             _modeClock = 0;
             return;
         }
@@ -76,7 +75,7 @@ namespace gasyboy
             if (_modeClock >= 204)
             {
                 _modeClock -= 204;
-                (*LY)++;
+                updateLY();
                 if (*LY == 144)
                 {
                     setMode(PpuMode::VBLANK);
@@ -93,7 +92,7 @@ namespace gasyboy
             if (_modeClock >= 456)
             {
                 _modeClock -= 456;
-                (*LY)++;
+                updateLY();
                 if (*LY > 153)
                 {
                     _canRender = true;
@@ -108,19 +107,6 @@ namespace gasyboy
     void Ppu::setMode(PpuMode mode)
     {
         STAT->modeFlag = static_cast<uint8_t>(mode);
-
-        if (*LY == *LCY)
-        {
-            STAT->coincidenceFlag = 1;
-            if (STAT->coincidenceInterrupt)
-            {
-                _interruptManager->requestInterrupt(InterruptManager::InterruptType::LCDStat);
-            }
-        }
-        else
-        {
-            STAT->coincidenceFlag = 0;
-        }
 
         switch (mode)
         {
@@ -144,6 +130,23 @@ namespace gasyboy
             break;
         default:
             break;
+        }
+    }
+
+    void Ppu::updateLY()
+    {
+        (*LY)++;
+        if (*LY == *LCY)
+        {
+            STAT->coincidenceFlag = 1;
+            if (STAT->coincidenceInterrupt)
+            {
+                _interruptManager->requestInterrupt(InterruptManager::InterruptType::LCDStat);
+            }
+        }
+        else
+        {
+            STAT->coincidenceFlag = 0;
         }
     }
 

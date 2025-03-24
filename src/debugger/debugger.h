@@ -83,8 +83,8 @@ namespace gasyboy
         std::shared_ptr<Ppu> _ppu;
         Disassembler _disassembler;
 
-        std::map<std::string, char *> _bytesBuffers;
-        std::map<std::string, char *> _wordsBuffers;
+        std::map<std::string, std::string> _bytesBuffers;
+        std::map<std::string, std::string> _wordsBuffers;
         void renderByte(const std::string &reg, std::function<uint8_t()> get, std::function<void(uint8_t)> set);
         void renderWord(const std::string &reg, std::function<uint16_t()> get, std::function<void(const uint16_t &value)> set, const size_t &base = 16);
 

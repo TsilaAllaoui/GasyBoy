@@ -83,6 +83,8 @@ namespace gasyboy
         void step(const int &cycle);
 
         void setMode(PpuMode mode);
+
+        void updateLY();
     };
 }
 

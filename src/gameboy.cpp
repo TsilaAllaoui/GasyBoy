@@ -113,13 +113,48 @@ namespace gasyboy
         _cycleCounter = 0;
 
         while ((Cpu::state == Cpu::State::RUNNING && _cycleCounter <= MAXCYCLE) ||
-               Cpu::state == Cpu::State::STEPPING)
+               Cpu::state == Cpu::State::STEPPING ||
+               Cpu::state == Cpu::State::PAUSED) // Keep processing when paused
         {
             _interruptManager->handleInterrupts();
-            step();
-            if (Cpu::state == Cpu::State::STEPPING)
+
+            if (Cpu::state == Cpu::State::RUNNING || Cpu::state == Cpu::State::STEPPING)
             {
-                Cpu::state = Cpu::State::PAUSED;
+                step();
+                if (Cpu::state == Cpu::State::STEPPING)
+                {
+                    Cpu::state = Cpu::State::PAUSED;
+                }
+            }
+            else if (Cpu::state == Cpu::State::PAUSED)
+            {
+                // Process SDL events while paused
+                SDL_Event event;
+                while (SDL_PollEvent(&event))
+                {
+#ifndef EMSCRIPTEN
+                    if (_debugMode)
+                    {
+                        ImGui_ImplSDL2_ProcessEvent(&event);
+                    }
+#endif
+                    if (event.type == SDL_QUIT)
+                    {
+                        GameBoy::state = GameBoy::State::STOPPED;
+                        return;
+                    }
+                }
+
+                // Render debugger UI while paused
+#ifndef EMSCRIPTEN
+                if (_debugMode)
+                {
+                    _debugger->render();
+                }
+#endif
+
+                // Add a small delay to avoid high CPU usage
+                SDL_Delay(10);
             }
         }
 
