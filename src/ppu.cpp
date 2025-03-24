@@ -51,6 +51,11 @@ namespace gasyboy
             return;
         }
 
+        if (*LY == 0)
+        {
+            windowLineCounter = 0; // Reset each new frame
+        }
+
         _modeClock += cycle;
 
         switch (STAT->modeFlag)
@@ -218,42 +223,45 @@ namespace gasyboy
 
     void Ppu::renderScanLineWindow()
     {
-        if (*WY > *LY) // Window only starts rendering when LY >= WY
+        if (*LY < *WY || *WX >= 167)
             return;
 
-        uint8_t wx = *WX; // Do not modify the actual WX register
+        uint8_t wx = *WX;
 
-        uint16_t address = 0x9800;
-        if (LCDC->windowDisplaySelect)
-            address += 0x400;
+        uint16_t baseAddress = LCDC->windowDisplaySelect ? 0x9C00 : 0x9800;
 
-        int y = (*LY - *WY) & 7;
+        int tileY = windowLineCounter / 8;
+        int pixelYInTile = windowLineCounter & 7;
+
+        uint16_t tileMapRowAddr = baseAddress + tileY * 32;
+
         int pixelOffset = *LY * SCREEN_WIDTH;
-        address += ((*LY - *WY) / 8) * 32;
 
-        // Adjust for off-screen WX values correctly
-        int startX = wx - 7; // The actual starting X position of the window
+        int startX = wx - 7;
 
-        for (uint16_t tileX = 0; tileX < 21; tileX++)
+        for (int tileX = 0; tileX < 21; tileX++)
         {
-            uint16_t tile_address = address + tileX;
-            int tile = _mmu->readRam(tile_address);
-            if (!LCDC->bgWindowDataSelect && tile < 128)
-                tile += 256;
+            uint16_t tileAddress = tileMapRowAddr + tileX;
+            int tileIndex = _mmu->readRam(tileAddress);
+
+            if (!LCDC->bgWindowDataSelect && tileIndex < 128)
+                tileIndex += 256;
 
             for (int x = 0; x < 8; x++)
             {
                 int windowPixelX = startX + tileX * 8 + x;
                 if (windowPixelX >= SCREEN_WIDTH)
-                    break; // Stop rendering if out of screen bounds
+                    break; // Off the right edge
 
-                if (windowPixelX >= 0) // Only render if within valid screen bounds
+                if (windowPixelX >= 0)
                 {
-                    int colour = _mmu->tiles[tile].pixels[y][x];
-                    _framebuffer[pixelOffset + windowPixelX] = _mmu->palette_BGP[colour];
+                    int colorIndex = _mmu->tiles[tileIndex].pixels[pixelYInTile][x];
+                    _framebuffer[pixelOffset + windowPixelX] = _mmu->palette_BGP[colorIndex];
                 }
             }
         }
+
+        windowLineCounter++;
     }
 
     void Ppu::renderScanLineSprites(bool *rowPixels)
@@ -265,11 +273,9 @@ namespace gasyboy
         {
             auto &sprite = _mmu->sprites[i];
 
-            // Check if the sprite is on the current scanline
-            if ((*LY < sprite.y) || (*LY >= sprite.y + sprite_height))
+            if (*LY < sprite.y || *LY >= sprite.y + sprite_height)
                 continue;
 
-            // Limit the number of sprites per scanline to 10
             if (spritesRendered >= 10)
                 break;
 
@@ -279,22 +285,32 @@ namespace gasyboy
                 if (pixelX < 0 || pixelX >= SCREEN_WIDTH)
                     continue;
 
-                int spriteX = x;
-                if (sprite.options.xFlip)
-                    spriteX = 7 - x;
+                // Dont draw if same x postition from previous sprite
+                if (i > 0 && pixelX == _mmu->sprites[i - 1].x + x)
+                {
+                    continue;
+                }
+
+                int spriteX = sprite.options.xFlip ? 7 - x : x;
                 int spriteY = *LY - sprite.y;
                 if (sprite.options.yFlip)
                     spriteY = sprite_height - 1 - spriteY;
 
-                int tile_num = sprite.tile & (LCDC->spriteSize ? 0xFE : 0xFF);
+                int tileIndex = sprite.tile & (LCDC->spriteSize ? 0xFE : 0xFF);
+
                 int colour = 0;
                 if (LCDC->spriteSize && spriteY >= 8)
-                    colour = _mmu->tiles[tile_num + 1].pixels[spriteY - 8][spriteX];
+                {
+                    colour = _mmu->tiles[tileIndex + 1].pixels[spriteY - 8][spriteX];
+                }
                 else
-                    colour = _mmu->tiles[tile_num].pixels[spriteY][spriteX];
+                {
+                    colour = _mmu->tiles[tileIndex].pixels[spriteY][spriteX];
+                }
 
                 if (colour == 0)
                     continue;
+
                 if (sprite.options.renderPriority && rowPixels[pixelX])
                     continue;
 

@@ -76,6 +76,8 @@ namespace gasyboy
 
         Colour _framebuffer[160 * 144];
 
+        int windowLineCounter = 0;
+
         int _modeClock = 0;
 
         bool _canRender = false;
