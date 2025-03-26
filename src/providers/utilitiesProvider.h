@@ -14,6 +14,7 @@ namespace gasyboy
         std::string newRomFilePath;
         bool debugMode;
         bool wasReset;
+        bool wasRefreshed;
     };
 
     namespace provider
