@@ -12,6 +12,7 @@
 #include "disassembler.h"
 #include <thread>
 #include <mutex>
+#include <span>
 
 namespace gasyboy
 {
@@ -92,6 +93,7 @@ namespace gasyboy
         std::vector<std::pair<std::string, bool>> _directions;
 
         void showByteArray(const std::vector<uint8_t> &data, const uint16_t &offset = 0, size_t bytes_per_row = 16);
+        void showByteArray(std::span<uint8_t> &data, const uint16_t &offset = 0, size_t bytes_per_row = 16, const bool &writable = false);
         void showIntegerCombo(int a, int b, int &selected_value);
 
         void showPalette(const char *label, Colour palette[4], const uint8_t &w = 50, const uint8_t &h = 50);

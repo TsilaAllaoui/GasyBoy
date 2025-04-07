@@ -3,6 +3,12 @@ cmake_minimum_required(VERSION 3.20)
 # Project info setup
 project(gasyboy VERSION 2.0 LANGUAGES CXX)
 
+# Set compiler standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 11)  # or 99, depending on what SDL requires
+
+
 # Default to Release if no build type is specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the build type (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
@@ -36,9 +42,10 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
 endif()
 
-# Set compiler standard
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|MSVC")
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++20>)
+endif()
+
 
 # External libs directory
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)

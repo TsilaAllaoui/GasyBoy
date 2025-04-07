@@ -290,6 +290,9 @@ namespace gasyboy
         // Cartridge type
         CartridgeType _cartridgeType;
 
+        uint16_t _romBankCount;
+        uint16_t _ramBankCount;
+
         // Loading ROM
         void loadRom(const std::string &filename);
 
@@ -300,7 +303,10 @@ namespace gasyboy
         void setMBC(const std::vector<uint8_t> &rom, const std::vector<uint8_t> &ram);
 
         // Get ROM
-        const std::vector<uint8_t> &getRom();
+        std::vector<uint8_t> &getRom();
+
+        // Get RAM
+        std::vector<uint8_t> &getRam();
 
         // ROM/RAM reading from MBC
         uint8_t mbcRomRead(const uint16_t &adrr);

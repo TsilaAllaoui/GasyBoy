@@ -84,6 +84,7 @@ namespace gasyboy
 
     // graphic memory TODO: change functions names
     std::vector<uint8_t> getVram();
+    std::vector<uint8_t> &getMemory();
     uint8_t getPaletteColor(const uint8_t &index);
 
     // Get rom from cartridge

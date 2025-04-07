@@ -65,6 +65,10 @@ namespace gasyboy
                     exit(ExitState::MANUAL_STOP);
                     break;
 
+                case SDLK_DOLLAR:
+                    gasyboy::provider::UtilitiesProvider::getInstance()->wasRefreshed = true;
+                    break;
+
                 case SDLK_KP_MULTIPLY:
                 case SDLK_ASTERISK:
                     gasyboy::provider::UtilitiesProvider::getInstance()->wasReset = true;

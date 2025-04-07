@@ -211,6 +211,7 @@ namespace gasyboy
             else if (address >= 0xFE00 && address <= 0xFE9F)
             {
                 updateSprite(address, value);
+                _memory[address] = value;
                 return;
             }
 
@@ -318,6 +319,11 @@ namespace gasyboy
         {
             exit(78);
         }
+    }
+
+    std::vector<uint8_t> &Mmu::getMemory()
+    {
+        return _memory;
     }
 
     uint8_t Mmu::getPaletteColor(const uint8_t &index)
