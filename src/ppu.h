@@ -12,7 +12,7 @@ namespace gasyboy
     {
         void renderScanLines();
         void renderScanLineBackground(bool *rowPixels);
-        void renderScanLineWindow();
+        void renderScanLineWindow(bool *rowPixels);
         void renderScanLineSprites(bool *rowPixels);
 
     public:
