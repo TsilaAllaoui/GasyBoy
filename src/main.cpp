@@ -57,7 +57,8 @@ int main()
 int main(int argc, char **argv)
 {
     gasyboy::provider::UtilitiesProvider::getInstance()->executeBios = false;
-    gasyboy::provider::UtilitiesProvider::getInstance()->debugMode = false;
+    gasyboy::provider::UtilitiesProvider::getInstance()->debugMode = true;
+    gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/trasoloallaoui/C++/roms/dmg-acid2/dmg-acid2.gb";
 
     // Boot default rom
     if (argc == 1)

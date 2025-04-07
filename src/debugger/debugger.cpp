@@ -287,7 +287,7 @@ namespace gasyboy
         ImGui::Begin("CPU", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
         // Render registers
-        if (ImGui::BeginTable("##CPU", 2, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
+        if (ImGui::BeginTable("##CPU", 2, ImGuiTableFlags_Borders)) // | ImGuiWindowFlags_NoMove))
         {
             ImGui::TableSetupColumn("Registers", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableSetupColumn("Flags", ImGuiTableColumnFlags_WidthStretch);
@@ -425,7 +425,7 @@ namespace gasyboy
         ImGui::Begin("Timer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
         // Render registers
-        if (ImGui::BeginTable("##Timer", 1, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
+        if (ImGui::BeginTable("##Timer", 1, ImGuiTableFlags_Borders)) // | ImGuiWindowFlags_NoMove))
         {
             ImGui::TableSetupColumn("Timer", ImGuiTableColumnFlags_WidthStretch);
 
@@ -484,7 +484,7 @@ namespace gasyboy
         }
 
         // Render registers
-        if (ImGui::BeginTable("##Joypad", 2, ImGuiTableFlags_Borders | ImGuiWindowFlags_NoMove))
+        if (ImGui::BeginTable("##Joypad", 2, ImGuiTableFlags_Borders)) // | ImGuiWindowFlags_NoMove))
         {
             ImGui::TableSetupColumn("Buttons", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableSetupColumn("Directions", ImGuiTableColumnFlags_WidthStretch);
@@ -510,72 +510,86 @@ namespace gasyboy
 
     void Debugger::renderMemoryViewerDebugScreen()
     {
-        // // Set window position and size
-        // ImGui::SetNextWindowPos(ImVec2(670, 495), ImGuiCond_Always);
-        // ImGui::SetNextWindowSize(ImVec2(670, 400), ImGuiCond_Always);
+        // Set window position and size
+        ImGui::SetNextWindowPos(ImVec2(670, 495), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(670, 275), ImGuiCond_Always);
 
-        // // Create the window
-        // ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        // Create the window
+        ImGui::Begin("Memory", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-        // auto cartridge = _mmu->getCartridge();
+        // Start the tab bar
+        if (ImGui::BeginTabBar("##Memory"))
+        {
+            // Header
+            if (ImGui::BeginTabItem("Header"))
+            {
+                ImGui::Text("Cartridge Header");
+                ImGui::EndTabItem();
+            }
 
-        // auto romBanks = _mmu->getCartridge().getRomBanks();
+            // ROM 0 [0 - 0x4000]
+            if (ImGui::BeginTabItem("ROM0"))
+            {
+                ImGui::Text("ROM [0x0 - 0x4000]");
+                auto rom = std::span<uint8_t>(_mmu->getCartridge().getRom().begin(), 0x4000);
+                showByteArray(rom);
+                ImGui::EndTabItem();
+            }
 
-        // auto ramBanks = _mmu->getCartridge().getRamBanks();
+            // ROM 1 [0x4000 - 0x8000]
+            if (ImGui::BeginTabItem("ROM1"))
+            {
+                ImGui::Text("ROM [0x4000 - 0x8000] (multiple banks)");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(75);
+                showIntegerCombo(1, _mmu->getCartridge()._romBankCount - 1, _currentSelectedRomBank);
+                auto rom = std::span<uint8_t>(_mmu->getCartridge().getRom().begin() + _currentSelectedRomBank * 0x4000, 0x4000);
+                showByteArray(rom, 0x4000);
+                ImGui::EndTabItem();
+            }
 
-        // // Start the tab bar
-        // if (ImGui::BeginTabBar("##Memory"))
-        // {
-        //     // Header
-        //     if (ImGui::BeginTabItem("Header"))
-        //     {
-        //         ImGui::Text("Cartridge Header");
-        //         ImGui::EndTabItem();
-        //     }
+            // Ext RAM
+            if (ImGui::BeginTabItem("SRAM"))
+            {
+                auto ramBankCount = _mmu->getCartridge()._ramBankCount;
+                if (ramBankCount == 0)
+                {
+                    ImGui::Text("No SRAM");
+                }
+                else
+                {
+                    auto &ram = _mmu->getCartridge().getRam();
+                    ImGui::Text("SRAM");
+                    ImGui::SetNextItemWidth(75);
+                    showIntegerCombo(0, ramBankCount - 1, _currentSelectedRamBank);
+                    showByteArray(ram, 0x2000 * _currentSelectedRamBank, true);
+                }
+                ImGui::EndTabItem();
+            }
 
-        //     // ROM 0 [0 - 0x4000]
-        //     if (ImGui::BeginTabItem("ROM0"))
-        //     {
-        //         ImGui::Text("ROM [0x0 - 0x4000]");
-        //         showByteArray(romBanks.at(0));
-        //         ImGui::EndTabItem();
-        //     }
+            // VRAM
+            if (ImGui::BeginTabItem("VRAM"))
+            {
+                ImGui::Text("VRAM");
+                auto vram = std::span<uint8_t>(_mmu->getMemory().begin() + 0x8000, 0x2000);
+                showByteArray(vram, 0x8000);
+                ImGui::EndTabItem();
+            }
 
-        //     // ROM 1 [0x4000 - 0x8000]
-        //     if (ImGui::BeginTabItem("ROM1"))
-        //     {
-        //         ImGui::Text("ROM [0x4000 - 0x8000] (multiple banks)");
-        //         ImGui::SameLine();
-        //         ImGui::SetNextItemWidth(75);
-        //         showIntegerCombo(1, _mmu->getCartridge().getRomBanksNumber() - 1, _currentSelectedRomBank);
-        //         showByteArray(romBanks.at(_currentSelectedRomBank), 0x4000);
-        //         ImGui::EndTabItem();
-        //     }
+            // OAM
+            if (ImGui::BeginTabItem("OAM"))
+            {
+                ImGui::Text("OAM");
+                auto vram = std::span<uint8_t>(_mmu->getMemory().begin() + 0xFE00, 0xA0);
+                showByteArray(vram, 0xFE00);
+                ImGui::EndTabItem();
+            }
 
-        //     // Ext RAM
-        //     if (ImGui::BeginTabItem("Ext RAM"))
-        //     {
-        //         if (cartridge.getRamBanksNumber() == 0)
-        //         {
-        //             ImGui::Text("No Ext RAM");
-        //         }
-        //         else
-        //         {
-        //             ImGui::Text("Ext RAM");
-        //             if (cartridge.getRamBanksNumber() > 2)
-        //             {
-        //                 showIntegerCombo(0, cartridge.getRamBanksNumber() - 1, _currentSelectedRamBank);
-        //             }
-        //             showByteArray(ramBanks.at(_currentSelectedRamBank));
-        //         }
-        //         ImGui::EndTabItem();
-        //     }
+            // End the tab bar
+            ImGui::EndTabBar();
+        }
 
-        //     // End the tab bar
-        //     ImGui::EndTabBar();
-        // }
-
-        // ImGui::End();
+        ImGui::End();
     }
 
     void Debugger::renderPreviewSprite()
@@ -587,10 +601,10 @@ namespace gasyboy
         ImGui::Text("Attributes: ");
 
         renderByte("X", [&]()
-                   { return static_cast<uint8_t>(_previewSprite.x); }, [&](const uint8_t &) {});
+                   { return static_cast<uint8_t>(_previewSprite.x + 8); }, [&](const uint8_t &) {});
 
         renderByte("Y", [&]()
-                   { return static_cast<uint8_t>(_previewSprite.y); }, [&](const uint8_t &) {});
+                   { return static_cast<uint8_t>(_previewSprite.y + 16); }, [&](const uint8_t &) {});
 
         renderByte("Tile", [&]()
                    { return static_cast<uint8_t>(_previewSprite.tile); }, [&](const uint8_t &) {});
@@ -1072,6 +1086,107 @@ namespace gasyboy
                     ascii_stream << (byte >= 32 && byte <= 126 ? static_cast<char>(byte) : '.');
                 }
                 ImGui::Text("%s", ascii_stream.str().c_str());
+            }
+        }
+
+        clipper.End();
+    }
+
+    void Debugger::showByteArray(std::span<uint8_t> &data, const uint16_t &offset, size_t bytes_per_row, const bool &writable)
+    {
+        // This variable holds the index of the byte currently being edited.
+        static int editedByteIndex = -1;
+
+        ImGuiListClipper clipper;
+        int totalRows = (int)data.size() / (int)bytes_per_row + ((data.size() % bytes_per_row) ? 1 : 0);
+        clipper.Begin(totalRows);
+
+        while (clipper.Step())
+        {
+            for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row)
+            {
+                size_t i = row * bytes_per_row;
+                ImGui::Text("%04X: ", static_cast<int>(i + offset));
+                ImGui::SameLine();
+
+                // Display the data in hex format.
+                for (size_t j = 0; j < bytes_per_row && i + j < data.size(); j++)
+                {
+                    size_t byteIndex = i + j;
+                    // Create a unique label for each byte cell.
+                    char label[32];
+                    sprintf(label, "##byte_%zu", byteIndex);
+
+                    // Editable hex cell if this byte is being edited.
+                    if (editedByteIndex == (int)byteIndex)
+                    {
+                        ImGui::SetNextItemWidth(20); // Adjust width as needed
+
+                        // Use a temporary variable for editing.
+                        uint8_t temp = data[byteIndex];
+
+                        // Push fixed frame padding to ensure constant height when editing.
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4)); // Fixed padding; adjust as needed
+
+                        if (!writable)
+                        {
+                            ImGui::Text("%02X", temp);
+                        }
+                        else
+                        {
+                            if (ImGui::InputScalar(label, ImGuiDataType_U8, &temp, nullptr, nullptr, "%02X", ImGuiInputTextFlags_CharsHexadecimal))
+                            {
+                                data[byteIndex] = temp;
+                                _mmu->writeRam(byteIndex + offset, temp);
+                            }
+                            // When done editing, exit edit mode.
+                            if (ImGui::IsItemDeactivatedAfterEdit())
+                            {
+                                editedByteIndex = -1;
+                            }
+                        }
+
+                        ImGui::PopStyleVar(); // Restore previous style settings.
+                    }
+                    else
+                    {
+                        // Display non-editable text.
+                        // If the byte is 0x00, display it in dark grey.
+                        if (data[byteIndex] == 0x00)
+                        {
+                            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
+                        }
+                        ImGui::Text("%02X ", data[byteIndex]);
+                        if (data[byteIndex] == 0x00)
+                        {
+                            ImGui::PopStyleColor();
+                        }
+
+                        // If the user double clicks this cell, switch to edit mode.
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+                        {
+                            editedByteIndex = static_cast<int>(byteIndex);
+                        }
+                    }
+                    ImGui::SameLine();
+                }
+
+                // Build the ASCII representation.
+                std::stringstream ascii_stream;
+                for (size_t j = 0; j < bytes_per_row && i + j < data.size(); j++)
+                {
+                    uint8_t byte = data[i + j];
+                    ascii_stream << (byte >= 32 && byte <= 126 ? static_cast<char>(byte) : '.');
+                }
+                std::string asciiStr = ascii_stream.str();
+
+                // Get the maximum available width from the content region.
+                float contentWidth = ImGui::GetContentRegionMax().x;
+                float asciiTextWidth = ImGui::CalcTextSize(asciiStr.c_str()).x;
+                // Calculate the target X position such that the ASCII text aligns to the right.
+                float targetPosX = contentWidth - asciiTextWidth;
+                ImGui::SetCursorPosX(targetPosX);
+                ImGui::Text("%s", asciiStr.c_str());
             }
         }
 

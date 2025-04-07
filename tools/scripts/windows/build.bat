@@ -27,24 +27,55 @@ echo Entering build folder...
 cd "%BUILD_DIR%" || exit /b 1
 
 echo ******************************
-echo Generating CMake files...
+echo Checking for compilers...
 
-:: Check if MSVC is being used (Multi-Config Generator)
-cmake --version | findstr /C:"Visual Studio" >nul
+:: Check for GCC (MinGW)
+where gcc >nul 2>&1
 if %ERRORLEVEL% == 0 (
-    cmake -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ..
+    echo GCC found! Using MinGW Makefiles.
+    cmake .. -G "MinGW Makefiles" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 ) else (
-    cmake -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ..
+    :: Check for Clang
+    where clang >nul 2>&1
+    if %ERRORLEVEL% == 0 (
+        echo Clang found! Using Ninja generator (for Clang).
+        :: Check if Ninja is installed
+        where ninja >nul 2>&1
+        if %ERRORLEVEL% == 0 (
+            echo Ninja found! Using Ninja as the build tool.
+            cmake .. -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+        ) else (
+            echo Ninja not found, using Unix Makefiles instead.
+            cmake .. -G "Unix Makefiles" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+        )
+    ) else (
+        :: Check for MSVC
+        cmake --version | findstr /C:"Visual Studio" >nul
+        if %ERRORLEVEL% == 0 (
+            echo Visual Studio detected! Using MSVC generator.
+            cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+        ) else (
+            echo No supported compiler found! Exiting.
+            exit /b 1
+        )
+    )
 )
 
 echo ******************************
 echo Building project...
 
-:: Check if MSVC (Multi-Config)
+:: Use Ninja if detected for Clang or GCC
+where ninja >nul 2>&1
 if %ERRORLEVEL% == 0 (
-    cmake --build . --config %BUILD_TYPE%
+    ninja
 ) else (
-    cmake --build .
+    :: Use Makefiles or MSVC build command
+    where gcc >nul 2>&1
+    if %ERRORLEVEL% == 0 (
+        mingw32-make
+    ) else (
+        cmake --build . --config %BUILD_TYPE%
+    )
 )
 
 echo ******************************

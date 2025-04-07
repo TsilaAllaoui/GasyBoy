@@ -93,7 +93,7 @@ namespace gasyboy
 
 		int ramBanksCount = getRamBanksCount(rom[0x149]);
 
-		int romBanksCount = rom.size() / 0x4000;
+		_romBankCount = rom.size() / 0x4000;
 
 		switch (rom[0x147])
 		{
@@ -105,18 +105,18 @@ namespace gasyboy
 		case 0x01:
 		case 0x02:
 		case 0x03:
-			_mbc = std::make_unique<MBC1>(rom, ram, romBanksCount, ramBanksCount);
+			_mbc = std::make_unique<MBC1>(rom, ram, _romBankCount, ramBanksCount);
 			break;
 		case 0x05:
 		case 0x06:
-			_mbc = std::make_unique<MBC2>(rom, ram, romBanksCount, ramBanksCount);
+			_mbc = std::make_unique<MBC2>(rom, ram, _romBankCount, ramBanksCount);
 			break;
 		case 0x0F:
 		case 0x10:
 		case 0x11:
 		case 0x12:
 		case 0x13:
-			_mbc = std::make_unique<MBC3>(rom, ram, romBanksCount, ramBanksCount);
+			_mbc = std::make_unique<MBC3>(rom, ram, _romBankCount, ramBanksCount);
 			break;
 		case 0x19:
 		case 0x1A:
@@ -124,7 +124,7 @@ namespace gasyboy
 		case 0x1C:
 		case 0x1D:
 		case 0x1E:
-			_mbc = std::make_unique<MBC5>(rom, ram, romBanksCount, ramBanksCount);
+			_mbc = std::make_unique<MBC5>(rom, ram, _romBankCount, ramBanksCount);
 			break;
 		default:
 			std::stringstream ss;
@@ -138,9 +138,14 @@ namespace gasyboy
 		return _mbc->readByte(addr);
 	}
 
-	const std::vector<uint8_t> &Cartridge::getRom()
+	std::vector<uint8_t> &Cartridge::getRom()
 	{
 		return _mbc->getRom();
+	}
+
+	std::vector<uint8_t> &Cartridge::getRam()
+	{
+		return _mbc->getRam();
 	}
 
 	void Cartridge::mbcRomWrite(const uint16_t &addr, const uint8_t &value)
@@ -361,28 +366,27 @@ namespace gasyboy
 		switch (value)
 		{
 		case 0x00:
-			return 0;
-			break;
 		case 0x01:
-			return 0;
+			_ramBankCount = 0;
 			break;
 		case 0x02:
-			return 1;
+			_ramBankCount = 1;
 			break;
 		case 0x03:
-			return 4;
+			_ramBankCount = 4;
 			break;
 		case 0x04:
-			return 16;
+			_ramBankCount = 16;
 			break;
 		case 0x05:
-			return 8;
+			_ramBankCount = 8;
 			break;
 		default:
 			std::stringstream ss;
 			ss << "\nIncorrect RAM type: " << std::hex << (int)value << "\n";
 			throw exception::GbException(ss.str());
 		}
+		return _ramBankCount;
 	}
 
 	void Cartridge::saveRam()

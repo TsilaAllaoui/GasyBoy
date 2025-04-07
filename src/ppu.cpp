@@ -46,8 +46,14 @@ namespace gasyboy
         if (!LCDC->lcdEnable)
         {
             *LY = 0;
+            STAT->modeFlag = PpuMode::HBLANK;
             _modeClock = 0;
             return;
+        }
+
+        if (*LY == 0)
+        {
+            windowLineCounter = 0; // Reset each new frame
         }
 
         _modeClock += cycle;
@@ -136,6 +142,12 @@ namespace gasyboy
     void Ppu::updateLY()
     {
         (*LY)++;
+        if (*LY == 144)
+        {
+            setMode(PpuMode::VBLANK);
+            _interruptManager->requestInterrupt(InterruptManager::InterruptType::VBlank);
+        }
+
         if (*LY == *LCY)
         {
             STAT->coincidenceFlag = 1;
@@ -152,19 +164,22 @@ namespace gasyboy
 
     void Ppu::renderScanLines()
     {
+        // Initialize the rowPixels array to false for all 160 pixels.
         bool rowPixels[160] = {0};
 
-        // Check if the Background Enable bit (LCDC.0) is set
+        // If the Background Enable bit is set, render BG and window.
         if (LCDC->bgDisplay)
         {
             renderScanLineBackground(rowPixels);
 
+            // Pass rowPixels to window rendering so nonzero window pixels are marked.
             if (LCDC->windowEnable)
             {
-                renderScanLineWindow();
+                renderScanLineWindow(rowPixels);
             }
         }
 
+        // Render sprites (they use rowPixels to check BG priority).
         if (LCDC->spriteDisplayEnable)
         {
             renderScanLineSprites(rowPixels);
@@ -173,121 +188,168 @@ namespace gasyboy
 
     void Ppu::renderScanLineBackground(bool *rowPixels)
     {
-        uint16_t address = 0x9800;
+        // 1. Base tilemap address
+        uint16_t tileMapBase = 0x9800;
         if (LCDC->bgDisplaySelect)
-            address += 0x400;
+            tileMapBase += 0x400; // switch to 9C00 region
 
-        uint16_t startRowAddress = address + ((*SCY + *LY) / 8) * 32;
-        uint16_t endRowAddress = startRowAddress + 32;
-        address = startRowAddress + ((*SCX) >> 3);
+        // 2. Compute the absolute y in the 256x256 BG, then wrap to 0–255
+        uint8_t y = *LY + *SCY;
+        //    tileRow = which of the 32 tile rows (0–31)
+        uint8_t tileRow = (y >> 3) & 31;
+        //    line inside that tile (0–7)
+        uint8_t tileLine = y & 7;
 
-        int x = *SCX & 7;
-        int y = (*LY + *SCY) & 7;
+        // 3. Similarly, find the starting tile column (0–31), plus the pixel offset within that tile (0–7).
+        uint8_t xOffset = *SCX & 7;
+        uint8_t tileColumn = (*SCX >> 3) & 31;
+
+        // 4. Start writing into the framebuffer at this scanline
         int pixelOffset = *LY * SCREEN_WIDTH;
-        int pixel = 0;
-        for (uint16_t i = 0; i < 21; i++)
+        int screenX = 0; // which x pixel on this scanline?
+
+        // 5. Each tile is 8 pixels wide. We need ~21 tiles to cover 160 px.
+        //    We'll fetch the tile number from tileMap, then draw up to 8 pixels from it.
+        //    Then move on to the next tile, wrapping tileColumn with &31.
+        for (int i = 0; i < 21 && screenX < 160; i++)
         {
-            uint16_t tile_address = address + i;
-            if (tile_address >= endRowAddress)
-                tile_address = startRowAddress + (tile_address % 32);
+            // Address in the BG tilemap for [tileRow, tileColumn]
+            uint16_t tileMapAddr = tileMapBase + tileRow * 32 + tileColumn;
 
-            int tile = _mmu->readRam(tile_address);
-            if (!LCDC->bgWindowDataSelect && tile < 128)
-                tile += 256;
+            // Read the tile index from VRAM
+            int tileIndex = _mmu->readRam(tileMapAddr);
+            // If in signed addressing mode (bgWindowDataSelect=0) and tileIndex<128, adjust by +256
+            if (!LCDC->bgWindowDataSelect && tileIndex < 128)
+                tileIndex += 256;
 
-            for (; x < 8 && pixel < 160; x++)
+            // 6. Draw up to 8 pixels from this tile, starting at xOffset
+            for (; xOffset < 8 && screenX < 160; xOffset++)
             {
-                if (pixelOffset >= SCREEN_WIDTH * SCREEN_HEIGHT)
-                    return;
-                int colour = _mmu->tiles[tile].pixels[y][x];
-                _framebuffer[pixelOffset++] = _mmu->palette_BGP[colour];
-                if (colour > 0)
-                    rowPixels[pixel] = true;
-                pixel++;
+                int colorIndex = _mmu->tiles[tileIndex].pixels[tileLine][xOffset];
+                _framebuffer[pixelOffset + screenX] = _mmu->palette_BGP[colorIndex];
+
+                // Mark rowPixels if BG pixel is nonzero
+                if (colorIndex > 0)
+                    rowPixels[screenX] = true;
+
+                screenX++;
             }
-            x = 0;
+
+            // Move on to next tile in this row
+            xOffset = 0;
+            tileColumn = (tileColumn + 1) & 31; // wrap horizontally
         }
     }
 
-    void Ppu::renderScanLineWindow()
+    // Updated renderScanLineWindow: now accepts rowPixels so that any nonzero
+    // window pixel is marked (hiding BG-priority sprites).
+    void Ppu::renderScanLineWindow(bool *rowPixels)
     {
-        if (*WY > *LY) // Window only starts rendering when LY >= WY
+        if (*LY < *WY || *WX >= 167)
             return;
 
-        uint8_t wx = *WX; // Do not modify the actual WX register
+        uint8_t wx = *WX;
+        uint16_t baseAddress = LCDC->windowDisplaySelect ? 0x9C00 : 0x9800;
 
-        uint16_t address = 0x9800;
-        if (LCDC->windowDisplaySelect)
-            address += 0x400;
+        int tileY = windowLineCounter / 8;
+        int pixelYInTile = windowLineCounter & 7;
+        uint16_t tileMapRowAddr = baseAddress + tileY * 32;
 
-        int y = (*LY - *WY) & 7;
         int pixelOffset = *LY * SCREEN_WIDTH;
-        address += ((*LY - *WY) / 8) * 32;
+        int startX = wx - 7;
 
-        // Adjust for off-screen WX values correctly
-        int startX = wx - 7; // The actual starting X position of the window
-
-        for (uint16_t tileX = 0; tileX < 21; tileX++)
+        // Render up to 21 tiles across the window.
+        for (int tileX = 0; tileX < 21; tileX++)
         {
-            uint16_t tile_address = address + tileX;
-            int tile = _mmu->readRam(tile_address);
-            if (!LCDC->bgWindowDataSelect && tile < 128)
-                tile += 256;
+            uint16_t tileAddress = tileMapRowAddr + tileX;
+            int tileIndex = _mmu->readRam(tileAddress);
+            if (!LCDC->bgWindowDataSelect && tileIndex < 128)
+                tileIndex += 256;
 
             for (int x = 0; x < 8; x++)
             {
                 int windowPixelX = startX + tileX * 8 + x;
                 if (windowPixelX >= SCREEN_WIDTH)
-                    break; // Stop rendering if out of screen bounds
+                    break; // Off the right edge
 
-                if (windowPixelX >= 0) // Only render if within valid screen bounds
-                {
-                    int colour = _mmu->tiles[tile].pixels[y][x];
-                    _framebuffer[pixelOffset + windowPixelX] = _mmu->palette_BGP[colour];
-                }
+                if (windowPixelX < 0)
+                    continue; // Off the left edge
+
+                int colorIndex = _mmu->tiles[tileIndex].pixels[pixelYInTile][x];
+                int frameIndex = pixelOffset + windowPixelX;
+                _framebuffer[frameIndex] = _mmu->palette_BGP[colorIndex];
+                // Mark this pixel if the window color is nonzero.
+                if (colorIndex > 0)
+                    rowPixels[windowPixelX] = true;
             }
         }
+
+        windowLineCounter++;
     }
 
     void Ppu::renderScanLineSprites(bool *rowPixels)
     {
-        int sprite_height = LCDC->spriteSize ? 16 : 8;
+        int spriteHeight = LCDC->spriteSize ? 16 : 8;
         int spritesRendered = 0;
 
+        // For each x coordinate on the scanline, store the sprite.x value of
+        // the sprite that currently occupies that pixel. Initialize to a high value.
+        int spriteXPriority[SCREEN_WIDTH];
+        for (int i = 0; i < SCREEN_WIDTH; i++)
+        {
+            spriteXPriority[i] = 256; // 256 is outside valid range (0-159) so it means "no sprite"
+        }
+
+        // Process all 40 sprites from OAM.
         for (int i = 0; i < 40; i++)
         {
             auto &sprite = _mmu->sprites[i];
 
-            // Check if the sprite is on the current scanline
-            if ((*LY < sprite.y) || (*LY >= sprite.y + sprite_height))
+            // Check if the current scanline (*LY) is within the sprite's vertical bounds.
+            if (*LY < sprite.y || *LY >= sprite.y + spriteHeight)
                 continue;
 
-            // Limit the number of sprites per scanline to 10
+            // Limit to 10 sprites per scanline.
             if (spritesRendered >= 10)
                 break;
 
+            // Calculate the vertical offset within the sprite.
+            int spriteY = *LY - sprite.y;
+            if (sprite.options.yFlip)
+                spriteY = spriteHeight - 1 - spriteY;
+
+            // In 8x16 mode, force tile index to be even.
+            int baseTileIndex = LCDC->spriteSize ? (sprite.tile & 0xFE) : sprite.tile;
+            int tileIndex = baseTileIndex;
+
+            // For 8x16 sprites, if in the bottom half, select the second tile.
+            if (LCDC->spriteSize && spriteY >= 8)
+            {
+                tileIndex += 1;
+                spriteY -= 8; // Adjust offset to index into the correct row of the second tile.
+            }
+
+            // Process each of the 8 horizontal pixels in the sprite.
             for (int x = 0; x < 8; x++)
             {
                 int pixelX = sprite.x + x;
                 if (pixelX < 0 || pixelX >= SCREEN_WIDTH)
                     continue;
 
-                int spriteX = x;
-                if (sprite.options.xFlip)
-                    spriteX = 7 - x;
-                int spriteY = *LY - sprite.y;
-                if (sprite.options.yFlip)
-                    spriteY = sprite_height - 1 - spriteY;
-
-                int tile_num = sprite.tile & (LCDC->spriteSize ? 0xFE : 0xFF);
-                int colour = 0;
-                if (LCDC->spriteSize && spriteY >= 8)
-                    colour = _mmu->tiles[tile_num + 1].pixels[spriteY - 8][spriteX];
-                else
-                    colour = _mmu->tiles[tile_num].pixels[spriteY][spriteX];
-
-                if (colour == 0)
+                // Check object priority: if a sprite pixel is already drawn at this screen x,
+                // only override if the current sprite's x coordinate is lower (further left).
+                if (sprite.x >= spriteXPriority[pixelX])
                     continue;
+
+                // Apply horizontal flip if needed.
+                int spriteX = sprite.options.xFlip ? 7 - x : x;
+
+                // Fetch the color index from the tile pixel data.
+                int colour = _mmu->tiles[tileIndex].pixels[spriteY][spriteX];
+                if (colour == 0)
+                    continue; // Transparent pixel.
+
+                // Check background priority (bit 7): if set and the BG (or window) pixel is nonzero, skip drawing.
                 if (sprite.options.renderPriority && rowPixels[pixelX])
                     continue;
 
@@ -295,9 +357,10 @@ namespace gasyboy
                 if (sprite.colourPalette && pixelOffset >= 0 && pixelOffset < SCREEN_WIDTH * SCREEN_HEIGHT)
                 {
                     _framebuffer[pixelOffset] = sprite.colourPalette[colour];
+                    // Record the x coordinate of the sprite that drew this pixel.
+                    spriteXPriority[pixelX] = sprite.x;
                 }
             }
-
             spritesRendered++;
         }
     }
