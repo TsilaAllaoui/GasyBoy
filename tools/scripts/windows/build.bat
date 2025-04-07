@@ -16,12 +16,6 @@ echo Selected Build Type: %BUILD_TYPE%
 :: Define build directory based on build type
 set BUILD_DIR=build_%BUILD_TYPE%
 
-:: Create build directory if it does not exist
-if not exist "%BUILD_DIR%" (
-    echo Creating build directory: %BUILD_DIR%
-    mkdir "%BUILD_DIR%"
-)
-
 echo ******************************
 echo Entering build folder...
 cd "%BUILD_DIR%" || exit /b 1
