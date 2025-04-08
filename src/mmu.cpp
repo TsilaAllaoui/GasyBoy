@@ -269,12 +269,6 @@ namespace gasyboy
                 _memory[address] = 0;
             }
 
-            // LYC write
-            else if (address == 0xFF45)
-            {
-                _memory[address] = value;
-            }
-
             // OAM DMA Transfer
             else if (address == 0xFF46)
             {

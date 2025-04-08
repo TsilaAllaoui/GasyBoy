@@ -368,6 +368,20 @@ namespace gasyboy
         }
     }
 
+    void Ppu::refresh()
+    {
+        auto ly = *LY;
+        *LY = 0;
+
+        for (size_t i = 0; i < 144; i++)
+        {
+            renderScanLines();
+            (*LY) += 1;
+        }
+
+        *LY = ly;
+    }
+
     void Ppu::reset()
     {
         LCDC = (Control *)&_mmu->_memory[0xff40];

@@ -87,6 +87,8 @@ namespace gasyboy
         void setMode(PpuMode mode);
 
         void updateLY();
+
+        void refresh();
     };
 }
 
