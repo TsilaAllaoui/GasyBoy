@@ -102,7 +102,7 @@ namespace gasyboy
                 if (*LY > 153)
                 {
                     _canRender = true;
-                    *LY = 0;
+                    // *LY = 0;
                     setMode(PpuMode::OAM_SEARCH);
                 }
             }
@@ -271,6 +271,9 @@ namespace gasyboy
 
             for (int x = 0; x < 8; x++)
             {
+                if (pixelOffset >= SCREEN_WIDTH * SCREEN_HEIGHT)
+                    return;
+
                 int windowPixelX = startX + tileX * 8 + x;
                 if (windowPixelX >= SCREEN_WIDTH)
                     break; // Off the right edge
