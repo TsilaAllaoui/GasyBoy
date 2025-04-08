@@ -128,6 +128,13 @@ namespace gasyboy
             }
             else if (Cpu::state == Cpu::State::PAUSED)
             {
+                if (_ppu->_debugRender)
+                {
+                    _ppu->refresh();
+                    _renderer->render();
+                    _ppu->_debugRender = false;
+                }
+
                 // Process SDL events while paused
                 SDL_Event event;
                 while (SDL_PollEvent(&event))
@@ -152,9 +159,6 @@ namespace gasyboy
                     _debugger->render();
                 }
 #endif
-
-                // Add a small delay to avoid high CPU usage
-                SDL_Delay(10);
             }
         }
 
@@ -167,22 +171,6 @@ namespace gasyboy
 
         if (_ppu->_canRender)
         {
-            if (gasyboy::provider::UtilitiesProvider::getInstance()->wasRefreshed)
-            {
-                for (int i = 0; i < 160 * 144; i++)
-                {
-                    _ppu->_framebuffer->a = 255;
-                    _ppu->_framebuffer->r = 0;
-                    _ppu->_framebuffer->g = 0;
-                    _ppu->_framebuffer->b = 0;
-                    _ppu->_framebuffer->colours[0] = 0;
-                    _ppu->_framebuffer->colours[1] = 0;
-                    _ppu->_framebuffer->colours[2] = 0;
-                    _ppu->_framebuffer->colours[3] = 0;
-                }
-                std::cout << "Refresh occured....\n";
-                gasyboy::provider::UtilitiesProvider::getInstance()->wasRefreshed = false;
-            }
             _renderer->render();
             _ppu->_canRender = false;
         }

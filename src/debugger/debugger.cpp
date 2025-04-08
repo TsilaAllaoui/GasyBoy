@@ -105,7 +105,7 @@ namespace gasyboy
         // Disassembling rom
         // _disassemblerThread = std::thread([&]()
         //                                   { _disassembler.disassemble(); });
-        _disassembler.disassemble();
+        // _disassembler.disassemble();
     }
 
     void Debugger::reset()
@@ -941,12 +941,38 @@ namespace gasyboy
                 }
                 else
                 {
-                    _mmu->writeRam(0xFF42, _scy);
-                    _mmu->writeRam(0xFF43, _scx);
-                    _mmu->writeRam(0xFF4A, _wy);
-                    _mmu->writeRam(0xFF4B, _wx);
-                    _mmu->writeRam(0xFF44, _ly);
-                    _mmu->writeRam(0xFF45, _lyc);
+                    if (_scy != _mmu->readRam(0xff42))
+                    {
+                        _mmu->writeRam(0xFF42, _scy);
+                        _ppu->_debugRender = true;
+                    }
+                    if (_scx != _mmu->readRam(0xff43))
+                    {
+                        _mmu->writeRam(0xFF43, _scx);
+                        _ppu->_debugRender = true;
+                    }
+                    if (_wy != _mmu->readRam(0xff4A))
+                    {
+                        _mmu->writeRam(0xFF4A, _wy);
+                        _ppu->_debugRender = true;
+                    }
+                    if (_wx != _mmu->readRam(0xff4B))
+                    {
+                        _mmu->writeRam(0xFF4B, _wx);
+                        _ppu->_debugRender = true;
+                    }
+
+                    if (_ly != _mmu->readRam(0xff44))
+                    {
+                        _mmu->writeRam(0xFF44, _ly);
+                        _ppu->_debugRender = true;
+                    }
+
+                    if (_lyc != _mmu->readRam(0xff45))
+                    {
+                        _mmu->writeRam(0xFF45, _lyc);
+                        _ppu->_debugRender = true;
+                    }
                 }
 
                 ImGui::SliderInt("SCX", &_scx, 0, 255);

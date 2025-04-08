@@ -102,7 +102,7 @@ namespace gasyboy
                 if (*LY > 153)
                 {
                     _canRender = true;
-                    *LY = 0;
+                    // *LY = 0;
                     setMode(PpuMode::OAM_SEARCH);
                 }
             }
@@ -225,6 +225,9 @@ namespace gasyboy
             // 6. Draw up to 8 pixels from this tile, starting at xOffset
             for (; xOffset < 8 && screenX < 160; xOffset++)
             {
+                if (pixelOffset >= SCREEN_WIDTH * SCREEN_HEIGHT)
+                    return;
+
                 int colorIndex = _mmu->tiles[tileIndex].pixels[tileLine][xOffset];
                 _framebuffer[pixelOffset + screenX] = _mmu->palette_BGP[colorIndex];
 
@@ -268,6 +271,9 @@ namespace gasyboy
 
             for (int x = 0; x < 8; x++)
             {
+                if (pixelOffset >= SCREEN_WIDTH * SCREEN_HEIGHT)
+                    return;
+
                 int windowPixelX = startX + tileX * 8 + x;
                 if (windowPixelX >= SCREEN_WIDTH)
                     break; // Off the right edge
@@ -363,6 +369,20 @@ namespace gasyboy
             }
             spritesRendered++;
         }
+    }
+
+    void Ppu::refresh()
+    {
+        auto ly = *LY;
+        *LY = 0;
+
+        for (size_t i = 0; i < 144; i++)
+        {
+            renderScanLines();
+            (*LY) += 1;
+        }
+
+        *LY = ly;
     }
 
     void Ppu::reset()

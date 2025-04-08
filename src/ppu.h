@@ -82,11 +82,15 @@ namespace gasyboy
 
         bool _canRender = false;
 
+        bool _debugRender = false;
+
         void step(const int &cycle);
 
         void setMode(PpuMode mode);
 
         void updateLY();
+
+        void refresh();
     };
 }
 
