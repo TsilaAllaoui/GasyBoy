@@ -1,6 +1,7 @@
 #include "interruptManagerProvider.h"
 #include "utilitiesProvider.h"
 #include "registersProvider.h"
+#include "instructions.h"
 #include "mmuProvider.h"
 #include "gbException.h"
 #include "timer.h"
@@ -173,6 +174,45 @@ namespace gasyboy
 	{
 		_currentOpcode = _mmu->readRam(_registers->PC);
 	}
+
+	// void Cpu::execute()
+	// {
+	// 	static bool first = true;
+	// 	if (first)
+	// 	{
+	// 		Cpu::state = Cpu::State::PAUSED;
+	// 		first = false;
+	// 	}
+
+	// 	Instruction instruction;
+	// 	bool isCB = (_currentOpcode == 0xCB);
+	// 	auto &usedInstructionSet = isCB ? instructionSetCB : instructionSet;
+	// 	if (isCB)
+	// 	{
+	// 		_registers->PC++; // Skip the CB prefix.
+	// 		_currentOpcode = _mmu->readRam(_registers->PC);
+	// 	}
+	// 	instruction = usedInstructionSet[_currentOpcode];
+
+	// 	// Clear flag to indicate PC has not been updated manually.
+	// 	_pcManuallySet = false;
+
+	// 	// Execute instruction.
+	// 	(this->*instruction.execute)();
+
+	// 	// Update cycle count.
+	// 	_cycle += instruction.cycles;
+
+	// 	// Only update PC if the instruction did not update it manually.
+	// 	if (isCB)
+	// 	{
+	// 		_registers->PC++;
+	// 	}
+	// 	else if (!_pcManuallySet)
+	// 	{
+	// 		_registers->PC += instruction.length;
+	// 	}
+	// }
 
 	void Cpu::execute()
 	{

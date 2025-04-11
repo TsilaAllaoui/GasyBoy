@@ -60,6 +60,7 @@ if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/events
         ${CMAKE_CURRENT_SOURCE_DIR}/src/providers
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/instructions
     )
 
     # Creating executable
@@ -102,6 +103,7 @@ else()
         ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger
         ${CMAKE_CURRENT_SOURCE_DIR}/src/events
         ${CMAKE_CURRENT_SOURCE_DIR}/src/providers
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/instructions
         ${EXTERNALS_DIR}/ImGuiFileDialog
     )
 
