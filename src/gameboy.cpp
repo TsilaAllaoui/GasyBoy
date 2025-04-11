@@ -10,6 +10,7 @@
 #include "gameboy.h"
 #include "logger.h"
 #include <thread>
+#include <chrono>
 #ifndef EMSCRIPTEN
 #include "imgui_impl_sdl2.h"
 #endif
@@ -83,14 +84,26 @@ namespace gasyboy
 
         std::thread eventThread([&running, this]
                                 {
-            while (running)
-            {
-               _gamepad->handleEvent();
-               if (provider::UtilitiesProvider::getInstance()->wasReset)
-               {
-                reset();
-                provider::UtilitiesProvider::getInstance()->wasReset = false;
-               }
+            using namespace std::chrono;
+        
+            const milliseconds frameDuration(16);
+        
+            while (running) {
+                auto frameStart = high_resolution_clock::now();
+        
+                _gamepad->handleEvent();
+        
+                if (provider::UtilitiesProvider::getInstance()->wasReset) {
+                    reset();
+                    provider::UtilitiesProvider::getInstance()->wasReset = false;
+                }
+        
+                auto frameEnd = high_resolution_clock::now();
+                auto elapsedTime = duration_cast<milliseconds>(frameEnd - frameStart);
+        
+                if (elapsedTime < frameDuration) {
+                    std::this_thread::sleep_for(frameDuration - elapsedTime);
+                }
             } });
 
         try

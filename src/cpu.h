@@ -61,8 +61,8 @@ namespace gasyboy
 		static State state;
 
 		// Getters
-		uint16_t getRegister(const std::string &reg);
-		uint8_t getRegister(const char &reg);
+		uint16_t getRegister(const Register::RegisterPairName &reg);
+		uint8_t getRegister(const Register::RegisterName &reg);
 
 		/***********useful function**********/
 		uint16_t next2bytes(const uint16_t &adress);
@@ -79,16 +79,16 @@ namespace gasyboy
 		/*******8bits load group instructions*******/
 
 		// Load a register value to another regsiter
-		void LD_r_r(const char &from, const char &to);
+		void LD_r_r(const Register::RegisterName &from, const Register::RegisterName &to);
 
 		// Load a 8bit integer in a register
-		void LD_r_n(const uint8_t &from, const char &to);
+		void LD_r_n(const uint8_t &from, const Register::RegisterName &to);
 
 		// Load memory value at a 16bit adress to a register
-		void LD_r_16(const uint16_t &adress, const char &to);
+		void LD_r_16(const uint16_t &adress, const Register::RegisterName &to);
 
 		// The content of the register is loaded at the memory location of a 16bit adress
-		void LD_16_r(const uint16_t &adress, const char &from);
+		void LD_16_r(const uint16_t &adress, const Register::RegisterName &from);
 
 		// An integer is loaded at the memory location of a 16bit adress
 		void LD_16_n(const uint16_t &adress, const uint8_t &value);
@@ -96,13 +96,13 @@ namespace gasyboy
 		/*******16bits load group instructions*******/
 
 		// A 16bits integer is loaded in a 16bits register pair
-		void LD_rr_nn(const uint16_t &value, const std::string &reg);
+		void LD_rr_nn(const uint16_t &value, const Register::RegisterPairName &reg);
 
 		// Load the content of the nex two bytes in memory starting at an adress to the appropriate 16bits register
-		void LD_rr_16(const uint16_t &adress, const std::string &reg);
+		void LD_rr_16(const uint16_t &adress, const Register::RegisterPairName &reg);
 
 		// Load the content of a 16bit register at memory adress
-		void LD_16_rr(const uint16_t &adress, const std::string &reg);
+		void LD_16_rr(const uint16_t &adress, const Register::RegisterPairName &reg);
 
 		// Load in SP the content of HL
 		void LD_SP_HL();
@@ -111,15 +111,15 @@ namespace gasyboy
 		void LD_HL_SP_n();
 
 		// push a 16bit register content to SP
-		void PUSH(const std::string &reg);
+		void PUSH(const Register::RegisterPairName &reg);
 
 		// pop 2bytes from the adress where the SP point to && load it in a 16bit register
-		void POP(const std::string &reg);
+		void POP(const Register::RegisterPairName &reg);
 
 		/********8bit Arithmetic group instructions*********/
 
 		// Add A && an 8bit register && store the result in A
-		void ADD_A_r(const char &reg);
+		void ADD_A_r(const Register::RegisterName &reg);
 
 		// Add A && an 8bit integer && store the result in A
 		void ADD_A_n(const uint8_t &value);
@@ -128,48 +128,48 @@ namespace gasyboy
 		void ADD_A_16();
 
 		// Add the content of the operand && the carry flag with A && store it in A
-		void ADC_A_r(const char &reg);
+		void ADC_A_r(const Register::RegisterName &reg);
 		void ADC_A_n(const uint8_t &value);
 		void ADC_A_16();
 
 		// Substract the content of A && the operand && store it in A
-		void SUB_r(const char &reg);
+		void SUB_r(const Register::RegisterName &reg);
 		void SUB_n(const uint8_t &value);
 		void SUB_16();
 
 		// Substract the content of A && the operand along with carry flag && store it in A
-		void SBC_r(const char &reg);
+		void SBC_r(const Register::RegisterName &reg);
 		void SBC_n(const uint8_t &value);
 		void SBC_16();
 
 		// AND operation on A && the operand
-		void AND_r(const char &reg);
+		void AND_r(const Register::RegisterName &reg);
 		void AND_n(const uint8_t &value);
 		void AND_16();
 
 		// OR operation on A && the operand
-		void OR_r(const char &reg);
+		void OR_r(const Register::RegisterName &reg);
 		void OR_n(const uint8_t &value);
 		void OR_16();
 
 		// XOR operation on A && the operand
-		void XOR_r(const char &reg);
+		void XOR_r(const Register::RegisterName &reg);
 		void XOR_n(const uint8_t &value);
 		void XOR_16();
 
 		// Compare the Accumulator && the operand
-		void CP_r(const char &reg);
+		void CP_r(const Register::RegisterName &reg);
 		void CP_n(const uint8_t &reg);
 		void CP_16();
 
 		// Increment a 8bit register
-		void INC_r(const char &reg);
+		void INC_r(const Register::RegisterName &reg);
 
 		// Increment the value at memory pointed by HL
 		void INC_16();
 
 		// Decrement a 8bit register
-		void DEC_r(const char &reg);
+		void DEC_r(const Register::RegisterName &reg);
 
 		// Decrement the value at memory pointed by HL
 		void DEC_16();
@@ -203,21 +203,21 @@ namespace gasyboy
 		/********16bit Arithmetic group instructions*********/
 
 		// Add HL && another 16bits register
-		void ADD_HL_rr(const std::string &reg);
+		void ADD_HL_rr(const Register::RegisterPairName &reg);
 
 		void ADD_SP_n();
 
 		// Add HL && the carryflag with another 16bits register
-		void ADC_HL_rr(const std::string &reg);
+		void ADC_HL_rr(const Register::RegisterPairName &reg);
 
 		// Substract HL with the carryflag && another 16bits register
-		void SBC_HL_rr(const std::string &reg);
+		void SBC_HL_rr(const Register::RegisterPairName &reg);
 
 		// Increment a 16bit register
-		void INC_rr(const std::string &reg);
+		void INC_rr(const Register::RegisterPairName &reg);
 
 		// Decrement a 168bit register
-		void DEC_rr(const std::string &reg);
+		void DEC_rr(const Register::RegisterPairName &reg);
 
 		/********Rotate && Shift group instructions*********/
 
@@ -234,10 +234,10 @@ namespace gasyboy
 		void RRA();
 
 		// Rotate left a 8bit register with carry
-		void RLC_r(const char &reg);
+		void RLC_r(const Register::RegisterName &reg);
 
 		// Rotate left a 8bit register
-		void RL_r(const char &reg);
+		void RL_r(const Register::RegisterName &reg);
 
 		// Rotate left value pointed by HL
 		void RL_16();
@@ -246,10 +246,10 @@ namespace gasyboy
 		void RLC_16();
 
 		// Rotate rigth a 8bit register with carry
-		void RRC_r(const char &reg);
+		void RRC_r(const Register::RegisterName &reg);
 
 		// Rotate rigth a 8bit register
-		void RR_r(const char &reg);
+		void RR_r(const Register::RegisterName &reg);
 
 		// Rotate right value pointed by HL
 		void RR_16();
@@ -258,43 +258,43 @@ namespace gasyboy
 		void RRC_16();
 
 		// Shift left a 8bit register
-		void SLA_r(const char &reg);
+		void SLA_r(const Register::RegisterName &reg);
 
 		// Shift left a value at HL
 		void SLA_16();
 
 		// Shift right a 8bit register without changing bit7
-		void SRA_r(const char &reg);
+		void SRA_r(const Register::RegisterName &reg);
 
 		// Shift right a value at HL without changing bit7
 		void SRA_16();
 
 		// Shift right a 8bit register && reset bit7
-		void SRL_r(const char &reg);
+		void SRL_r(const Register::RegisterName &reg);
 
 		// Shift right a value pointed by HL && reset bit7
 		void SRL_16();
 
 		// Swap upper with lower nibbles
-		void SWAP_r(const char &reg);
+		void SWAP_r(const Register::RegisterName &reg);
 		void SWAP_16();
 
 		/***********Bit Set/Reset/Test group instructions********************/
 
 		// Check if bit n is set in a 8bit register && set flags accordingly
-		void BIT_b_r(const int &bit, const char &reg);
+		void BIT_b_r(const int &bit, const Register::RegisterName &reg);
 
 		// Check if bit n is set in a 8bit value pointed by HL register && set flags accordingly
 		void BIT_b_16(const int &bit);
 
 		// Set bit n in 8bit register
-		void SET_b_r(const int &b, const char &reg);
+		void SET_b_r(const int &b, const Register::RegisterName &reg);
 
 		// Set bit n in 8bit value pointed by HL register
 		void SET_b_16(const int &b);
 
 		// Reset bit n in a 8bit register
-		void RES_b_r(const int &b, const char &reg);
+		void RES_b_r(const int &b, const Register::RegisterName &reg);
 
 		// Reset bit n in memory pointed by HL
 		void RES_b_16(const int &b);
@@ -305,7 +305,7 @@ namespace gasyboy
 		void JP_16(const uint16_t &adress);
 
 		// Jump with conditions
-		void JP_c_16(const std::string &condition, const uint16_t &adress);
+		void JP_c_16(const Register::FlagName &condition, const uint16_t &adress);
 
 		// Jump relative
 		void JR_e(const uint8_t &value);
@@ -331,13 +331,13 @@ namespace gasyboy
 		void CALL();
 
 		// Subroutine jump with condition
-		void CALL_c(const std::string &condition);
+		void CALL_c(const Register::FlagName &condition);
 
 		// Return from subroutine
 		void RET();
 
 		// Return from subroutine with condition
-		void RET_c(const std::string &condition);
+		void RET_c(const Register::FlagName &condition);
 
 		// Return fomr interrupt
 		void RETI();

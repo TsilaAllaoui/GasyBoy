@@ -51,7 +51,11 @@ endif()
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
 # Add all source files in src/ excluding main.cpp
-file(GLOB GASYBOY_SOURCES_FILES src/*.cpp src/providers/*.cpp)
+file(GLOB_RECURSE GASYBOY_SOURCES_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/providers/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/instructions/*.cpp"
+)
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
 
 # Check if using Emscripten

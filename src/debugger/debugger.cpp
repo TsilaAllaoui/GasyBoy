@@ -336,10 +336,10 @@ namespace gasyboy
             ImGui::TableNextColumn();
 
             ImGui::Text("Flags");
-            bool Z = _registers->AF.getFlag('Z');
-            bool N = _registers->AF.getFlag('N');
-            bool H = _registers->AF.getFlag('H');
-            bool C = _registers->AF.getFlag('C');
+            bool Z = _registers->AF.getFlag(Register::FlagName::Z);
+            bool N = _registers->AF.getFlag(Register::FlagName::N);
+            bool H = _registers->AF.getFlag(Register::FlagName::H);
+            bool C = _registers->AF.getFlag(Register::FlagName::C);
             ImGui::Checkbox("Zero", &Z);
             ImGui::Checkbox("Subtract", &N);
             ImGui::Checkbox("Half Carry", &H);
