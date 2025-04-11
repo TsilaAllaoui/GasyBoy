@@ -14,7 +14,7 @@ echo ******************************
 echo Selected Build Type: %BUILD_TYPE%
 
 :: Define build directory based on build type
-set BUILD_DIR=build_%BUILD_TYPE%
+set BUILD_DIR=build
 
 echo ******************************
 echo Entering build folder...
@@ -23,37 +23,10 @@ cd "%BUILD_DIR%" || exit /b 1
 echo ******************************
 echo Checking for compilers...
 
-:: Check for GCC (MinGW)
-where gcc >nul 2>&1
-if %ERRORLEVEL% == 0 (
-    echo GCC found! Using MinGW Makefiles.
-    cmake .. -G "MinGW Makefiles" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
-) else (
-    :: Check for Clang
-    where clang >nul 2>&1
-    if %ERRORLEVEL% == 0 (
-        echo Clang found! Using Ninja generator (for Clang).
-        :: Check if Ninja is installed
-        where ninja >nul 2>&1
-        if %ERRORLEVEL% == 0 (
-            echo Ninja found! Using Ninja as the build tool.
-            cmake .. -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
-        ) else (
-            echo Ninja not found, using Unix Makefiles instead.
-            cmake .. -G "Unix Makefiles" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
-        )
-    ) else (
-        :: Check for MSVC
-        cmake --version | findstr /C:"Visual Studio" >nul
-        if %ERRORLEVEL% == 0 (
-            echo Visual Studio detected! Using MSVC generator.
-            cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
-        ) else (
-            echo No supported compiler found! Exiting.
-            exit /b 1
-        )
-    )
-)
+
+echo Visual Studio detected! Using MSVC generator.
+cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+
 
 echo ******************************
 echo Building project...

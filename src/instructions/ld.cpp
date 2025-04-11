@@ -1,6 +1,3 @@
-#ifndef LD_INSTRUCTION_H
-#define LD_INSTRUCTION_H
-
 #include "cpu.h"
 
 namespace gasyboy
@@ -294,5 +291,3 @@ namespace gasyboy
             exit(2);
     }
 }
-
-#endif

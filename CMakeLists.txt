@@ -42,19 +42,14 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
 endif()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|MSVC")
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++20>)
-endif()
-
-
 # External libs directory
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
 # Add all source files in src/ excluding main.cpp
 file(GLOB_RECURSE GASYBOY_SOURCES_FILES
+"${CMAKE_CURRENT_SOURCE_DIR}/src/instructions/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/providers/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/instructions/*.cpp"
 )
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
 
