@@ -49,6 +49,10 @@ namespace gasyboy
 
 		// Execute the next opcode pointed by the pc
 		void execute();
+		void execute2();
+
+		// Execute the next opcode pointed by the pc using a function pointer
+		void executeUsingFunctionPointer();
 
 		// Fetch the current opcode
 		void fetch();
