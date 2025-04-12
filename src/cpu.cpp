@@ -42,13 +42,13 @@ namespace gasyboy
 		return *this;
 	}
 
-	uint16_t Cpu::getRegister(const std::string &reg)
+	uint16_t Cpu::getRegister(const Register::RegisterPairName &reg)
 	{
-		if (reg == "PC")
+		if (reg == Register::RegisterPairName::PC)
 		{
 			return _registers->PC;
 		}
-		else if (reg == "SP")
+		else if (reg == Register::RegisterPairName::SP)
 		{
 			return _registers->SP;
 		}
@@ -58,2230 +58,9 @@ namespace gasyboy
 		}
 	}
 
-	uint8_t Cpu::getRegister(const char &reg)
+	uint8_t Cpu::getRegister(const Register::RegisterName &reg)
 	{
 		return _registers->getRegister(reg);
-	}
-
-	void Cpu::LD_HL_SP_n()
-	{
-		int8_t value = static_cast<int8_t>(_mmu->readRam(_registers->PC + 1));
-		uint16_t result = (_registers->SP + value);
-		(((_registers->SP ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		(((_registers->SP ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		_registers->HL.set(result);
-		_registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('N');
-	}
-
-	// TODO: use Registers method
-	void Cpu::LD_r_r(const char &from, const char &to)
-	{
-		uint8_t regFrom = 0;
-		switch (from)
-		{
-		case 'A':
-			regFrom = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			regFrom = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			regFrom = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			regFrom = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			regFrom = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			regFrom = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			regFrom = _registers->HL.getRightRegister();
-			break;
-		default:
-			throw exception::GbException("Invalid register");
-			break;
-		}
-		switch (to)
-		{
-		case 'A':
-			_registers->AF.setLeftRegister(regFrom);
-			break;
-		case 'B':
-			_registers->BC.setLeftRegister(regFrom);
-			break;
-		case 'C':
-			_registers->BC.setRightRegister(regFrom);
-			break;
-		case 'D':
-			_registers->DE.setLeftRegister(regFrom);
-			break;
-		case 'E':
-			_registers->DE.setRightRegister(regFrom);
-			break;
-		case 'H':
-			_registers->HL.setLeftRegister(regFrom);
-			break;
-		case 'L':
-			_registers->HL.setRightRegister(regFrom);
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-	}
-
-	void Cpu::LD_r_n(const uint8_t &from, const char &to)
-	{
-		switch (to)
-		{
-		case 'A':
-			_registers->AF.setLeftRegister(from);
-			break;
-		case 'F':
-			_registers->AF.setRightRegister(from);
-			break;
-		case 'B':
-			_registers->BC.setLeftRegister(from);
-			break;
-		case 'C':
-			_registers->BC.setRightRegister(from);
-			break;
-		case 'D':
-			_registers->DE.setLeftRegister(from);
-			break;
-		case 'E':
-			_registers->DE.setRightRegister(from);
-			break;
-		case 'H':
-			_registers->HL.setLeftRegister(from);
-			break;
-		case 'L':
-			_registers->HL.setRightRegister(from);
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-	}
-
-	void Cpu::LD_r_16(const uint16_t &adress, const char &to)
-	{
-		uint8_t from = _mmu->readRam(adress);
-		switch (to)
-		{
-		case 'A':
-			_registers->AF.setLeftRegister(from);
-			break;
-		case 'B':
-			_registers->BC.setLeftRegister(from);
-			break;
-		case 'C':
-			_registers->BC.setRightRegister(from);
-			break;
-		case 'D':
-			_registers->DE.setLeftRegister(from);
-			break;
-		case 'E':
-			_registers->DE.setRightRegister(from);
-			break;
-		case 'H':
-			_registers->HL.setLeftRegister(from);
-			break;
-		case 'L':
-			_registers->HL.setRightRegister(from);
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-	}
-
-	void Cpu::LD_16_r(const uint16_t &adress, const char &from)
-	{
-		uint8_t value = 0;
-		switch (from)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error."; // TODO: add gbException here
-			exit(0);
-			break;
-		}
-		_mmu->writeRam(adress, value);
-	}
-
-	void Cpu::LD_16_n(const uint16_t &adress, const uint8_t &value)
-	{
-		_mmu->writeRam(adress, value);
-	}
-
-	void Cpu::LD_rr_nn(const uint16_t &value, const std::string &reg)
-	{
-		if (reg == "AF")
-			_registers->AF.set(value);
-		else if (reg == "BC")
-			_registers->BC.set(value);
-		else if (reg == "DE")
-			_registers->DE.set(value);
-		else if (reg == "HL")
-			_registers->HL.set(value);
-		else if (reg == "SP")
-			_registers->SP = value;
-		else
-			exit(2); // TODO: add gbException here
-	}
-
-	void Cpu::LD_rr_16(const uint16_t &adress, const std::string &reg)
-	{
-		uint8_t leftValue = _mmu->readRam(adress + 1);
-		uint8_t rightValue = _mmu->readRam(adress);
-		uint16_t value = ((uint16_t)(leftValue << 8) | rightValue);
-		if (reg == "AF")
-			_registers->AF.set(value);
-		else if (reg == "BC")
-			_registers->BC.set(value);
-		else if (reg == "DE")
-			_registers->DE.set(value);
-		else if (reg == "HL")
-			_registers->HL.set(value);
-		else if (reg == "SP")
-			_registers->SP = value;
-		else
-			exit(2);
-	}
-
-	void Cpu::LD_16_rr(const uint16_t &adress, const std::string &reg)
-	{
-		uint16_t value;
-		if (reg == "AF")
-			value = _registers->AF.get();
-		else if (reg == "BC")
-			value = _registers->BC.get();
-		else if (reg == "DE")
-			value = _registers->DE.get();
-		else if (reg == "HL")
-			value = _registers->HL.get();
-		else if (reg == "SP")
-			value = _registers->SP;
-		else
-			exit(2);
-		uint8_t firstByte = static_cast<uint8_t>(value & 0xFF);
-		uint8_t secondByte = static_cast<uint8_t>((value & 0xFF00) >> 8);
-		_mmu->writeRam(adress, firstByte);
-		_mmu->writeRam(adress + 1, secondByte);
-	}
-
-	void Cpu::LD_SP_HL()
-	{
-		_registers->SP = _registers->HL.get();
-	}
-
-	void Cpu::PUSH(const std::string &reg)
-	{
-		uint16_t value = 0xFFFF;
-		if (reg == "AF")
-			value = _registers->AF.get();
-		else if (reg == "BC")
-			value = _registers->BC.get();
-		else if (reg == "DE")
-			value = _registers->DE.get();
-		else if (reg == "HL")
-			value = _registers->HL.get();
-		else
-			exit(2);
-		uint8_t firstByte = static_cast<uint8_t>((value & 0xFF00) >> 8);
-		uint8_t secondByte = static_cast<uint8_t>(value & 0xFF);
-		_registers->SP--;
-		_mmu->writeRam(_registers->SP, firstByte);
-		_registers->SP--;
-		_mmu->writeRam(_registers->SP, secondByte);
-	}
-
-	void Cpu::POP(const std::string &reg)
-	{
-		uint8_t firstByte = _mmu->readRam(_registers->SP + 1);
-		uint16_t secondByte = (_mmu->readRam(_registers->SP));
-		_registers->SP += 2;
-		uint16_t value = ((firstByte << 8) | secondByte);
-		if (reg == "AF")
-		{
-			value &= 0xFFF0;
-			_registers->AF.set(value);
-		}
-		// _registers->AF.set(value);
-		else if (reg == "BC")
-		{
-			_registers->BC.set(value);
-		}
-		else if (reg == "DE")
-		{
-			_registers->DE.set(value);
-		}
-		else if (reg == "HL")
-		{
-			_registers->HL.set(value);
-		}
-		else
-			exit(2);
-	}
-
-	void Cpu::ADD_A_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'F':
-			value = _registers->AF.getRightRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		checkAddHalfCarry(value, _registers->AF.getLeftRegister()) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		checkAddCarry(value, _registers->AF.getLeftRegister()) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		uint8_t result = _registers->AF.getLeftRegister() + value;
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('N');
-		_registers->AF.setLeftRegister(result);
-	}
-
-	void Cpu::ADD_A_n(const uint8_t &value)
-	{
-		checkAddHalfCarry(value, _registers->AF.getLeftRegister()) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		checkAddCarry(value, _registers->AF.getLeftRegister()) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		uint8_t result = _registers->AF.getLeftRegister() + value;
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('N');
-		_registers->AF.setLeftRegister(result);
-	}
-
-	void Cpu::ADD_A_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		checkAddHalfCarry(value, _registers->AF.getLeftRegister()) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		((uint16_t)value + (uint16_t)_registers->AF.getLeftRegister() >= 0x100) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		uint8_t result = _registers->AF.getLeftRegister() + value;
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('N');
-		_registers->AF.setLeftRegister(result);
-	}
-
-	void Cpu::ADC_A_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		uint8_t A = _registers->AF.getLeftRegister();
-		uint8_t carry = _registers->AF.getFlag('C') ? 1 : 0;
-
-		unsigned int result_full = A + value + carry;
-		uint8_t result = static_cast<uint8_t>(result_full);
-
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('N');
-		(((A & 0xF) + (value & 0xF) + carry) > 0xF) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		(result_full > 0xFF) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-
-		_registers->AF.setLeftRegister(result);
-	}
-
-	void Cpu::ADC_A_n(const uint8_t &value)
-	{
-		uint8_t reg = _registers->AF.getLeftRegister();
-		uint8_t carry = _registers->AF.getFlag('C') ? 1 : 0;
-
-		unsigned int result_full = reg + value + carry;
-		uint8_t result = static_cast<uint8_t>(result_full);
-
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('N');
-		(((reg & 0xF) + (value & 0xF) + carry) > 0xF) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		(result_full > 0xFF) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-
-		_registers->AF.setLeftRegister(result);
-	}
-	void Cpu::ADC_A_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		uint8_t reg = _registers->AF.getLeftRegister();
-		uint8_t carry = _registers->AF.getFlag('C') ? 1 : 0;
-
-		unsigned int result_full = reg + value + carry;
-		uint8_t result = static_cast<uint8_t>(result_full);
-
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('N');
-		(((reg & 0xF) + (value & 0xF) + carry) > 0xF) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		(result_full > 0xFF) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-
-		_registers->AF.setLeftRegister(result);
-	}
-
-	void Cpu::SUB_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'F':
-			value = _registers->AF.getRightRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		(_registers->AF.getLeftRegister() - value < 0) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		(checkSubHalfCarry(_registers->AF.getLeftRegister(), value)) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		_registers->AF.setLeftRegister(_registers->AF.getLeftRegister() - value);
-		(_registers->AF.getLeftRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('N');
-	}
-
-	void Cpu::SUB_n(const uint8_t &value)
-	{
-		(_registers->AF.getLeftRegister() - value < 0) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		(checkSubHalfCarry(_registers->AF.getLeftRegister(), value)) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		_registers->AF.setLeftRegister(_registers->AF.getLeftRegister() - value);
-		(_registers->AF.getLeftRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('N');
-	}
-
-	void Cpu::SUB_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		(_registers->AF.getLeftRegister() - value < 0) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		(checkSubHalfCarry(_registers->AF.getLeftRegister(), value)) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		_registers->AF.setLeftRegister(_registers->AF.getLeftRegister() - value);
-		(_registers->AF.getLeftRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('N');
-	}
-
-	void Cpu::SBC_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		uint8_t carry = _registers->AF.getFlag('C') ? 1 : 0;
-		uint8_t A = _registers->AF.getLeftRegister();
-
-		int result_full = A - value - carry;
-		uint8_t result = static_cast<uint8_t>(result_full);
-
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('N');
-		(result_full < 0) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		(((A & 0xF) - (value & 0xF) - carry) < 0) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-
-		_registers->AF.setLeftRegister(result);
-	}
-
-	void Cpu::SBC_n(const uint8_t &value)
-	{
-		uint8_t carry = _registers->AF.getFlag('C') ? 1 : 0;
-		uint8_t A = _registers->AF.getLeftRegister();
-
-		int result_full = A - value - carry;
-		uint8_t result = static_cast<uint8_t>(result_full);
-
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('N');
-		(result_full < 0) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		(((A & 0xF) - (value & 0xF) - carry) < 0) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-
-		_registers->AF.setLeftRegister(result);
-	}
-
-	void Cpu::SBC_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		uint8_t carry = _registers->AF.getFlag('C') ? 1 : 0;
-		uint8_t A = _registers->AF.getLeftRegister();
-
-		int result_full = A - value - carry;
-		uint8_t result = static_cast<uint8_t>(result_full);
-
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('N');
-		(result_full < 0) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		(((A & 0xF) - (value & 0xF) - carry) < 0) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-
-		_registers->AF.setLeftRegister(result);
-	}
-
-	void Cpu::AND_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'F':
-			value = _registers->AF.getRightRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		uint8_t result = static_cast<uint8_t>(_registers->AF.getLeftRegister() & value);
-		_registers->AF.setLeftRegister(result);
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::AND_n(const uint8_t &value)
-	{
-		uint8_t result = static_cast<uint8_t>(_registers->AF.getLeftRegister() & value);
-		_registers->AF.setLeftRegister(result);
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::AND_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		uint8_t result = static_cast<uint8_t>(_registers->AF.getLeftRegister() & value);
-		_registers->AF.setLeftRegister(result);
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::OR_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-
-		uint8_t result = _registers->AF.getLeftRegister() | value;
-		_registers->AF.setLeftRegister(result);
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::OR_n(const uint8_t &value)
-	{
-		uint8_t result = _registers->AF.getLeftRegister() | value;
-		_registers->AF.setLeftRegister(result);
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::OR_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		uint8_t result = _registers->AF.getLeftRegister() | value;
-		_registers->AF.setLeftRegister(result);
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::XOR_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-
-		uint8_t result = _registers->AF.getLeftRegister() ^ value;
-		_registers->AF.setLeftRegister(result);
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::XOR_n(const uint8_t &value)
-	{
-		uint8_t result = _registers->AF.getLeftRegister() ^ value;
-		_registers->AF.setLeftRegister(result);
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::XOR_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		uint8_t result = _registers->AF.getLeftRegister() ^ value;
-		_registers->AF.setLeftRegister(result);
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::CP_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'F':
-			value = _registers->AF.getRightRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		((uint16_t)_registers->AF.getLeftRegister() - (uint16_t)value < 0) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		(checkSubHalfCarry(_registers->AF.getLeftRegister(), value)) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		(_registers->AF.getLeftRegister() - value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('N');
-	}
-
-	void Cpu::CP_n(const uint8_t &value)
-	{
-		uint8_t reg = _registers->AF.getLeftRegister();
-		uint8_t result = static_cast<uint8_t>(reg - value);
-
-		(result == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('N');
-		(((reg & 0xf) - (value & 0xf)) < 0) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		(reg < value) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-	}
-
-	void Cpu::CP_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		((uint16_t)_registers->AF.getLeftRegister() - (uint16_t)value < 0) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		(checkSubHalfCarry(_registers->AF.getLeftRegister(), value)) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		(_registers->AF.getLeftRegister() - value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.setFlag('N');
-	}
-
-	void Cpu::INC_r(const char &reg)
-	{
-		uint8_t value = 0, oldReg = 0;
-		switch (reg)
-		{
-		case 'A':
-			oldReg = _registers->AF.getLeftRegister();
-			value = _registers->AF.getLeftRegister() + 1;
-			_registers->AF.setLeftRegister(value);
-			break;
-		case 'F':
-			oldReg = _registers->AF.getRightRegister();
-			value = _registers->AF.getRightRegister() + 1;
-			_registers->AF.setRightRegister(value);
-			break;
-		case 'B':
-			oldReg = _registers->BC.getLeftRegister();
-			value = _registers->BC.getLeftRegister() + 1;
-			_registers->BC.setLeftRegister(value);
-			break;
-		case 'C':
-			oldReg = _registers->BC.getRightRegister();
-			value = _registers->BC.getRightRegister() + 1;
-			_registers->BC.setRightRegister(value);
-			break;
-		case 'D':
-			oldReg = _registers->DE.getLeftRegister();
-			value = _registers->DE.getLeftRegister() + 1;
-			_registers->DE.setLeftRegister(value);
-			break;
-		case 'E':
-			oldReg = _registers->DE.getRightRegister();
-			value = _registers->DE.getRightRegister() + 1;
-			_registers->DE.setRightRegister(value);
-			break;
-		case 'H':
-			oldReg = _registers->HL.getLeftRegister();
-			value = _registers->HL.getLeftRegister() + 1;
-			_registers->HL.setLeftRegister(value);
-			break;
-		case 'L':
-			oldReg = _registers->HL.getRightRegister();
-			value = _registers->HL.getRightRegister() + 1;
-			_registers->HL.setRightRegister(value);
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		checkAddHalfCarry(oldReg, 1) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-	}
-
-	void Cpu::INC_16()
-	{
-		uint8_t oldValue = _mmu->readRam(_registers->HL.get());
-		uint8_t value = _mmu->readRam(_registers->HL.get()) + 1;
-		_mmu->writeRam(_registers->HL.get(), value);
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		checkAddHalfCarry(oldValue, 1) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-	}
-
-	void Cpu::DEC_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'F':
-			value = _registers->AF.getRightRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		switch (reg)
-		{
-		case 'A':
-			_registers->AF.setLeftRegister(value - 1);
-			break;
-		case 'F':
-			_registers->AF.setRightRegister(value - 1);
-			break;
-		case 'B':
-			_registers->BC.setLeftRegister(value - 1);
-			break;
-		case 'C':
-			_registers->BC.setRightRegister(value - 1);
-			break;
-		case 'D':
-			_registers->DE.setLeftRegister(value - 1);
-			break;
-		case 'E':
-			_registers->DE.setRightRegister(value - 1);
-			break;
-		case 'H':
-			_registers->HL.setLeftRegister(value - 1);
-			break;
-		case 'L':
-			_registers->HL.setRightRegister(value - 1);
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		((value - 1) == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		(checkSubHalfCarry(value, 1)) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		_registers->AF.setFlag('N');
-	}
-
-	void Cpu::DEC_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		_mmu->writeRam(_registers->HL.get(), value - 1);
-		((value - 1) == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		(checkSubHalfCarry(value, 1)) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		_registers->AF.setFlag('N');
-	}
-
-	void Cpu::DAA()
-	{
-		if (!_registers->AF.getFlag('N'))
-		{
-			if (_registers->AF.getFlag('C') || (_registers->AF.getLeftRegister() > 0x99))
-			{
-				uint8_t value = _registers->AF.getLeftRegister();
-				_registers->AF.setLeftRegister(value + 0x60);
-				_registers->AF.setFlag('C');
-			}
-			if (_registers->AF.getFlag('H') || ((_registers->AF.getLeftRegister() & 0x0F) > 0x09))
-			{
-				uint8_t value = _registers->AF.getLeftRegister();
-				_registers->AF.setLeftRegister(value + 0x06);
-			}
-		}
-		else
-		{
-			if (_registers->AF.getFlag('C'))
-			{
-				uint8_t value = _registers->AF.getLeftRegister();
-				_registers->AF.setLeftRegister(value - 0x60);
-			}
-			if (_registers->AF.getFlag('H'))
-			{
-				uint8_t value = _registers->AF.getLeftRegister();
-				_registers->AF.setLeftRegister(value - 0x06);
-			}
-		}
-		(_registers->AF.getLeftRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-	}
-
-	void Cpu::CPL()
-	{
-		uint8_t value = _registers->AF.getLeftRegister();
-		_registers->AF.setLeftRegister(~value);
-		_registers->AF.setFlag('H');
-		_registers->AF.setFlag('N');
-	}
-
-	void Cpu::CCF()
-	{
-		uint8_t value = _registers->AF.getRightRegister();
-		value ^= 0x10;
-		_registers->AF.setRightRegister(value);
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('H');
-	}
-
-	void Cpu::SCF()
-	{
-		uint8_t value = _registers->AF.getRightRegister();
-		value |= 0x10;
-		_registers->AF.setRightRegister(value);
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('H');
-	}
-
-	void Cpu::NOP()
-	{
-	}
-
-	void Cpu::HALT()
-	{
-		bool interruptPending = (_mmu->readRam(0xFF0F) & _mmu->readRam(0xFFFF) & 0x1F) > 0;
-		if (!_interruptManager->isMasterInterruptEnabled() && interruptPending)
-		{
-			// HALT Bug: CPU does not halt, but skips the next opcode fetch
-			_haltBug = true;
-		}
-		else
-		{
-			_registers->setHalted(true);
-		}
-	}
-
-	void Cpu::DI()
-	{
-		_registers->setInterruptEnabled(false);
-		_interruptManager->setMasterInterrupt(false);
-	}
-
-	void Cpu::EI()
-	{
-		_registers->setInterruptEnabled(true);
-		_interruptManager->setMasterInterrupt(true);
-	}
-
-	void Cpu::ADD_HL_rr(const std::string &reg)
-	{
-		uint16_t value;
-		if (reg == "AF")
-			value = _registers->AF.get();
-		else if (reg == "BC")
-			value = _registers->BC.get();
-		else if (reg == "DE")
-			value = _registers->DE.get();
-		else if (reg == "HL")
-			value = _registers->HL.get();
-		else if (reg == "SP")
-			value = _registers->SP;
-		else
-			exit(2);
-		uint16_t operand = _registers->HL.get();
-		_registers->HL.set(operand + value);
-		_registers->AF.clearFlag('N');
-		((operand + value) >= 0x10000) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		((operand & 0xFFF) + (value & 0xFFF) >= 0x1000) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-	}
-
-	void Cpu::ADD_SP_n()
-	{
-		int8_t value = static_cast<int8_t>(_mmu->readRam(_registers->PC + 1));
-		uint16_t result = (_registers->SP + value);
-		(((_registers->SP ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-		(((_registers->SP ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		_registers->SP = (result);
-		_registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('N');
-	}
-
-	void Cpu::ADC_HL_rr(const std::string &reg)
-	{
-		uint16_t value = 0;
-		if (reg == "AF")
-			value = _registers->AF.get();
-		else if (reg == "BC")
-			value = _registers->BC.get();
-		else if (reg == "DE")
-			value = _registers->DE.get();
-		else if (reg == "HL")
-			value = _registers->HL.get();
-		else if (reg == "SP")
-			value = _registers->SP;
-		else
-			exit(2);
-		value += _registers->AF.getFlag('C') ? 1 : 0;
-		uint16_t operand = _registers->HL.get();
-		_registers->HL.set(operand + value);
-		_registers->AF.clearFlag('N');
-		checkAddCarry(operand, value) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		checkAddHalfCarry(operand, value) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-	}
-
-	void Cpu::SBC_HL_rr(const std::string &reg)
-	{
-		uint16_t value = 0;
-		if (reg == "AF")
-			value = _registers->AF.get();
-		else if (reg == "BC")
-			value = _registers->BC.get();
-		else if (reg == "DE")
-			value = _registers->DE.get();
-		else if (reg == "HL")
-			value = _registers->HL.get();
-		else if (reg == "SP")
-			value = _registers->SP;
-		else
-			exit(2);
-		value += _registers->AF.getFlag('C') ? 1 : 0;
-		uint16_t operand = _registers->HL.get();
-		_registers->HL.set(operand - value);
-		_registers->AF.setFlag('N');
-		checkAddCarry(operand, value) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		checkSubHalfCarry(operand, value) ? _registers->AF.setFlag('H') : _registers->AF.clearFlag('H');
-	}
-
-	void Cpu::INC_rr(const std::string &reg)
-	{
-		uint16_t value = 0;
-		if (reg == "AF")
-		{
-			value = _registers->AF.get() + 1;
-			_registers->AF.set(value);
-		}
-		else if (reg == "BC")
-		{
-			value = _registers->BC.get() + 1;
-			_registers->BC.set(value);
-		}
-		else if (reg == "DE")
-		{
-			value = _registers->DE.get() + 1;
-			_registers->DE.set(value);
-		}
-		else if (reg == "HL")
-		{
-			value = _registers->HL.get() + 1;
-			_registers->HL.set(value);
-		}
-		else if (reg == "SP")
-		{
-			value = _registers->SP + 1;
-			_registers->SP++;
-		}
-		else
-			exit(2);
-	}
-
-	void Cpu::DEC_rr(const std::string &reg)
-	{
-		uint16_t value = 0;
-		if (reg == "AF")
-		{
-			value = _registers->AF.get() - 1;
-			_registers->AF.set(value);
-		}
-		else if (reg == "BC")
-		{
-			value = _registers->BC.get() - 1;
-			_registers->BC.set(value);
-		}
-		else if (reg == "DE")
-		{
-			value = _registers->DE.get() - 1;
-			_registers->DE.set(value);
-		}
-		else if (reg == "HL")
-		{
-			value = _registers->HL.get() - 1;
-			_registers->HL.set(value);
-		}
-		else if (reg == "SP")
-		{
-			value = _registers->SP - 1;
-			_registers->SP--;
-		}
-		else
-			exit(2);
-	}
-
-	void Cpu::RLCA()
-	{
-		uint8_t reg = _registers->AF.getLeftRegister();
-		((reg & 0x80) == 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		int old7bit = ((reg & 0x80) == 0x80) ? 1 : 0;
-		uint8_t value = static_cast<uint8_t>((reg << 1) | (old7bit));
-		_registers->AF.setLeftRegister(value);
-		_registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-	}
-
-	void Cpu::RLA()
-	{
-		int oldCarry = _registers->AF.getFlag('C');
-		(_registers->AF.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		uint8_t value = static_cast<uint8_t>((_registers->AF.getLeftRegister() << 1) | (oldCarry << 0));
-		_registers->AF.setLeftRegister(value);
-		_registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-	}
-
-	void Cpu::RRCA()
-	{
-		(_registers->AF.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		_registers->AF.setLeftRegister((_registers->AF.getLeftRegister() >> 1) | (_registers->AF.getFlag('C') << 7));
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::RRA()
-	{
-		int oldCarry = _registers->AF.getFlag('C');
-		(_registers->AF.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		uint8_t value = static_cast<uint8_t>((_registers->AF.getLeftRegister() >> 1) | (oldCarry << 7));
-		_registers->AF.setLeftRegister(value);
-		_registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-	}
-
-	void Cpu::RLC_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			(_registers->AF.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->AF.setLeftRegister((_registers->AF.getLeftRegister() << 1) | static_cast<uint8_t>(_registers->AF.getFlag('C')));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			(_registers->BC.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setLeftRegister((_registers->BC.getLeftRegister() << 1) | static_cast<uint8_t>(_registers->AF.getFlag('C')));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			(_registers->BC.getRightRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setRightRegister((_registers->BC.getRightRegister() << 1) | static_cast<uint8_t>(_registers->AF.getFlag('C')));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			(_registers->DE.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setLeftRegister((_registers->DE.getLeftRegister() << 1) | static_cast<uint8_t>(_registers->AF.getFlag('C')));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			(_registers->DE.getRightRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setRightRegister((_registers->DE.getRightRegister() << 1) | static_cast<uint8_t>(_registers->AF.getFlag('C')));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			(_registers->HL.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setLeftRegister((_registers->HL.getLeftRegister() << 1) | static_cast<uint8_t>(_registers->AF.getFlag('C')));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			(_registers->HL.getRightRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setRightRegister((_registers->HL.getRightRegister() << 1) | static_cast<uint8_t>(_registers->AF.getFlag('C')));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::RLC_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		(value & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		uint8_t newValue = (value << 1) | static_cast<uint8_t>(_registers->AF.getFlag('C'));
-		_mmu->writeRam(_registers->HL.get(), newValue);
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		(newValue == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::RL_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		int oldCarry = _registers->AF.getFlag('C');
-		(value & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		value = static_cast<uint8_t>((value << 1) | (oldCarry));
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		_mmu->writeRam(_registers->HL.get(), value);
-	}
-
-	void Cpu::RL_r(const char &reg)
-	{
-		uint8_t value = 0, oldCarry = _registers->AF.getFlag('C');
-		switch (reg)
-		{
-		case 'A':
-			(_registers->AF.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->AF.setLeftRegister((_registers->AF.getLeftRegister() << 1) | oldCarry);
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			(_registers->BC.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setLeftRegister((_registers->BC.getLeftRegister() << 1) | oldCarry);
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			(_registers->BC.getRightRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setRightRegister((_registers->BC.getRightRegister() << 1) | oldCarry);
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			(_registers->DE.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setLeftRegister((_registers->DE.getLeftRegister() << 1) | oldCarry);
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			(_registers->DE.getRightRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setRightRegister((_registers->DE.getRightRegister() << 1) | oldCarry);
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			(_registers->HL.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setLeftRegister((_registers->HL.getLeftRegister() << 1) | oldCarry);
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			(_registers->HL.getRightRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setRightRegister((_registers->HL.getRightRegister() << 1) | oldCarry);
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::RR_r(const char &reg)
-	{
-		uint8_t value = 0;
-		int oldCarry = _registers->AF.getFlag('C');
-		switch (reg)
-		{
-		case 'A':
-			(_registers->AF.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->AF.setLeftRegister(static_cast<uint8_t>((_registers->AF.getLeftRegister() >> 1) | (oldCarry << 7)));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			(_registers->BC.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setLeftRegister(static_cast<uint8_t>((_registers->BC.getLeftRegister() >> 1) | (oldCarry << 7)));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			(_registers->BC.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setRightRegister(static_cast<uint8_t>((_registers->BC.getRightRegister() >> 1) | (oldCarry << 7)));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			(_registers->DE.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setLeftRegister(static_cast<uint8_t>((_registers->DE.getLeftRegister() >> 1) | (oldCarry << 7)));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			(_registers->DE.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setRightRegister(static_cast<uint8_t>((_registers->DE.getRightRegister() >> 1) | (oldCarry << 7)));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			(_registers->HL.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setLeftRegister(static_cast<uint8_t>((_registers->HL.getLeftRegister() >> 1) | (oldCarry << 7)));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			(_registers->HL.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setRightRegister(static_cast<uint8_t>((_registers->HL.getRightRegister() >> 1) | (oldCarry << 7)));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::RR_16() // TODO may be innacurate
-	{
-		int oldCarry = _registers->AF.getFlag('C');
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		(value & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		value = static_cast<uint8_t>((value >> 1) | (oldCarry << 7));
-		_mmu->writeRam(_registers->HL.get(), value);
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-	}
-
-	void Cpu::RRC_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			(_registers->AF.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->AF.setLeftRegister((_registers->AF.getLeftRegister() >> 1) | (_registers->AF.getFlag('C') << 7));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			(_registers->BC.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setLeftRegister((_registers->BC.getLeftRegister() >> 1) | (_registers->AF.getFlag('C') << 7));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			(_registers->BC.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setRightRegister((_registers->BC.getRightRegister() >> 1) | (_registers->AF.getFlag('C') << 7));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			(_registers->DE.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setLeftRegister((_registers->DE.getLeftRegister() >> 1) | (_registers->AF.getFlag('C') << 7));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			(_registers->DE.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setRightRegister((_registers->DE.getRightRegister() >> 1) | (_registers->AF.getFlag('C') << 7));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			(_registers->HL.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setLeftRegister((_registers->HL.getLeftRegister() >> 1) | (_registers->AF.getFlag('C') << 7));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			(_registers->HL.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setRightRegister((_registers->HL.getRightRegister() >> 1) | (_registers->AF.getFlag('C') << 7));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::RRC_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		(value & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		value = ((value >> 1) | (_registers->AF.getFlag('C') << 7));
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		_mmu->writeRam(_registers->HL.get(), value);
-	}
-
-	void Cpu::SLA_r(const char &reg)
-	{
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			(_registers->AF.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->AF.setLeftRegister((_registers->AF.getLeftRegister() << 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			(_registers->BC.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setLeftRegister((_registers->BC.getLeftRegister() << 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			(_registers->BC.getRightRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setRightRegister((_registers->BC.getRightRegister() << 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			(_registers->DE.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setLeftRegister((_registers->DE.getLeftRegister() << 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			(_registers->DE.getRightRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setRightRegister((_registers->DE.getRightRegister() << 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			(_registers->HL.getLeftRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setLeftRegister((_registers->HL.getLeftRegister() << 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			(_registers->HL.getRightRegister() & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setRightRegister((_registers->HL.getRightRegister() << 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::SLA_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		(value & 0x80) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		_mmu->writeRam(_registers->HL.get(), (value << 1));
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		value = _mmu->readRam(_registers->HL.get());
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::SRA_r(const char &reg)
-	{
-		uint8_t value = 0;
-		uint8_t old7thbit = 0;
-		switch (reg)
-		{
-		case 'A':
-			(_registers->AF.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			old7thbit = (_registers->AF.getLeftRegister() & 0x80);
-			_registers->AF.setLeftRegister((_registers->AF.getLeftRegister() >> 1) | (old7thbit));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'B':
-			(_registers->BC.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			old7thbit = (_registers->BC.getLeftRegister() & 0x80);
-			_registers->BC.setLeftRegister((_registers->BC.getLeftRegister() >> 1) | (old7thbit));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			(_registers->BC.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			old7thbit = (_registers->BC.getRightRegister() & 0x80);
-			_registers->BC.setRightRegister((_registers->BC.getRightRegister() >> 1) | (old7thbit));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			(_registers->DE.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			old7thbit = (_registers->DE.getLeftRegister() & 0x80);
-			_registers->DE.setLeftRegister((_registers->DE.getLeftRegister() >> 1) | (old7thbit));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			(_registers->DE.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			old7thbit = (_registers->DE.getRightRegister() & 0x80);
-			_registers->DE.setRightRegister((_registers->DE.getRightRegister() >> 1) | (old7thbit));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			(_registers->HL.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			old7thbit = (_registers->HL.getLeftRegister() & 0x80);
-			_registers->HL.setLeftRegister((_registers->HL.getLeftRegister() >> 1) | (old7thbit));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			(_registers->HL.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			old7thbit = (_registers->HL.getRightRegister() & 0x80);
-			_registers->HL.setRightRegister((_registers->HL.getRightRegister() >> 1) | (old7thbit));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::SRA_16()
-	{
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		int old7bit = (value & 0x80);
-		(value & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		value = static_cast<uint8_t>((value >> 1) | (old7bit));
-		_mmu->writeRam(_registers->HL.get(), value);
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-	}
-
-	void Cpu::SRL_r(const char &reg)
-	{
-		switch (reg)
-		{
-		case 'A':
-			(_registers->AF.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->AF.setLeftRegister((_registers->AF.getLeftRegister() >> 1));
-			(_registers->AF.getLeftRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			break;
-		case 'B':
-			(_registers->BC.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setLeftRegister((_registers->BC.getLeftRegister() >> 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			(_registers->BC.getLeftRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-			break;
-		case 'C':
-			(_registers->BC.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->BC.setRightRegister((_registers->BC.getRightRegister() >> 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			(_registers->BC.getRightRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-			break;
-		case 'D':
-			(_registers->DE.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setLeftRegister((_registers->DE.getLeftRegister() >> 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			(_registers->DE.getLeftRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-			break;
-		case 'E':
-			(_registers->DE.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->DE.setRightRegister((_registers->DE.getRightRegister() >> 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			(_registers->DE.getRightRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-			break;
-		case 'H':
-			(_registers->HL.getLeftRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setLeftRegister((_registers->HL.getLeftRegister() >> 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			(_registers->HL.getLeftRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-			break;
-		case 'L':
-			(_registers->HL.getRightRegister() & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-			_registers->HL.setRightRegister((_registers->HL.getRightRegister() >> 1));
-			_registers->AF.clearFlag('H');
-			_registers->AF.clearFlag('N');
-			(_registers->HL.getRightRegister() == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-	}
-
-	void Cpu::SRL_16()
-	{
-		uint8_t value = 0;
-		(_mmu->readRam(_registers->HL.get()) & 0x1) ? _registers->AF.setFlag('C') : _registers->AF.clearFlag('C');
-		_mmu->writeRam(_registers->HL.get(), (_mmu->readRam(_registers->HL.get()) >> 1));
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('N');
-		value = _mmu->readRam(_registers->HL.get());
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::SWAP_r(const char &reg)
-	{
-		uint8_t left = 0, rigth = 0, value = 0;
-		switch (reg)
-		{
-		case 'A':
-			left = _registers->AF.getLeftRegister() & 0xF0;
-			rigth = _registers->AF.getLeftRegister() & 0xF;
-			value = ((left >> 4) | (rigth << 4));
-			_registers->AF.setLeftRegister(value);
-			break;
-		case 'B':
-			left = _registers->BC.getLeftRegister() & 0xF0;
-			rigth = _registers->BC.getLeftRegister() & 0xF;
-			value = ((left >> 4) | (rigth << 4));
-			_registers->BC.setLeftRegister(value);
-			break;
-		case 'C':
-			left = _registers->BC.getRightRegister() & 0xF0;
-			rigth = _registers->BC.getRightRegister() & 0xF;
-			value = ((left >> 4) | (rigth << 4));
-			_registers->BC.setRightRegister(value);
-			break;
-		case 'D':
-			left = _registers->DE.getLeftRegister() & 0xF0;
-			rigth = _registers->DE.getLeftRegister() & 0xF;
-			value = ((left >> 4) | (rigth << 4));
-			_registers->DE.setLeftRegister(value);
-			break;
-		case 'E':
-			left = _registers->DE.getRightRegister() & 0xF0;
-			rigth = _registers->DE.getRightRegister() & 0xF;
-			value = ((left >> 4) | (rigth << 4));
-			_registers->DE.setRightRegister(value);
-			break;
-		case 'H':
-			left = _registers->HL.getLeftRegister() & 0xF0;
-			rigth = _registers->HL.getLeftRegister() & 0xF;
-			value = ((left >> 4) | (rigth << 4));
-			_registers->HL.setLeftRegister(value);
-			break;
-		case 'L':
-			left = _registers->HL.getRightRegister() & 0xF0;
-			rigth = _registers->HL.getRightRegister() & 0xF;
-			value = ((left >> 4) | (rigth << 4));
-			_registers->HL.setRightRegister(value);
-			break;
-		}
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('C');
-		_registers->AF.clearFlag('H');
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-	}
-
-	void Cpu::SWAP_16()
-	{
-		uint8_t left = 0, rigth = 0, value = _mmu->readRam(_registers->HL.get());
-		left = (value & 0xF0);
-		rigth = (value & 0xF);
-		value = ((left >> 4) | (rigth << 4));
-		_mmu->writeRam(_registers->HL.get(), value);
-		(value == 0) ? _registers->AF.setFlag('Z') : _registers->AF.clearFlag('Z');
-		_registers->AF.clearFlag('N');
-		_registers->AF.clearFlag('H');
-		_registers->AF.clearFlag('C');
-	}
-
-	void Cpu::BIT_b_r(const int &bit, const char &reg)
-	{
-		if (bit > 7 || bit < 0)
-		{
-			cout << "Bit to check out of bound" << endl;
-			exit(3);
-		}
-		uint8_t value = 0;
-		switch (reg)
-		{
-		case 'A':
-			value = _registers->AF.getLeftRegister();
-			break;
-		case 'F':
-			value = _registers->AF.getRightRegister();
-			break;
-		case 'B':
-			value = _registers->BC.getLeftRegister();
-			break;
-		case 'C':
-			value = _registers->BC.getRightRegister();
-			break;
-		case 'D':
-			value = _registers->DE.getLeftRegister();
-			break;
-		case 'E':
-			value = _registers->DE.getRightRegister();
-			break;
-		case 'H':
-			value = _registers->HL.getLeftRegister();
-			break;
-		case 'L':
-			value = _registers->HL.getRightRegister();
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-		(value & (1 << bit)) ? _registers->AF.clearFlag('Z') : _registers->AF.setFlag('Z');
-		_registers->AF.clearFlag('N');
-		_registers->AF.setFlag('H');
-	}
-
-	void Cpu::BIT_b_16(const int &bit)
-	{
-		if (bit > 7 || bit < 0)
-		{
-			cout << "Bit to check out of bound" << endl;
-			exit(3);
-		}
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		(value & (1 << bit)) ? _registers->AF.clearFlag('Z') : _registers->AF.setFlag('Z');
-		_registers->AF.clearFlag('N');
-		_registers->AF.setFlag('H');
-	}
-
-	void Cpu::SET_b_r(const int &bit, const char &reg)
-	{
-		if (bit > 7 || bit < 0)
-		{
-			cout << "Bit to check out of bound" << endl;
-			exit(3);
-		}
-		uint8_t value = (1 << bit);
-		switch (reg)
-		{
-		case 'A':
-			_registers->AF.setLeftRegister(_registers->AF.getLeftRegister() | value);
-			break;
-		case 'F':
-			_registers->AF.setRightRegister(_registers->AF.getRightRegister() | value);
-			break;
-		case 'B':
-			_registers->BC.setLeftRegister(_registers->BC.getLeftRegister() | value);
-			break;
-		case 'C':
-			_registers->BC.setRightRegister(_registers->BC.getRightRegister() | value);
-			break;
-		case 'D':
-			_registers->DE.setLeftRegister(_registers->DE.getLeftRegister() | value);
-			break;
-		case 'E':
-			_registers->DE.setRightRegister(_registers->DE.getRightRegister() | value);
-			break;
-		case 'H':
-			_registers->HL.setLeftRegister(_registers->HL.getLeftRegister() | value);
-			break;
-		case 'L':
-			_registers->HL.setRightRegister(_registers->HL.getRightRegister() | value);
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-	}
-
-	void Cpu::SET_b_16(const int &bit)
-	{
-		if (bit > 7 || bit < 0)
-		{
-			cout << "Bit to check out of bound" << endl;
-			exit(3);
-		}
-		uint8_t value = _mmu->readRam(_registers->HL.get());
-		_mmu->writeRam(_registers->HL.get(), (value | (1 << bit)));
-	}
-
-	void Cpu::RES_b_r(const int &bit, const char &reg)
-	{
-		if (bit > 7 || bit < 0)
-		{
-			cout << "Bit to check out of bound" << endl;
-			exit(3);
-		}
-		uint8_t value = (1 << bit);
-		switch (reg)
-		{
-		case 'A':
-			_registers->AF.setLeftRegister(_registers->AF.getLeftRegister() & ~value);
-			break;
-		case 'B':
-			_registers->BC.setLeftRegister(_registers->BC.getLeftRegister() & ~value);
-			break;
-		case 'C':
-			_registers->BC.setRightRegister(_registers->BC.getRightRegister() & ~value);
-			break;
-		case 'D':
-			_registers->DE.setLeftRegister(_registers->DE.getLeftRegister() & ~value);
-			break;
-		case 'E':
-			_registers->DE.setRightRegister(_registers->DE.getRightRegister() & ~value);
-			break;
-		case 'H':
-			_registers->HL.setLeftRegister(_registers->HL.getLeftRegister() & ~value);
-			break;
-		case 'L':
-			_registers->HL.setRightRegister(_registers->HL.getRightRegister() & ~value);
-			break;
-		default:
-			cout << "Flag error.";
-			exit(0);
-			break;
-		}
-	}
-
-	void Cpu::RES_b_16(const int &bit)
-	{
-		if (bit > 7 || bit < 0)
-		{
-			cout << "Bit to check out of bound" << endl;
-			exit(3);
-		}
-		uint8_t value = ~(1 << bit);
-		_mmu->writeRam(_registers->HL.get(), _mmu->readRam(_registers->HL.get()) & value);
-	}
-
-	void Cpu::JP_16(const uint16_t &adress)
-	{
-		uint16_t leftValue = _mmu->readRam(adress + 1);
-		uint8_t rigthValue = _mmu->readRam(adress);
-		_registers->PC = ((leftValue << 8) | rigthValue);
-	}
-
-	void Cpu::JP_c_16(const std::string &condition, const uint16_t &adress)
-	{
-		if (condition == "Z")
-			(_registers->AF.getFlag('Z')) ? _registers->PC = adress : _registers->PC += 3;
-		else if (condition == "NZ")
-			(!_registers->AF.getFlag('Z')) ? _registers->PC = adress : _registers->PC += 3;
-		else if (condition == "C")
-			(_registers->AF.getFlag('C')) ? _registers->PC = adress : _registers->PC += 3;
-		else if (condition == "NC")
-			(!_registers->AF.getFlag('C')) ? _registers->PC = adress : _registers->PC += 3;
-	}
-
-	void Cpu::JR_e(const uint8_t &value)
-	{
-		_registers->PC += 2;
-		_registers->PC += static_cast<int8_t>(value);
-	}
-
-	void Cpu::JR_C_e(const uint8_t &value)
-	{
-		_registers->PC += 2;
-		if (_registers->AF.getFlag('C'))
-			_registers->PC += static_cast<int8_t>(value);
-	}
-
-	void Cpu::JR_NC_e(const uint8_t &value)
-	{
-		_registers->PC += 2;
-		if (!_registers->AF.getFlag('C'))
-			_registers->PC += static_cast<int8_t>(value);
-	}
-
-	void Cpu::JR_Z_e(const uint8_t &value)
-	{
-		_registers->PC += 2;
-		if (_registers->AF.getFlag('Z'))
-			_registers->PC += static_cast<int8_t>(value);
-	}
-
-	void Cpu::JR_NZ_e(const uint8_t &value)
-	{
-		_registers->PC += 2;
-		if (!_registers->AF.getFlag('Z'))
-			_registers->PC += static_cast<int8_t>(value);
-	}
-
-	void Cpu::JP_16()
-	{
-		_registers->PC = _registers->HL.get();
-	}
-
-	void Cpu::CALL()
-	{
-		uint8_t leftValue = _mmu->readRam(_registers->PC + 2);
-		uint8_t rightValue = _mmu->readRam(_registers->PC + 1);
-		_registers->SP--;
-		_mmu->writeRam(_registers->SP, (((_registers->PC + 3) & 0xFF00) >> 8));
-		_registers->SP--;
-		_mmu->writeRam(_registers->SP, static_cast<uint8_t>((_registers->PC + 3) & 0xFF));
-		_registers->PC = ((leftValue << 8) | rightValue);
-	}
-
-	void Cpu::CALL_c(const std::string &condition)
-	{
-		uint8_t leftValue = _mmu->readRam(_registers->PC + 2);
-		uint8_t rightValue = _mmu->readRam(_registers->PC + 1);
-		if (condition == "Z")
-		{
-			if (_registers->AF.getFlag('Z'))
-			{
-
-				_registers->SP--;
-				_mmu->writeRam(_registers->SP, (((_registers->PC + 3) & 0xFF00) >> 8));
-				_registers->SP--;
-				_mmu->writeRam(_registers->SP, static_cast<uint8_t>((_registers->PC + 3) & 0xFF));
-				_registers->PC = ((leftValue << 8) | rightValue);
-				return;
-			}
-			else
-			{
-				_registers->PC += 3;
-				return;
-			}
-		}
-
-		else if (condition == "NZ")
-		{
-			if (!_registers->AF.getFlag('Z'))
-			{
-
-				_registers->SP--;
-				_mmu->writeRam(_registers->SP, (((_registers->PC + 3) & 0xFF00) >> 8));
-				_registers->SP--;
-				_mmu->writeRam(_registers->SP, static_cast<uint8_t>((_registers->PC + 3) & 0xFF));
-				_registers->PC = ((leftValue << 8) | rightValue);
-				return;
-			}
-			else
-			{
-				_registers->PC += 3;
-				return;
-			}
-		}
-		else if (condition == "C")
-		{
-			if (_registers->AF.getFlag('C'))
-			{
-
-				_registers->SP--;
-				_mmu->writeRam(_registers->SP, (((_registers->PC + 3) & 0xFF00) >> 8));
-				_registers->SP--;
-				_mmu->writeRam(_registers->SP, static_cast<uint8_t>((_registers->PC + 3) & 0xFF));
-				_registers->PC = ((leftValue << 8) | rightValue);
-				return;
-			}
-			else
-			{
-				_registers->PC += 3;
-				return;
-			}
-		}
-		else if (condition == "NC")
-		{
-			if (!_registers->AF.getFlag('C'))
-			{
-
-				_registers->SP--;
-				_mmu->writeRam(_registers->SP, (((_registers->PC + 3) & 0xFF00) >> 8));
-				_registers->SP--;
-				_mmu->writeRam(_registers->SP, static_cast<uint8_t>((_registers->PC + 3) & 0xFF));
-				_registers->PC = ((leftValue << 8) | rightValue);
-				return;
-			}
-			else
-			{
-				_registers->PC += 3;
-				return;
-			}
-		}
-	}
-
-	void Cpu::RET()
-	{
-		uint8_t firstByte = _mmu->readRam(_registers->SP + 1);
-		uint16_t secondByte = (_mmu->readRam(_registers->SP));
-		_registers->SP += 2;
-		_registers->PC = ((firstByte << 8) | secondByte);
-	}
-
-	void Cpu::RET_c(const std::string &condition)
-	{
-		if (condition == "Z")
-		{
-			if (_registers->AF.getFlag('Z'))
-			{
-				uint16_t leftNibble = (_mmu->readRam(_registers->SP + 1) << 8);
-				uint8_t rightNibble = _mmu->readRam(_registers->SP);
-				_registers->SP += 2;
-				_registers->PC = (leftNibble | rightNibble);
-				return;
-			}
-			else
-			{
-				_registers->PC++;
-				return;
-			}
-		}
-
-		if (condition == "NZ")
-		{
-			if (!_registers->AF.getFlag('Z'))
-			{
-				uint16_t leftNibble = (_mmu->readRam(_registers->SP + 1) << 8);
-				uint8_t rightNibble = _mmu->readRam(_registers->SP);
-				_registers->SP += 2;
-				_registers->PC = (leftNibble | rightNibble);
-				return;
-			}
-			else
-			{
-				_registers->PC++;
-				return;
-			}
-		}
-		if (condition == "C")
-		{
-			if (_registers->AF.getFlag('C'))
-			{
-				uint16_t leftNibble = (_mmu->readRam(_registers->SP + 1) << 8);
-				uint8_t rightNibble = _mmu->readRam(_registers->SP);
-				_registers->SP += 2;
-				_registers->PC = (leftNibble | rightNibble);
-				return;
-			}
-			else
-			{
-				_registers->PC++;
-				return;
-			}
-		}
-		if (condition == "NC")
-		{
-			if (!_registers->AF.getFlag('C'))
-			{
-				uint16_t leftNibble = (_mmu->readRam(_registers->SP + 1) << 8);
-				uint8_t rightNibble = _mmu->readRam(_registers->SP);
-				_registers->SP += 2;
-				_registers->PC = (leftNibble | rightNibble);
-				return;
-			}
-			else
-			{
-				_registers->PC++;
-				return;
-			}
-		}
-	}
-
-	void Cpu::RETI() // TODO  Unknown if the IME is enabled after execution of this
-	{
-		_registers->setInterruptEnabled(true);
-		uint16_t leftNibble = (_mmu->readRam(_registers->SP + 1) << 8);
-		uint8_t rightNibble = _mmu->readRam(_registers->SP);
-		_registers->SP += 2;
-		_registers->PC = (leftNibble | rightNibble);
-		_interruptManager->setMasterInterrupt(true);
-	}
-
-	void Cpu::RST_p(const uint16_t &p)
-	{
-		_registers->SP--;
-		_mmu->writeRam(_registers->SP, (((_registers->PC + 1) & 0xFF00) >> 8));
-		_registers->SP--;
-		_mmu->writeRam(_registers->SP, ((_registers->PC + 1) & 0x00FF));
-		_registers->PC = p;
 	}
 
 	bool Cpu::checkAddHalfCarry(const uint8_t &a, const uint8_t &b)
@@ -2402,30 +181,31 @@ namespace gasyboy
 		switch (_currentOpcode)
 		{
 		case 0x0:
+			NOP();
 			_registers->PC++;
 			break;
 		case 0x01:
-			LD_rr_16(_registers->PC + 1, "BC");
+			LD_rr_16(_registers->PC + 1, Register::RegisterPairName::BC);
 			_registers->PC += 3;
 			break;
 		case 0x02:
-			LD_16_r(_registers->BC.get(), 'A');
+			LD_16_r(_registers->BC.get(), Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x03:
-			INC_rr("BC");
+			INC_rr(Register::RegisterPairName::BC);
 			_registers->PC++;
 			break;
 		case 0x04:
-			INC_r('B');
+			INC_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x05:
-			DEC_r('B');
+			DEC_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x06:
-			LD_r_n(_mmu->readRam(_registers->PC + 1), 'B');
+			LD_r_n(_mmu->readRam(_registers->PC + 1), Register::RegisterName::B);
 			_registers->PC += 2;
 			break;
 		case 0x07:
@@ -2433,31 +213,31 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0x08:
-			LD_16_rr(next2bytes(_registers->PC + 1), "SP");
+			LD_16_rr(next2bytes(_registers->PC + 1), Register::RegisterPairName::SP);
 			_registers->PC += 3;
 			break;
 		case 0x09:
-			ADD_HL_rr("BC");
+			ADD_HL_rr(Register::RegisterPairName::BC);
 			_registers->PC++;
 			break;
 		case 0x0A:
-			LD_r_16(_registers->BC.get(), 'A');
+			LD_r_16(_registers->BC.get(), Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x0B:
-			DEC_rr("BC");
+			DEC_rr(Register::RegisterPairName::BC);
 			_registers->PC++;
 			break;
 		case 0x0C:
-			INC_r('C');
+			INC_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x0D:
-			DEC_r('C');
+			DEC_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x0E:
-			LD_r_n(_mmu->readRam(_registers->PC + 1), 'C');
+			LD_r_n(_mmu->readRam(_registers->PC + 1), Register::RegisterName::C);
 			_registers->PC += 2;
 			break;
 		case 0x0F:
@@ -2470,27 +250,27 @@ namespace gasyboy
 			Timer::resetDIV();
 			break;
 		case 0x11:
-			LD_rr_16(_registers->PC + 1, "DE");
+			LD_rr_16(_registers->PC + 1, Register::RegisterPairName::DE);
 			_registers->PC += 3;
 			break;
 		case 0x12:
-			LD_16_r(_registers->DE.get(), 'A');
+			LD_16_r(_registers->DE.get(), Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x13:
-			INC_rr("DE");
+			INC_rr(Register::RegisterPairName::DE);
 			_registers->PC++;
 			break;
 		case 0x14:
-			INC_r('D');
+			INC_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x15:
-			DEC_r('D');
+			DEC_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x16:
-			LD_r_n(_mmu->readRam(_registers->PC + 1), 'D');
+			LD_r_n(_mmu->readRam(_registers->PC + 1), Register::RegisterName::D);
 			_registers->PC += 2;
 			break;
 		case 0x17:
@@ -2501,27 +281,27 @@ namespace gasyboy
 			JR_e(_mmu->readRam(_registers->PC + 1));
 			break;
 		case 0x19:
-			ADD_HL_rr("DE");
+			ADD_HL_rr(Register::RegisterPairName::DE);
 			_registers->PC++;
 			break;
 		case 0x1A:
-			LD_r_16(_registers->DE.get(), 'A');
+			LD_r_16(_registers->DE.get(), Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x1B:
-			DEC_rr("DE");
+			DEC_rr(Register::RegisterPairName::DE);
 			_registers->PC++;
 			break;
 		case 0x1C:
-			INC_r('E');
+			INC_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x1D:
-			DEC_r('E');
+			DEC_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x1E:
-			LD_r_n(_mmu->readRam(_registers->PC + 1), 'E');
+			LD_r_n(_mmu->readRam(_registers->PC + 1), Register::RegisterName::E);
 			_registers->PC += 2;
 			break;
 		case 0x1F:
@@ -2530,31 +310,31 @@ namespace gasyboy
 			break;
 		case 0x20:
 			JR_NZ_e(_mmu->readRam(_registers->PC + 1));
-			_registers->AF.getFlag('Z');
+			_registers->AF.getFlag(Register::FlagName::Z);
 			break;
 		case 0x21:
-			LD_rr_nn(next2bytes(_registers->PC + 1), "HL");
+			LD_rr_nn(next2bytes(_registers->PC + 1), Register::RegisterPairName::HL);
 			_registers->PC += 3;
 			break;
 		case 0x22:
-			LD_16_r(_registers->HL.get(), 'A');
-			INC_rr("HL");
+			LD_16_r(_registers->HL.get(), Register::RegisterName::A);
+			INC_rr(Register::RegisterPairName::HL);
 			_registers->PC++;
 			break;
 		case 0x23:
-			INC_rr("HL");
+			INC_rr(Register::RegisterPairName::HL);
 			_registers->PC++;
 			break;
 		case 0x24:
-			INC_r('H');
+			INC_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x25:
-			DEC_r('H');
+			DEC_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x26:
-			LD_r_n(_mmu->readRam(_registers->PC + 1), 'H');
+			LD_r_n(_mmu->readRam(_registers->PC + 1), Register::RegisterName::H);
 			_registers->PC += 2;
 			break;
 		case 0x27:
@@ -2565,28 +345,28 @@ namespace gasyboy
 			JR_Z_e(_mmu->readRam(_registers->PC + 1));
 			break;
 		case 0x29:
-			ADD_HL_rr("HL");
+			ADD_HL_rr(Register::RegisterPairName::HL);
 			_registers->PC++;
 			break;
 		case 0x2A:
-			LD_r_n(_mmu->readRam(_registers->HL.get()), 'A');
-			INC_rr("HL");
+			LD_r_n(_mmu->readRam(_registers->HL.get()), Register::RegisterName::A);
+			INC_rr(Register::RegisterPairName::HL);
 			_registers->PC++;
 			break;
 		case 0x2B:
-			DEC_rr("HL");
+			DEC_rr(Register::RegisterPairName::HL);
 			_registers->PC++;
 			break;
 		case 0x2C:
-			INC_r('L');
+			INC_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x2D:
-			DEC_r('L');
+			DEC_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x2E:
-			LD_r_n(_mmu->readRam(_registers->PC + 1), 'L');
+			LD_r_n(_mmu->readRam(_registers->PC + 1), Register::RegisterName::L);
 			_registers->PC += 2;
 			break;
 		case 0x2F:
@@ -2597,16 +377,16 @@ namespace gasyboy
 			JR_NC_e(_mmu->readRam(_registers->PC + 1));
 			break;
 		case 0x31:
-			LD_rr_nn(next2bytes(_registers->PC + 1), "SP");
+			LD_rr_nn(next2bytes(_registers->PC + 1), Register::RegisterPairName::SP);
 			_registers->PC += 3;
 			break;
 		case 0x32:
-			LD_16_r(_registers->HL.get(), 'A');
-			DEC_rr("HL");
+			LD_16_r(_registers->HL.get(), Register::RegisterName::A);
+			DEC_rr(Register::RegisterPairName::HL);
 			_registers->PC++;
 			break;
 		case 0x33:
-			INC_rr("SP");
+			INC_rr(Register::RegisterPairName::SP);
 			_registers->PC++;
 			break;
 		case 0x34:
@@ -2629,28 +409,28 @@ namespace gasyboy
 			JR_C_e(_mmu->readRam(_registers->PC + 1));
 			break;
 		case 0x39:
-			ADD_HL_rr("SP");
+			ADD_HL_rr(Register::RegisterPairName::SP);
 			_registers->PC++;
 			break;
 		case 0x3A:
-			LD_r_16(_registers->HL.get(), 'A');
-			DEC_rr("HL");
+			LD_r_16(_registers->HL.get(), Register::RegisterName::A);
+			DEC_rr(Register::RegisterPairName::HL);
 			_registers->PC++;
 			break;
 		case 0x3B:
-			DEC_rr("SP");
+			DEC_rr(Register::RegisterPairName::SP);
 			_registers->PC++;
 			break;
 		case 0x3C:
-			INC_r('A');
+			INC_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x3D:
-			DEC_r('A');
+			DEC_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x3E:
-			LD_r_n(_mmu->readRam(_registers->PC + 1), 'A');
+			LD_r_n(_mmu->readRam(_registers->PC + 1), Register::RegisterName::A);
 			_registers->PC += 2;
 			break;
 		case 0x3F:
@@ -2658,219 +438,219 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0x40:
-			LD_r_r('B', 'B');
+			LD_r_r(Register::RegisterName::B, Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x41:
-			LD_r_r('C', 'B');
+			LD_r_r(Register::RegisterName::C, Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x42:
-			LD_r_r('D', 'B');
+			LD_r_r(Register::RegisterName::D, Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x43:
-			LD_r_r('E', 'B');
+			LD_r_r(Register::RegisterName::E, Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x44:
-			LD_r_r('H', 'B');
+			LD_r_r(Register::RegisterName::H, Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x45:
-			LD_r_r('L', 'B');
+			LD_r_r(Register::RegisterName::L, Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x46:
-			LD_r_16(_registers->HL.get(), 'B');
+			LD_r_16(_registers->HL.get(), Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x47:
-			LD_r_r('A', 'B');
+			LD_r_r(Register::RegisterName::A, Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x48:
-			LD_r_r('B', 'C');
+			LD_r_r(Register::RegisterName::B, Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x49:
-			LD_r_r('C', 'C');
+			LD_r_r(Register::RegisterName::C, Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x4A:
-			LD_r_r('D', 'C');
+			LD_r_r(Register::RegisterName::D, Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x4B:
-			LD_r_r('E', 'C');
+			LD_r_r(Register::RegisterName::E, Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x4C:
-			LD_r_r('H', 'C');
+			LD_r_r(Register::RegisterName::H, Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x4D:
-			LD_r_r('L', 'C');
+			LD_r_r(Register::RegisterName::L, Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x4E:
-			LD_r_16(_registers->HL.get(), 'C');
+			LD_r_16(_registers->HL.get(), Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x4F:
-			LD_r_r('A', 'C');
+			LD_r_r(Register::RegisterName::A, Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x50:
-			LD_r_r('B', 'D');
+			LD_r_r(Register::RegisterName::B, Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x51:
-			LD_r_r('C', 'D');
+			LD_r_r(Register::RegisterName::C, Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x52:
-			LD_r_r('D', 'D');
+			LD_r_r(Register::RegisterName::D, Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x53:
-			LD_r_r('E', 'D');
+			LD_r_r(Register::RegisterName::E, Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x54:
-			LD_r_r('H', 'D');
+			LD_r_r(Register::RegisterName::H, Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x55:
-			LD_r_r('L', 'D');
+			LD_r_r(Register::RegisterName::L, Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x56:
-			LD_r_16(_registers->HL.get(), 'D');
+			LD_r_16(_registers->HL.get(), Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x57:
-			LD_r_r('A', 'D');
+			LD_r_r(Register::RegisterName::A, Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x58:
-			LD_r_r('B', 'E');
+			LD_r_r(Register::RegisterName::B, Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x59:
-			LD_r_r('C', 'E');
+			LD_r_r(Register::RegisterName::C, Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x5A:
-			LD_r_r('D', 'E');
+			LD_r_r(Register::RegisterName::D, Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x5B:
-			LD_r_r('E', 'E');
+			LD_r_r(Register::RegisterName::E, Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x5C:
-			LD_r_r('H', 'E');
+			LD_r_r(Register::RegisterName::H, Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x5D:
-			LD_r_r('L', 'E');
+			LD_r_r(Register::RegisterName::L, Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x5E:
-			LD_r_16(_registers->HL.get(), 'E');
+			LD_r_16(_registers->HL.get(), Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x5F:
-			LD_r_r('A', 'E');
+			LD_r_r(Register::RegisterName::A, Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x60:
-			LD_r_r('B', 'H');
+			LD_r_r(Register::RegisterName::B, Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x61:
-			LD_r_r('C', 'H');
+			LD_r_r(Register::RegisterName::C, Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x62:
-			LD_r_r('D', 'H');
+			LD_r_r(Register::RegisterName::D, Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x63:
-			LD_r_r('E', 'H');
+			LD_r_r(Register::RegisterName::E, Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x64:
-			LD_r_r('H', 'H');
+			LD_r_r(Register::RegisterName::H, Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x65:
-			LD_r_r('L', 'H');
+			LD_r_r(Register::RegisterName::L, Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x66:
-			LD_r_16(_registers->HL.get(), 'H');
+			LD_r_16(_registers->HL.get(), Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x67:
-			LD_r_r('A', 'H');
+			LD_r_r(Register::RegisterName::A, Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x68:
-			LD_r_r('B', 'L');
+			LD_r_r(Register::RegisterName::B, Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x69:
-			LD_r_r('C', 'L');
+			LD_r_r(Register::RegisterName::C, Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x6A:
-			LD_r_r('D', 'L');
+			LD_r_r(Register::RegisterName::D, Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x6B:
-			LD_r_r('E', 'L');
+			LD_r_r(Register::RegisterName::E, Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x6C:
-			LD_r_r('H', 'L');
+			LD_r_r(Register::RegisterName::H, Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x6D:
-			LD_r_r('L', 'L');
+			LD_r_r(Register::RegisterName::L, Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x6E:
-			LD_r_16(_registers->HL.get(), 'L');
+			LD_r_16(_registers->HL.get(), Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x6F:
-			LD_r_r('A', 'L');
+			LD_r_r(Register::RegisterName::A, Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x70:
-			LD_16_r(_registers->HL.get(), 'B');
+			LD_16_r(_registers->HL.get(), Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x71:
-			LD_16_r(_registers->HL.get(), 'C');
+			LD_16_r(_registers->HL.get(), Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x72:
-			LD_16_r(_registers->HL.get(), 'D');
+			LD_16_r(_registers->HL.get(), Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x73:
-			LD_16_r(_registers->HL.get(), 'E');
+			LD_16_r(_registers->HL.get(), Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x74:
-			LD_16_r(_registers->HL.get(), 'H');
+			LD_16_r(_registers->HL.get(), Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x75:
-			LD_16_r(_registers->HL.get(), 'L');
+			LD_16_r(_registers->HL.get(), Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x76:
@@ -2878,63 +658,63 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0x77:
-			LD_16_r(_registers->HL.get(), 'A');
+			LD_16_r(_registers->HL.get(), Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x78:
-			LD_r_r('B', 'A');
+			LD_r_r(Register::RegisterName::B, Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x79:
-			LD_r_r('C', 'A');
+			LD_r_r(Register::RegisterName::C, Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x7A:
-			LD_r_r('D', 'A');
+			LD_r_r(Register::RegisterName::D, Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x7B:
-			LD_r_r('E', 'A');
+			LD_r_r(Register::RegisterName::E, Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x7C:
-			LD_r_r('H', 'A');
+			LD_r_r(Register::RegisterName::H, Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x7D:
-			LD_r_r('L', 'A');
+			LD_r_r(Register::RegisterName::L, Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x7E:
-			LD_r_16(_registers->HL.get(), 'A');
+			LD_r_16(_registers->HL.get(), Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x7F:
-			LD_r_r('A', 'A');
+			LD_r_r(Register::RegisterName::A, Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x80:
-			ADD_A_r('B');
+			ADD_A_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x81:
-			ADD_A_r('C');
+			ADD_A_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x82:
-			ADD_A_r('D');
+			ADD_A_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x83:
-			ADD_A_r('E');
+			ADD_A_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x84:
-			ADD_A_r('H');
+			ADD_A_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x85:
-			ADD_A_r('L');
+			ADD_A_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x86:
@@ -2942,31 +722,31 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0x87:
-			ADD_A_r('A');
+			ADD_A_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x88:
-			ADC_A_r('B');
+			ADC_A_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x89:
-			ADC_A_r('C');
+			ADC_A_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x8A:
-			ADC_A_r('D');
+			ADC_A_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x8B:
-			ADC_A_r('E');
+			ADC_A_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x8C:
-			ADC_A_r('H');
+			ADC_A_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x8D:
-			ADC_A_r('L');
+			ADC_A_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x8E:
@@ -2974,31 +754,31 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0x8F:
-			ADC_A_r('A');
+			ADC_A_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x90:
-			SUB_r('B');
+			SUB_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x91:
-			SUB_r('C');
+			SUB_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x92:
-			SUB_r('D');
+			SUB_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x93:
-			SUB_r('E');
+			SUB_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x94:
-			SUB_r('H');
+			SUB_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x95:
-			SUB_r('L');
+			SUB_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x96:
@@ -3006,31 +786,31 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0x97:
-			SUB_r('A');
+			SUB_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0x98:
-			SBC_r('B');
+			SBC_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0x99:
-			SBC_r('C');
+			SBC_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0x9A:
-			SBC_r('D');
+			SBC_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0x9B:
-			SBC_r('E');
+			SBC_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0x9C:
-			SBC_r('H');
+			SBC_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0x9D:
-			SBC_r('L');
+			SBC_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0x9E:
@@ -3038,31 +818,31 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0x9F:
-			SBC_r('A');
+			SBC_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0xA0:
-			AND_r('B');
+			AND_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0xA1:
-			AND_r('C');
+			AND_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0xA2:
-			AND_r('D');
+			AND_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0xA3:
-			AND_r('E');
+			AND_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0xA4:
-			AND_r('H');
+			AND_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0xA5:
-			AND_r('L');
+			AND_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0xA6:
@@ -3070,31 +850,31 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0xA7:
-			AND_r('A');
+			AND_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0xA8:
-			XOR_r('B');
+			XOR_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0xA9:
-			XOR_r('C');
+			XOR_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0xAA:
-			XOR_r('D');
+			XOR_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0xAB:
-			XOR_r('E');
+			XOR_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0xAC:
-			XOR_r('H');
+			XOR_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0xAD:
-			XOR_r('L');
+			XOR_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0xAE:
@@ -3102,31 +882,31 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0xAF:
-			XOR_r('A');
+			XOR_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0xB0:
-			OR_r('B');
+			OR_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0xB1:
-			OR_r('C');
+			OR_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0xB2:
-			OR_r('D');
+			OR_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0xB3:
-			OR_r('E');
+			OR_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0xB4:
-			OR_r('H');
+			OR_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0xB5:
-			OR_r('L');
+			OR_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0xB6:
@@ -3134,31 +914,31 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0xB7:
-			OR_r('A');
+			OR_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0xB8:
-			CP_r('B');
+			CP_r(Register::RegisterName::B);
 			_registers->PC++;
 			break;
 		case 0xB9:
-			CP_r('C');
+			CP_r(Register::RegisterName::C);
 			_registers->PC++;
 			break;
 		case 0xBA:
-			CP_r('D');
+			CP_r(Register::RegisterName::D);
 			_registers->PC++;
 			break;
 		case 0xBB:
-			CP_r('E');
+			CP_r(Register::RegisterName::E);
 			_registers->PC++;
 			break;
 		case 0xBC:
-			CP_r('H');
+			CP_r(Register::RegisterName::H);
 			_registers->PC++;
 			break;
 		case 0xBD:
-			CP_r('L');
+			CP_r(Register::RegisterName::L);
 			_registers->PC++;
 			break;
 		case 0xBE:
@@ -3166,27 +946,27 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0xBF:
-			CP_r('A');
+			CP_r(Register::RegisterName::A);
 			_registers->PC++;
 			break;
 		case 0xC0:
-			RET_c("NZ");
+			RET_c(Register::FlagName::NZ);
 			break;
 		case 0xC1:
-			POP("BC");
+			POP(Register::RegisterPairName::BC);
 			_registers->PC++;
 			break;
 		case 0xC2:
-			JP_c_16("NZ", next2bytes(_registers->PC + 1));
+			JP_c_16(Register::FlagName::NZ, next2bytes(_registers->PC + 1));
 			break;
 		case 0xC3:
 			JP_16(_registers->PC + 1);
 			break;
 		case 0xC4:
-			CALL_c("NZ");
+			CALL_c(Register::FlagName::NZ);
 			break;
 		case 0xC5:
-			PUSH("BC");
+			PUSH(Register::RegisterPairName::BC);
 			_registers->PC++;
 			break;
 		case 0xC6:
@@ -3197,17 +977,17 @@ namespace gasyboy
 			RST_p(0x00);
 			break;
 		case 0xC8:
-			RET_c("Z");
+			RET_c(Register::FlagName::Z);
 			break;
 		case 0xC9:
 			RET();
 			break;
 		case 0xCA:
-			JP_c_16("Z", next2bytes(_registers->PC + 1));
+			JP_c_16(Register::FlagName::Z, next2bytes(_registers->PC + 1));
 			break;
 			// REFER TO CB PREFIX FOR SPECIAL INSTRUCTIONS FURTHER BELOW
 		case 0xCC:
-			CALL_c("Z");
+			CALL_c(Register::FlagName::Z);
 			break;
 		case 0xCD:
 			CALL();
@@ -3220,20 +1000,20 @@ namespace gasyboy
 			RST_p(0x08);
 			break;
 		case 0xD0:
-			RET_c("NC");
+			RET_c(Register::FlagName::NC);
 			break;
 		case 0xD1:
-			POP("DE");
+			POP(Register::RegisterPairName::DE);
 			_registers->PC++;
 			break;
 		case 0xD2:
-			JP_c_16("NC", next2bytes(_registers->PC + 1));
+			JP_c_16(Register::FlagName::NC, next2bytes(_registers->PC + 1));
 			break;
 		case 0xD4:
-			CALL_c("NC");
+			CALL_c(Register::FlagName::NC);
 			break;
 		case 0xD5:
-			PUSH("DE");
+			PUSH(Register::RegisterPairName::DE);
 			_registers->PC++;
 			break;
 		case 0xD6:
@@ -3244,16 +1024,16 @@ namespace gasyboy
 			RST_p(0x10);
 			break;
 		case 0xD8:
-			RET_c("C");
+			RET_c(Register::FlagName::C);
 			break;
 		case 0xD9:
 			RETI();
 			break;
 		case 0xDA:
-			JP_c_16("C", next2bytes(_registers->PC + 1));
+			JP_c_16(Register::FlagName::C, next2bytes(_registers->PC + 1));
 			break;
 		case 0xDC:
-			CALL_c("C");
+			CALL_c(Register::FlagName::C);
 			break;
 		case 0xDE:
 			SBC_n(_mmu->readRam(_registers->PC + 1));
@@ -3267,7 +1047,7 @@ namespace gasyboy
 			_registers->PC += 2;
 			break;
 		case 0xE1:
-			POP("HL");
+			POP(Register::RegisterPairName::HL);
 			_registers->PC++;
 			break;
 		case 0xE2:
@@ -3275,7 +1055,7 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0xE5:
-			PUSH("HL");
+			PUSH(Register::RegisterPairName::HL);
 			_registers->PC++;
 			break;
 		case 0xE6:
@@ -3293,7 +1073,7 @@ namespace gasyboy
 			JP_16();
 			break;
 		case 0xEA:
-			LD_16_r(next2bytes(_registers->PC + 1), 'A');
+			LD_16_r(next2bytes(_registers->PC + 1), Register::RegisterName::A);
 			_registers->PC += 3;
 			break;
 		case 0xEE:
@@ -3308,7 +1088,7 @@ namespace gasyboy
 			_registers->PC += 2;
 			break;
 		case 0xF1:
-			POP("AF");
+			POP(Register::RegisterPairName::AF);
 			_registers->PC++;
 			break;
 		case 0xF2:
@@ -3320,7 +1100,7 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0xF5:
-			PUSH("AF");
+			PUSH(Register::RegisterPairName::AF);
 			_registers->PC++;
 			break;
 		case 0xF6:
@@ -3339,7 +1119,7 @@ namespace gasyboy
 			_registers->PC++;
 			break;
 		case 0xFA:
-			LD_r_16(next2bytes(_registers->PC + 1), 'A');
+			LD_r_16(next2bytes(_registers->PC + 1), Register::RegisterName::A);
 			_registers->PC += 3;
 			break;
 		case 0xFB:
@@ -3364,27 +1144,27 @@ namespace gasyboy
 			switch (_mmu->readRam(_registers->PC))
 			{
 			case 0x00:
-				RLC_r('B');
+				RLC_r(Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x01:
-				RLC_r('C');
+				RLC_r(Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x02:
-				RLC_r('D');
+				RLC_r(Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x03:
-				RLC_r('E');
+				RLC_r(Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x04:
-				RLC_r('H');
+				RLC_r(Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x05:
-				RLC_r('L');
+				RLC_r(Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x06:
@@ -3392,31 +1172,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x07:
-				RLC_r('A');
+				RLC_r(Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x08:
-				RRC_r('B');
+				RRC_r(Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x09:
-				RRC_r('C');
+				RRC_r(Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x0A:
-				RRC_r('D');
+				RRC_r(Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x0B:
-				RRC_r('E');
+				RRC_r(Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x0C:
-				RRC_r('H');
+				RRC_r(Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x0D:
-				RRC_r('L');
+				RRC_r(Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x0E:
@@ -3424,31 +1204,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x0F:
-				RRC_r('A');
+				RRC_r(Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x10:
-				RL_r('B');
+				RL_r(Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x11:
-				RL_r('C');
+				RL_r(Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x12:
-				RL_r('D');
+				RL_r(Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x13:
-				RL_r('E');
+				RL_r(Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x14:
-				RL_r('H');
+				RL_r(Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x15:
-				RL_r('L');
+				RL_r(Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x16:
@@ -3456,31 +1236,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x17:
-				RL_r('A');
+				RL_r(Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x18:
-				RR_r('B');
+				RR_r(Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x19:
-				RR_r('C');
+				RR_r(Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x1A:
-				RR_r('D');
+				RR_r(Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x1B:
-				RR_r('E');
+				RR_r(Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x1C:
-				RR_r('H');
+				RR_r(Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x1D:
-				RR_r('L');
+				RR_r(Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x1E:
@@ -3488,31 +1268,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x1F:
-				RR_r('A');
+				RR_r(Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x20:
-				SLA_r('B');
+				SLA_r(Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x21:
-				SLA_r('C');
+				SLA_r(Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x22:
-				SLA_r('D');
+				SLA_r(Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x23:
-				SLA_r('E');
+				SLA_r(Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x24:
-				SLA_r('H');
+				SLA_r(Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x25:
-				SLA_r('L');
+				SLA_r(Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x26:
@@ -3520,31 +1300,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x27:
-				SLA_r('A');
+				SLA_r(Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x28:
-				SRA_r('B');
+				SRA_r(Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x29:
-				SRA_r('C');
+				SRA_r(Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x2A:
-				SRA_r('D');
+				SRA_r(Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x2B:
-				SRA_r('E');
+				SRA_r(Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x2C:
-				SRA_r('H');
+				SRA_r(Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x2D:
-				SRA_r('L');
+				SRA_r(Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x2E:
@@ -3552,31 +1332,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x2F:
-				SRA_r('A');
+				SRA_r(Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x30:
-				SWAP_r('B');
+				SWAP_r(Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x31:
-				SWAP_r('C');
+				SWAP_r(Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x32:
-				SWAP_r('D');
+				SWAP_r(Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x33:
-				SWAP_r('E');
+				SWAP_r(Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x34:
-				SWAP_r('H');
+				SWAP_r(Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x35:
-				SWAP_r('L');
+				SWAP_r(Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x36:
@@ -3584,31 +1364,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x37:
-				SWAP_r('A');
+				SWAP_r(Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x38:
-				SRL_r('B');
+				SRL_r(Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x39:
-				SRL_r('C');
+				SRL_r(Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x3A:
-				SRL_r('D');
+				SRL_r(Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x3B:
-				SRL_r('E');
+				SRL_r(Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x3C:
-				SRL_r('H');
+				SRL_r(Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x3D:
-				SRL_r('L');
+				SRL_r(Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x3E:
@@ -3616,31 +1396,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x3F:
-				SRL_r('A');
+				SRL_r(Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x40:
-				BIT_b_r(0, 'B');
+				BIT_b_r(0, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x41:
-				BIT_b_r(0, 'C');
+				BIT_b_r(0, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x42:
-				BIT_b_r(0, 'D');
+				BIT_b_r(0, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x43:
-				BIT_b_r(0, 'E');
+				BIT_b_r(0, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x44:
-				BIT_b_r(0, 'H');
+				BIT_b_r(0, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x45:
-				BIT_b_r(0, 'L');
+				BIT_b_r(0, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x46:
@@ -3648,31 +1428,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x47:
-				BIT_b_r(0, 'A');
+				BIT_b_r(0, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x48:
-				BIT_b_r(1, 'B');
+				BIT_b_r(1, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x49:
-				BIT_b_r(1, 'C');
+				BIT_b_r(1, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x4A:
-				BIT_b_r(1, 'D');
+				BIT_b_r(1, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x4B:
-				BIT_b_r(1, 'E');
+				BIT_b_r(1, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x4C:
-				BIT_b_r(1, 'H');
+				BIT_b_r(1, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x4D:
-				BIT_b_r(1, 'L');
+				BIT_b_r(1, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x4E:
@@ -3680,31 +1460,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x4F:
-				BIT_b_r(1, 'A');
+				BIT_b_r(1, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x50:
-				BIT_b_r(2, 'B');
+				BIT_b_r(2, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x51:
-				BIT_b_r(2, 'C');
+				BIT_b_r(2, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x52:
-				BIT_b_r(2, 'D');
+				BIT_b_r(2, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x53:
-				BIT_b_r(2, 'E');
+				BIT_b_r(2, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x54:
-				BIT_b_r(2, 'H');
+				BIT_b_r(2, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x55:
-				BIT_b_r(2, 'L');
+				BIT_b_r(2, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x56:
@@ -3712,31 +1492,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x57:
-				BIT_b_r(2, 'A');
+				BIT_b_r(2, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x58:
-				BIT_b_r(3, 'B');
+				BIT_b_r(3, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x59:
-				BIT_b_r(3, 'C');
+				BIT_b_r(3, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x5A:
-				BIT_b_r(3, 'D');
+				BIT_b_r(3, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x5B:
-				BIT_b_r(3, 'E');
+				BIT_b_r(3, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x5C:
-				BIT_b_r(3, 'H');
+				BIT_b_r(3, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x5D:
-				BIT_b_r(3, 'L');
+				BIT_b_r(3, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x5E:
@@ -3744,31 +1524,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x5F:
-				BIT_b_r(3, 'A');
+				BIT_b_r(3, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x60:
-				BIT_b_r(4, 'B');
+				BIT_b_r(4, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x61:
-				BIT_b_r(4, 'C');
+				BIT_b_r(4, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x62:
-				BIT_b_r(4, 'D');
+				BIT_b_r(4, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x63:
-				BIT_b_r(4, 'E');
+				BIT_b_r(4, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x64:
-				BIT_b_r(4, 'H');
+				BIT_b_r(4, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x65:
-				BIT_b_r(4, 'L');
+				BIT_b_r(4, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x66:
@@ -3776,31 +1556,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x67:
-				BIT_b_r(4, 'A');
+				BIT_b_r(4, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x68:
-				BIT_b_r(5, 'B');
+				BIT_b_r(5, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x69:
-				BIT_b_r(5, 'C');
+				BIT_b_r(5, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x6A:
-				BIT_b_r(5, 'D');
+				BIT_b_r(5, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x6B:
-				BIT_b_r(5, 'E');
+				BIT_b_r(5, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x6C:
-				BIT_b_r(5, 'H');
+				BIT_b_r(5, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x6D:
-				BIT_b_r(5, 'L');
+				BIT_b_r(5, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x6E:
@@ -3808,31 +1588,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x6F:
-				BIT_b_r(5, 'A');
+				BIT_b_r(5, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x70:
-				BIT_b_r(6, 'B');
+				BIT_b_r(6, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x71:
-				BIT_b_r(6, 'C');
+				BIT_b_r(6, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x72:
-				BIT_b_r(6, 'D');
+				BIT_b_r(6, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x73:
-				BIT_b_r(6, 'E');
+				BIT_b_r(6, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x74:
-				BIT_b_r(6, 'H');
+				BIT_b_r(6, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x75:
-				BIT_b_r(6, 'L');
+				BIT_b_r(6, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x76:
@@ -3840,31 +1620,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x77:
-				BIT_b_r(6, 'A');
+				BIT_b_r(6, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x78:
-				BIT_b_r(7, 'B');
+				BIT_b_r(7, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x79:
-				BIT_b_r(7, 'C');
+				BIT_b_r(7, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x7A:
-				BIT_b_r(7, 'D');
+				BIT_b_r(7, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x7B:
-				BIT_b_r(7, 'E');
+				BIT_b_r(7, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x7C:
-				BIT_b_r(7, 'H');
+				BIT_b_r(7, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x7D:
-				BIT_b_r(7, 'L');
+				BIT_b_r(7, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x7E:
@@ -3872,31 +1652,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x7F:
-				BIT_b_r(7, 'A');
+				BIT_b_r(7, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x80:
-				RES_b_r(0, 'B');
+				RES_b_r(0, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x81:
-				RES_b_r(0, 'C');
+				RES_b_r(0, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x82:
-				RES_b_r(0, 'D');
+				RES_b_r(0, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x83:
-				RES_b_r(0, 'E');
+				RES_b_r(0, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x84:
-				RES_b_r(0, 'H');
+				RES_b_r(0, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x85:
-				RES_b_r(0, 'L');
+				RES_b_r(0, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x86:
@@ -3904,31 +1684,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x87:
-				RES_b_r(0, 'A');
+				RES_b_r(0, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x88:
-				RES_b_r(1, 'B');
+				RES_b_r(1, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x89:
-				RES_b_r(1, 'C');
+				RES_b_r(1, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x8A:
-				RES_b_r(1, 'D');
+				RES_b_r(1, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x8B:
-				RES_b_r(1, 'E');
+				RES_b_r(1, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x8C:
-				RES_b_r(1, 'H');
+				RES_b_r(1, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x8D:
-				RES_b_r(1, 'L');
+				RES_b_r(1, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x8E:
@@ -3936,32 +1716,32 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x8F:
-				RES_b_r(1, 'A');
+				RES_b_r(1, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x90:
-				RES_b_r(2, 'B');
+				RES_b_r(2, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x91:
-				RES_b_r(2, 'C');
+				RES_b_r(2, Register::RegisterName::C);
 				;
 				_registers->PC++;
 				break;
 			case 0x92:
-				RES_b_r(2, 'D');
+				RES_b_r(2, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x93:
-				RES_b_r(2, 'E');
+				RES_b_r(2, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x94:
-				RES_b_r(2, 'H');
+				RES_b_r(2, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x95:
-				RES_b_r(2, 'L');
+				RES_b_r(2, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x96:
@@ -3969,31 +1749,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x97:
-				RES_b_r(2, 'A');
+				RES_b_r(2, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0x98:
-				RES_b_r(3, 'B');
+				RES_b_r(3, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0x99:
-				RES_b_r(3, 'C');
+				RES_b_r(3, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0x9A:
-				RES_b_r(3, 'D');
+				RES_b_r(3, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0x9B:
-				RES_b_r(3, 'E');
+				RES_b_r(3, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0x9C:
-				RES_b_r(3, 'H');
+				RES_b_r(3, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0x9D:
-				RES_b_r(3, 'L');
+				RES_b_r(3, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0x9E:
@@ -4001,31 +1781,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0x9F:
-				RES_b_r(3, 'A');
+				RES_b_r(3, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xA0:
-				RES_b_r(4, 'B');
+				RES_b_r(4, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xA1:
-				RES_b_r(4, 'C');
+				RES_b_r(4, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xA2:
-				RES_b_r(4, 'D');
+				RES_b_r(4, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xA3:
-				RES_b_r(4, 'E');
+				RES_b_r(4, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xA4:
-				RES_b_r(4, 'H');
+				RES_b_r(4, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xA5:
-				RES_b_r(4, 'L');
+				RES_b_r(4, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xA6:
@@ -4033,31 +1813,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xA7:
-				RES_b_r(4, 'A');
+				RES_b_r(4, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xA8:
-				RES_b_r(5, 'B');
+				RES_b_r(5, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xA9:
-				RES_b_r(5, 'C');
+				RES_b_r(5, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xAA:
-				RES_b_r(5, 'D');
+				RES_b_r(5, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xAB:
-				RES_b_r(5, 'E');
+				RES_b_r(5, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xAC:
-				RES_b_r(5, 'H');
+				RES_b_r(5, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xAD:
-				RES_b_r(5, 'L');
+				RES_b_r(5, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xAE:
@@ -4065,31 +1845,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xAF:
-				RES_b_r(5, 'A');
+				RES_b_r(5, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xB0:
-				RES_b_r(6, 'B');
+				RES_b_r(6, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xB1:
-				RES_b_r(6, 'C');
+				RES_b_r(6, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xB2:
-				RES_b_r(6, 'D');
+				RES_b_r(6, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xB3:
-				RES_b_r(6, 'E');
+				RES_b_r(6, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xB4:
-				RES_b_r(6, 'H');
+				RES_b_r(6, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xB5:
-				RES_b_r(6, 'L');
+				RES_b_r(6, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xB6:
@@ -4097,31 +1877,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xB7:
-				RES_b_r(6, 'A');
+				RES_b_r(6, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xB8:
-				RES_b_r(7, 'B');
+				RES_b_r(7, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xB9:
-				RES_b_r(7, 'C');
+				RES_b_r(7, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xBA:
-				RES_b_r(7, 'D');
+				RES_b_r(7, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xBB:
-				RES_b_r(7, 'E');
+				RES_b_r(7, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xBC:
-				RES_b_r(7, 'H');
+				RES_b_r(7, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xBD:
-				RES_b_r(7, 'L');
+				RES_b_r(7, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xBE:
@@ -4129,31 +1909,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xBF:
-				RES_b_r(7, 'A');
+				RES_b_r(7, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xC0:
-				SET_b_r(0, 'B');
+				SET_b_r(0, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xC1:
-				SET_b_r(0, 'C');
+				SET_b_r(0, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xC2:
-				SET_b_r(0, 'D');
+				SET_b_r(0, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xC3:
-				SET_b_r(0, 'E');
+				SET_b_r(0, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xC4:
-				SET_b_r(0, 'H');
+				SET_b_r(0, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xC5:
-				SET_b_r(0, 'L');
+				SET_b_r(0, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xC6:
@@ -4161,31 +1941,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xC7:
-				SET_b_r(0, 'A');
+				SET_b_r(0, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xC8:
-				SET_b_r(1, 'B');
+				SET_b_r(1, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xC9:
-				SET_b_r(1, 'C');
+				SET_b_r(1, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xCA:
-				SET_b_r(1, 'D');
+				SET_b_r(1, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xCB:
-				SET_b_r(1, 'E');
+				SET_b_r(1, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xCC:
-				SET_b_r(1, 'H');
+				SET_b_r(1, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xCD:
-				SET_b_r(1, 'L');
+				SET_b_r(1, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xCE:
@@ -4193,31 +1973,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xCF:
-				SET_b_r(1, 'A');
+				SET_b_r(1, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xD0:
-				SET_b_r(2, 'B');
+				SET_b_r(2, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xD1:
-				SET_b_r(2, 'C');
+				SET_b_r(2, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xD2:
-				SET_b_r(2, 'D');
+				SET_b_r(2, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xD3:
-				SET_b_r(2, 'E');
+				SET_b_r(2, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xD4:
-				SET_b_r(2, 'H');
+				SET_b_r(2, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xD5:
-				SET_b_r(2, 'L');
+				SET_b_r(2, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xD6:
@@ -4225,31 +2005,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xD7:
-				SET_b_r(2, 'A');
+				SET_b_r(2, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xD8:
-				SET_b_r(3, 'B');
+				SET_b_r(3, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xD9:
-				SET_b_r(3, 'C');
+				SET_b_r(3, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xDA:
-				SET_b_r(3, 'D');
+				SET_b_r(3, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xDB:
-				SET_b_r(3, 'E');
+				SET_b_r(3, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xDC:
-				SET_b_r(3, 'H');
+				SET_b_r(3, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xDD:
-				SET_b_r(3, 'L');
+				SET_b_r(3, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xDE:
@@ -4257,31 +2037,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xDF:
-				SET_b_r(3, 'A');
+				SET_b_r(3, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xE0:
-				SET_b_r(4, 'B');
+				SET_b_r(4, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xE1:
-				SET_b_r(4, 'C');
+				SET_b_r(4, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xE2:
-				SET_b_r(4, 'D');
+				SET_b_r(4, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xE3:
-				SET_b_r(4, 'E');
+				SET_b_r(4, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xE4:
-				SET_b_r(4, 'H');
+				SET_b_r(4, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xE5:
-				SET_b_r(4, 'L');
+				SET_b_r(4, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xE6:
@@ -4289,31 +2069,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xE7:
-				SET_b_r(4, 'A');
+				SET_b_r(4, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xE8:
-				SET_b_r(5, 'B');
+				SET_b_r(5, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xE9:
-				SET_b_r(5, 'C');
+				SET_b_r(5, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xEA:
-				SET_b_r(5, 'D');
+				SET_b_r(5, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xEB:
-				SET_b_r(5, 'E');
+				SET_b_r(5, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xEC:
-				SET_b_r(5, 'H');
+				SET_b_r(5, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xED:
-				SET_b_r(5, 'L');
+				SET_b_r(5, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xEE:
@@ -4321,31 +2101,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xEF:
-				SET_b_r(5, 'A');
+				SET_b_r(5, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xF0:
-				SET_b_r(6, 'B');
+				SET_b_r(6, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xF1:
-				SET_b_r(6, 'C');
+				SET_b_r(6, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xF2:
-				SET_b_r(6, 'D');
+				SET_b_r(6, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xF3:
-				SET_b_r(6, 'E');
+				SET_b_r(6, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xF4:
-				SET_b_r(6, 'H');
+				SET_b_r(6, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xF5:
-				SET_b_r(6, 'L');
+				SET_b_r(6, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xF6:
@@ -4353,31 +2133,31 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xF7:
-				SET_b_r(6, 'A');
+				SET_b_r(6, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 			case 0xF8:
-				SET_b_r(7, 'B');
+				SET_b_r(7, Register::RegisterName::B);
 				_registers->PC++;
 				break;
 			case 0xF9:
-				SET_b_r(7, 'C');
+				SET_b_r(7, Register::RegisterName::C);
 				_registers->PC++;
 				break;
 			case 0xFA:
-				SET_b_r(7, 'D');
+				SET_b_r(7, Register::RegisterName::D);
 				_registers->PC++;
 				break;
 			case 0xFB:
-				SET_b_r(7, 'E');
+				SET_b_r(7, Register::RegisterName::E);
 				_registers->PC++;
 				break;
 			case 0xFC:
-				SET_b_r(7, 'H');
+				SET_b_r(7, Register::RegisterName::H);
 				_registers->PC++;
 				break;
 			case 0xFD:
-				SET_b_r(7, 'L');
+				SET_b_r(7, Register::RegisterName::L);
 				_registers->PC++;
 				break;
 			case 0xFE:
@@ -4385,7 +2165,7 @@ namespace gasyboy
 				_registers->PC++;
 				break;
 			case 0xFF:
-				SET_b_r(7, 'A');
+				SET_b_r(7, Register::RegisterName::A);
 				_registers->PC++;
 				break;
 

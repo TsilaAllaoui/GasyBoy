@@ -10,6 +10,7 @@
 #include "gameboy.h"
 #include "logger.h"
 #include <thread>
+#include <chrono>
 #ifndef EMSCRIPTEN
 #include "imgui_impl_sdl2.h"
 #endif
@@ -67,8 +68,6 @@ namespace gasyboy
         const uint16_t cycle = static_cast<uint16_t>(_cpu->step());
         _cycleCounter += cycle;
         _timer->update(cycle);
-        _gamepad->handleEvent();
-        _interruptManager->handleInterrupts();
         _ppu->step(cycle);
     }
 
@@ -81,25 +80,12 @@ namespace gasyboy
     {
         bool running = true;
 
-        std::thread eventThread([&running, this]
-                                {
-            while (running)
-            {
-               _gamepad->handleEvent();
-               if (provider::UtilitiesProvider::getInstance()->wasReset)
-               {
-                reset();
-                provider::UtilitiesProvider::getInstance()->wasReset = false;
-               }
-            } });
-
         try
         {
             while (running)
             {
                 loop();
             }
-            eventThread.join();
         }
 
         catch (const exception::GbException &e)
@@ -135,22 +121,7 @@ namespace gasyboy
                     _ppu->_debugRender = false;
                 }
 
-                // Process SDL events while paused
-                SDL_Event event;
-                while (SDL_PollEvent(&event))
-                {
-#ifndef EMSCRIPTEN
-                    if (_debugMode)
-                    {
-                        ImGui_ImplSDL2_ProcessEvent(&event);
-                    }
-#endif
-                    if (event.type == SDL_QUIT)
-                    {
-                        GameBoy::state = GameBoy::State::STOPPED;
-                        return;
-                    }
-                }
+                _gamepad->handleEvent();
 
                 // Render debugger UI while paused
 #ifndef EMSCRIPTEN
@@ -161,6 +132,8 @@ namespace gasyboy
 #endif
             }
         }
+
+        _gamepad->handleEvent();
 
 #ifndef EMSCRIPTEN
         if (_debugMode)

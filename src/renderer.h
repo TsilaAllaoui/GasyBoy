@@ -53,6 +53,9 @@ namespace gasyboy
 
         void initWindow(int windowWidth, int windowHeight);
 
+        int _frameCount = 0;
+        std::chrono::steady_clock::time_point _fpsTimerStart = std::chrono::steady_clock::now();
+
     public:
         Renderer();
         ~Renderer();

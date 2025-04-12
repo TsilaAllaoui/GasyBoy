@@ -51,11 +51,6 @@ namespace gasyboy
             return;
         }
 
-        if (*LY == 0)
-        {
-            windowLineCounter = 0; // Reset each new frame
-        }
-
         _modeClock += cycle;
 
         switch (STAT->modeFlag)
@@ -248,20 +243,26 @@ namespace gasyboy
     // window pixel is marked (hiding BG-priority sprites).
     void Ppu::renderScanLineWindow(bool *rowPixels)
     {
+        // Only render the window if LY has reached WY and WX is valid.
         if (*LY < *WY || *WX >= 167)
             return;
+
+        // Reset the window internal line counter on the very first window line.
+        if (*LY == *WY)
+            windowLineCounter = 0;
 
         uint8_t wx = *WX;
         uint16_t baseAddress = LCDC->windowDisplaySelect ? 0x9C00 : 0x9800;
 
+        // Use the internal window counter (which starts at 0 when the window first appears)
         int tileY = windowLineCounter / 8;
-        int pixelYInTile = windowLineCounter & 7;
+        int pixelYInTile = windowLineCounter % 8;
         uint16_t tileMapRowAddr = baseAddress + tileY * 32;
 
         int pixelOffset = *LY * SCREEN_WIDTH;
         int startX = wx - 7;
 
-        // Render up to 21 tiles across the window.
+        // Draw up to 21 tiles covering the screen horizontally
         for (int tileX = 0; tileX < 21; tileX++)
         {
             uint16_t tileAddress = tileMapRowAddr + tileX;
@@ -276,20 +277,19 @@ namespace gasyboy
 
                 int windowPixelX = startX + tileX * 8 + x;
                 if (windowPixelX >= SCREEN_WIDTH)
-                    break; // Off the right edge
-
+                    break;
                 if (windowPixelX < 0)
-                    continue; // Off the left edge
+                    continue;
 
                 int colorIndex = _mmu->tiles[tileIndex].pixels[pixelYInTile][x];
                 int frameIndex = pixelOffset + windowPixelX;
                 _framebuffer[frameIndex] = _mmu->palette_BGP[colorIndex];
-                // Mark this pixel if the window color is nonzero.
                 if (colorIndex > 0)
                     rowPixels[windowPixelX] = true;
             }
         }
 
+        // Increment only if the window was drawn on this line.
         windowLineCounter++;
     }
 

@@ -41,6 +41,41 @@ namespace gasyboy
 
         // print the value of the 16bist register
         void show();
+
+        // enum for the register name
+        enum class RegisterName
+        {
+            A = 0,
+            B,
+            C,
+            D,
+            E,
+            H,
+            L,
+            F,
+            Z,
+        };
+
+        enum class RegisterPairName
+        {
+            AF = 9,
+            BC,
+            DE,
+            HL,
+            SP,
+            PC
+        };
+
+        // enum for flags
+        enum class FlagName
+        {
+            Z = 0x80,
+            N = 0x40,
+            H = 0x20,
+            C = 0x10,
+            NZ,
+            NC,
+        };
     };
 
     // the register with the flags (ie ; AF register)
@@ -53,9 +88,9 @@ namespace gasyboy
         ~SpecialRegister();
 
         // get/set the appropriate flag
-        bool getFlag(const char &reg);
-        void setFlag(const char &reg);
-        void clearFlag(const char &reg);
+        bool getFlag(const FlagName &reg);
+        void setFlag(const FlagName &reg);
+        void clearFlag(const FlagName &reg);
     };
 }
 

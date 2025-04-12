@@ -42,16 +42,15 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
 endif()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|MSVC")
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=c++20>)
-endif()
-
-
 # External libs directory
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
 # Add all source files in src/ excluding main.cpp
-file(GLOB GASYBOY_SOURCES_FILES src/*.cpp src/providers/*.cpp)
+file(GLOB_RECURSE GASYBOY_SOURCES_FILES
+"${CMAKE_CURRENT_SOURCE_DIR}/src/instructions/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/providers/*.cpp"
+)
 list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
 
 # Check if using Emscripten
@@ -61,6 +60,7 @@ if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/events
         ${CMAKE_CURRENT_SOURCE_DIR}/src/providers
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/instructions
     )
 
     # Creating executable
@@ -103,6 +103,7 @@ else()
         ${CMAKE_CURRENT_SOURCE_DIR}/src/debugger
         ${CMAKE_CURRENT_SOURCE_DIR}/src/events
         ${CMAKE_CURRENT_SOURCE_DIR}/src/providers
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/instructions
         ${EXTERNALS_DIR}/ImGuiFileDialog
     )
 

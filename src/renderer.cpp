@@ -110,6 +110,20 @@ namespace gasyboy
         // Present
         SDL_RenderCopy(_renderer, _viewportTexture, NULL, &_viewportRect);
         SDL_RenderPresent(_renderer);
+
+        // FPS Calculation and Update
+        _frameCount++;
+        auto currentTime = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - _fpsTimerStart).count();
+
+        if (elapsed >= 1000) // Update every 1 second
+        {
+            std::string title = "GasyBoy - FPS: " + std::to_string(_frameCount);
+            SDL_SetWindowTitle(_window, title.c_str());
+
+            _frameCount = 0;
+            _fpsTimerStart = currentTime;
+        }
     }
 
     void Renderer::draw()

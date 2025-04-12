@@ -30,10 +30,10 @@ namespace gasyboy
             SP = 0xFFFE;
 
             _registersMap = {
-                {"AF", AF},
-                {"BC", BC},
-                {"DE", DE},
-                {"HL", HL},
+                {Register::RegisterPairName::AF, AF},
+                {Register::RegisterPairName::BC, BC},
+                {Register::RegisterPairName::DE, DE},
+                {Register::RegisterPairName::HL, HL},
             };
         }
     }
@@ -74,15 +74,15 @@ namespace gasyboy
             SP = 0xFFFE;
 
             _registersMap = {
-                {"AF", AF},
-                {"BC", BC},
-                {"DE", DE},
-                {"HL", HL},
+                {Register::RegisterPairName::AF, AF},
+                {Register::RegisterPairName::BC, BC},
+                {Register::RegisterPairName::DE, DE},
+                {Register::RegisterPairName::HL, HL},
             };
         }
     }
 
-    Register Registers::getRegister(const std::string &reg)
+    Register Registers::getRegister(const Register::RegisterPairName &reg)
     {
         try
         {
@@ -103,40 +103,37 @@ namespace gasyboy
         }
     }
 
-    uint8_t Registers::getRegister(const char &reg)
+    uint8_t Registers::getRegister(const Register::RegisterName &reg)
     {
         switch (reg)
         {
-        case 'A':
+        case Register::RegisterName::A:
             return AF.getLeftRegister();
             break;
-        case 'B':
+        case Register::RegisterName::B:
             return BC.getLeftRegister();
             break;
-        case 'C':
+        case Register::RegisterName::C:
             return BC.getRightRegister();
             break;
-        case 'D':
+        case Register::RegisterName::D:
             return DE.getLeftRegister();
             break;
-        case 'E':
+        case Register::RegisterName::E:
             return DE.getRightRegister();
             break;
-        case 'H':
+        case Register::RegisterName::H:
             return HL.getLeftRegister();
             break;
-        case 'L':
+        case Register::RegisterName::L:
             return HL.getRightRegister();
             break;
         default:
-            std::string message("Invalid register: \"");
-            message += reg;
-            message += "\"";
-            throw exception::GbException(message);
+            throw exception::GbException("Invalid register: \"");
         }
     }
 
-    void Registers::setRegister(const std::string &reg, const uint16_t &value)
+    void Registers::setRegister(const Register::RegisterPairName &reg, const uint16_t &value)
     {
         try
         {
@@ -157,36 +154,33 @@ namespace gasyboy
         }
     }
 
-    void Registers::setRegister(const char &reg, const uint8_t &value)
+    void Registers::setRegister(const Register::RegisterName &reg, const uint8_t &value)
     {
         switch (reg)
         {
-        case 'A':
+        case Register::RegisterName::A:
             AF.setLeftRegister(value);
             break;
-        case 'B':
+        case Register::RegisterName::B:
             BC.setLeftRegister(value);
             break;
-        case 'C':
+        case Register::RegisterName::C:
             BC.setRightRegister(value);
             break;
-        case 'D':
+        case Register::RegisterName::D:
             DE.setLeftRegister(value);
             break;
-        case 'E':
+        case Register::RegisterName::E:
             DE.setRightRegister(value);
             break;
-        case 'H':
+        case Register::RegisterName::H:
             HL.setLeftRegister(value);
             break;
-        case 'L':
+        case Register::RegisterName::L:
             HL.setRightRegister(value);
             break;
         default:
-            std::string message("Invalid register: \"");
-            message += reg;
-            message += "\"";
-            throw exception::GbException(message);
+            throw exception::GbException("Invalid register: \"");
         }
     }
 

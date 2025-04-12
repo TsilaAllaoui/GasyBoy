@@ -10,4 +10,5 @@ gb-test-roms-master/
 
 # Files
 *.gb
+*.sav
 imgui.ini

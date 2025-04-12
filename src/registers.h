@@ -12,7 +12,7 @@ namespace gasyboy
     {
         std::shared_ptr<Mmu> _mmu;
 
-        std::map<std::string, Register> _registersMap;
+        std::map<Register::RegisterPairName, Register> _registersMap;
 
         // boolean to check interrupted state of the cpu
         bool _interruptEnabled;
@@ -35,12 +35,12 @@ namespace gasyboy
         void reset();
 
         // Get the corresponding register
-        Register getRegister(const std::string &reg);
-        uint8_t getRegister(const char &reg);
+        Register getRegister(const Register::RegisterPairName &reg);
+        uint8_t getRegister(const Register::RegisterName &reg);
 
         // Set corresponding register
-        void setRegister(const std::string &reg, const uint16_t &value);
-        void setRegister(const char &reg, const uint8_t &value);
+        void setRegister(const Register::RegisterPairName &reg, const uint16_t &value);
+        void setRegister(const Register::RegisterName &reg, const uint8_t &value);
 
         // Push PC to Sp and set PC to given address
         void pushSP(const uint16_t &address);

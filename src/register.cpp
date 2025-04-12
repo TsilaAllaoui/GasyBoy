@@ -68,28 +68,28 @@ namespace gasyboy
     {
     }
 
-    bool SpecialRegister::getFlag(const char &reg)
+    bool SpecialRegister::getFlag(const FlagName &reg)
     {
         try
         {
             bool value;
             switch (reg)
             {
-            case 'Z':
+            case FlagName::Z:
                 value = getRightRegister() & (1 << 7);
                 break;
-            case 'N':
+            case FlagName::N:
                 value = getRightRegister() & (1 << 6);
                 break;
-            case 'H':
+            case FlagName::H:
                 value = getRightRegister() & (1 << 5);
                 break;
-            case 'C':
+            case FlagName::C:
                 value = getRightRegister() & (1 << 4);
                 break;
             default:
                 std::stringstream message;
-                message << "Invalid register: \"" << reg << "\"";
+                message << "Invalid register\n";
                 throw exception::GbException(message.str());
             }
             return value;
@@ -102,28 +102,28 @@ namespace gasyboy
         }
     }
 
-    void SpecialRegister::setFlag(const char &reg)
+    void SpecialRegister::setFlag(const FlagName &reg)
     {
         try
         {
             uint8_t bit = 0;
             switch (reg)
             {
-            case 'Z':
+            case FlagName::Z:
                 bit = 0x80;
                 break;
-            case 'N':
+            case FlagName::N:
                 bit = 0x40;
                 break;
-            case 'H':
+            case FlagName::H:
                 bit = 0x20;
                 break;
-            case 'C':
+            case FlagName::C:
                 bit = 0x10;
                 break;
             default:
                 std::stringstream message;
-                message << "Invalid register: \"" << reg << "\"";
+                message << "Invalid register\n";
                 throw exception::GbException(message.str());
             }
             bit |= getRightRegister();
@@ -137,28 +137,28 @@ namespace gasyboy
         }
     }
 
-    void SpecialRegister::clearFlag(const char &reg)
+    void SpecialRegister::clearFlag(const FlagName &reg)
     {
         try
         {
             int bit = 0;
             switch (reg)
             {
-            case 'Z':
+            case FlagName::Z:
                 bit = (~0x80);
                 break;
-            case 'N':
+            case FlagName::N:
                 bit = (~0x40);
                 break;
-            case 'H':
+            case FlagName::H:
                 bit = (~0x20);
                 break;
-            case 'C':
+            case FlagName::C:
                 bit = (~0x10);
                 break;
             default:
                 std::stringstream message;
-                message << "Invalid register: \"" << reg << "\"";
+                message << "Invalid register\n";
                 throw exception::GbException(message.str());
             }
 
