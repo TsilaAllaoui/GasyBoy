@@ -145,6 +145,12 @@ namespace gasyboy
                 }
             }
         }
+
+        if (provider::UtilitiesProvider::getInstance()->wasReset)
+        {
+            provider::GameBoyProvider::getInstance()->reset();
+            provider::UtilitiesProvider::getInstance()->wasReset = false;
+        }
     }
 
     void Gamepad::setState(uint8_t value)
