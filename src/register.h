@@ -52,8 +52,7 @@ namespace gasyboy
             E,
             H,
             L,
-            F,
-            Z,
+            F
         };
 
         enum class RegisterPairName
@@ -74,7 +73,7 @@ namespace gasyboy
             H = 0x20,
             C = 0x10,
             NZ,
-            NC,
+            NC
         };
     };
 

@@ -49,6 +49,8 @@ namespace gasyboy
             value = ((left >> 4) | (rigth << 4));
             _registers->HL.setRightRegister(value);
             break;
+        default:
+            break;
         }
         _registers->AF.clearFlag(Register::FlagName::N);
         _registers->AF.clearFlag(Register::FlagName::C);

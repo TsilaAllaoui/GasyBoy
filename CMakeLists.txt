@@ -47,14 +47,19 @@ set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
 # Add all source files in src/ excluding main.cpp
 file(GLOB_RECURSE GASYBOY_SOURCES_FILES
-"${CMAKE_CURRENT_SOURCE_DIR}/src/instructions/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/instructions/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/providers/*.cpp"
 )
-list(REMOVE_ITEM GASYBOY_SOURCES_FILES src/main.cpp)
+list(REMOVE_ITEM GASYBOY_SOURCES_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
 # Check if using Emscripten
 if(USE_EMSCRIPTEN_SDL2 OR(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
+
+    # Remove debugger sources files
+    file(GLOB_RECURSE DEBUGGER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/debugger/*.cpp")
+    list(REMOVE_ITEM GASYBOY_SOURCES_FILES ${DEBUGGER_FILES})
+
     # Add include directories
     set(GASYBOY_HEADERS_DIR
         ${CMAKE_CURRENT_SOURCE_DIR}/src
