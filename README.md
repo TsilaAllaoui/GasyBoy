@@ -15,17 +15,18 @@ Experience GasyBoy directly in your web browser:
 
 <table>
   <tr>
-    <td align="center"><img src="./screenshots/dr_mario.gif" alt="Dr. Mario" width="300px" /></td>
-    <td align="center"><img src="./screenshots/mario_land_2.gif" alt="Mario Land 2" width="300px" /></td>
-    <td align="center"><img src="./screenshots/pokemon_red.gif" alt="Pokemon Red" width="300px" /></td>
+    <td align="center"><img src="./screenshots/dr_mario.gif" alt="Dr. Mario" width="200px" /></td>
+    <td align="center"><img src="./screenshots/mario_land_2.gif" alt="Mario Land 2" width="200px" /></td>
+    <td align="center"><img src="./screenshots/pokemon_red.gif" alt="Pokemon Red" width="200px" /></td>
   </tr>
   <tr>
-    <td align="center"><img src="./screenshots/pokemon_silver.gif" alt="Pokemon Silver" width="300px" /></td>
-    <td align="center"><img src="./screenshots/tetris.gif" alt="Tetris" width="300px" /></td>
-    <td align="center"><img src="./screenshots/zelda.gif" alt="Zelda" width="300px" /></td>
+    <td align="center"><img src="./screenshots/pokemon_silver.gif" alt="Pokemon Silver" width="200px" /></td>
+    <td align="center"><img src="./screenshots/tetris.gif" alt="Tetris" width="200px" /></td>
+    <td align="center"><img src="./screenshots/zelda.gif" alt="Zelda" width="200px" /></td>
   </tr>
 </table>
-<div align="center"><img src="./screenshots/debugger.gif" alt="Pokemon Silver" width="100%"></div>
+<img src="./screenshots/debugger.gif" alt="Pokemon Silver" width="680">
+
 
 [**Try the Live Demo!**](https://tsilaallaoui.github.io/GasyBoy/index.html)
 
