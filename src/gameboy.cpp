@@ -154,6 +154,12 @@ namespace gasyboy
         // Saving RAM to file
         gasyboy::provider::MmuProvider::getInstance()->saveRam();
 
+        Cartridge previousCartridge;
+        if (provider::UtilitiesProvider::getInstance()->wasReset)
+        {
+            previousCartridge = gasyboy::provider::MmuProvider::getInstance()->getCartridge();
+        }
+
         gasyboy::provider::GamepadProvider::deleteInstance();
         gasyboy::provider::MmuProvider::deleteInstance();
         gasyboy::provider::RegistersProvider::deleteInstance();
@@ -171,6 +177,10 @@ namespace gasyboy
 
         gasyboy::provider::GamepadProvider::getInstance()->reset();
         gasyboy::provider::MmuProvider::getInstance()->reset();
+        if (provider::UtilitiesProvider::getInstance()->wasReset)
+        {
+            gasyboy::provider::MmuProvider::getInstance()->setCartridge(previousCartridge);
+        }
         gasyboy::provider::RegistersProvider::getInstance()->reset();
         gasyboy::provider::InterruptManagerProvider::getInstance()->reset();
         gasyboy::provider::CpuProvider::getInstance()->reset();

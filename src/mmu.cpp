@@ -92,7 +92,6 @@ namespace gasyboy
     void Mmu::reset()
     {
         _biosEnabled = provider::UtilitiesProvider::getInstance()->executeBios;
-        _cartridge.reset();
         _memory.assign(0x10000, 0);
 
         if (!_biosEnabled)
@@ -106,22 +105,26 @@ namespace gasyboy
         _memory[0xFFFF] = 0xFF;
 
         // loading rom file
-        try
+        if (!provider::UtilitiesProvider::getInstance()->wasReset)
         {
-            if (provider::UtilitiesProvider::getInstance()->romFilePath.empty())
+            _cartridge.reset();
+            try
             {
-                throw exception::GbException("Invalid rom file path");
-            }
+                if (provider::UtilitiesProvider::getInstance()->romFilePath.empty())
+                {
+                    throw exception::GbException("Invalid rom file path");
+                }
 
-            _cartridge.loadRom(provider::UtilitiesProvider::getInstance()->romFilePath);
-            utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
-                                              "Rom file : \"" +
-                                                  provider::UtilitiesProvider::getInstance()->romFilePath + "\" loaded successfully");
-        }
-        catch (const exception::GbException &e)
-        {
-            utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
-                                              e.what());
+                _cartridge.loadRom(provider::UtilitiesProvider::getInstance()->romFilePath);
+                utils::Logger::getInstance()->log(utils::Logger::LogType::FUNCTIONAL,
+                                                  "Rom file : \"" +
+                                                      provider::UtilitiesProvider::getInstance()->romFilePath + "\" loaded successfully");
+            }
+            catch (const exception::GbException &e)
+            {
+                utils::Logger::getInstance()->log(utils::Logger::LogType::CRITICAL,
+                                                  e.what());
+            }
         }
 
         // Load RAM file to ram
@@ -333,6 +336,11 @@ namespace gasyboy
     Cartridge &Mmu::getCartridge()
     {
         return _cartridge;
+    }
+
+    void Mmu::setCartridge(const Cartridge &cartridge)
+    {
+        _cartridge = cartridge;
     }
 
     void Mmu::saveRam()
