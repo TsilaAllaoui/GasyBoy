@@ -56,7 +56,7 @@ namespace gasyboy
     // context of the gamepad
     std::shared_ptr<Gamepad> _gamepad;
 
-    // the actual cartridge
+    // The actual cartridge
     Cartridge _cartridge;
 
   public:
@@ -68,6 +68,10 @@ namespace gasyboy
     Mmu(const uint8_t *bytes, const size_t &romSize);
     Mmu &operator=(const gasyboy::Mmu &);
     ~Mmu() = default;
+
+    // Get/Set the actual cartridge
+    Cartridge &getCartridge();
+    void setCartridge(const Cartridge &cartridge);
 
     // Reset MMU
     void reset();
@@ -86,9 +90,6 @@ namespace gasyboy
     std::vector<uint8_t> getVram();
     std::vector<uint8_t> &getMemory();
     uint8_t getPaletteColor(const uint8_t &index);
-
-    // Get/Set rom from cartridge
-    Cartridge &getCartridge();
 
     // Save Ram to file
     void saveRam();

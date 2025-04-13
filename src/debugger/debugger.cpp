@@ -239,7 +239,7 @@ namespace gasyboy
         renderPpuViewerDebugScreen();
 
         // Rendering Disassembler
-        renderDisassemblerScreen();
+        // renderDisassemblerScreen();
 
         ImGui::Render();
         SDL_RenderClear(_renderer);

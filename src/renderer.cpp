@@ -4,7 +4,10 @@
 #include "mmuProvider.h"
 #include "ppuProvider.h"
 #include "renderer.h"
+
+#ifndef EMSCRIPTEN
 #include <SDL_syswm.h>
+#endif
 
 namespace gasyboy
 {
@@ -41,8 +44,23 @@ namespace gasyboy
         }
     }
 
-    void Renderer::setWindowAlwaysOnTop()
+    void Renderer::init()
     {
+        // Fill pixels to white
+        _viewportPixels.fill(0xFF);
+
+        // Iniy SDL and _window
+        initWindow(_windowWidth, _windowHeight);
+
+        // Create viewport texture
+        _viewportTexture = SDL_CreateTexture(_renderer,
+                                             SDL_PIXELFORMAT_ARGB8888,
+                                             SDL_TEXTUREACCESS_STREAMING,
+                                             _viewportWidth,
+                                             _viewportHeight);
+
+#ifndef EMSCRIPTEN
+        // Set window always on top
         SDL_SysWMinfo wmInfo;
         SDL_VERSION(&wmInfo.version);
 
@@ -59,25 +77,7 @@ namespace gasyboy
         {
             SDL_Log("Could not get window information: %s", SDL_GetError());
         }
-    }
-
-    void Renderer::init()
-    {
-        // Fill pixels to white
-        _viewportPixels.fill(0xFF);
-
-        // Iniy SDL and _window
-        initWindow(_windowWidth, _windowHeight);
-
-        // Create viewport texture
-        _viewportTexture = SDL_CreateTexture(_renderer,
-                                             SDL_PIXELFORMAT_ARGB8888,
-                                             SDL_TEXTUREACCESS_STREAMING,
-                                             _viewportWidth,
-                                             _viewportHeight);
-
-        // Set window always on top
-        setWindowAlwaysOnTop();
+#endif
     }
 
     void Renderer::initWindow(int windowWidth, int windowHeight)
