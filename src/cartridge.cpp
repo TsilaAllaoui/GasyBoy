@@ -17,17 +17,9 @@ namespace gasyboy
 
 	Cartridge &Cartridge::operator=(const Cartridge &other)
 	{
-		_mbc.reset(other._mbc.get());
+		setMBC(other._mbc->getRom(), other._cartridgeType == CartridgeType::ROM_ONLY ? std::vector<uint8_t>() : other._mbc->getRam());
 		_cartridgeType = other._cartridgeType;
 		_cartridgeHeader = other._cartridgeHeader;
-		if (other._mbc)
-		{
-			_mbc.reset(other._mbc.get());
-		}
-		else
-		{
-			_mbc.reset();
-		}
 		return *this;
 	}
 

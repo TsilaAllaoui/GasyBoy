@@ -87,7 +87,7 @@ namespace gasyboy
     std::vector<uint8_t> &getMemory();
     uint8_t getPaletteColor(const uint8_t &index);
 
-    // Get rom from cartridge
+    // Get/Set rom from cartridge
     Cartridge &getCartridge();
 
     // Save Ram to file

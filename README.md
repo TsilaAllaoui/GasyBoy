@@ -1,92 +1,74 @@
-# 🕹️ **GasyBoy** 🕹️
-**Gameboy** emulator made with **C++/SDL2**.
+# 🕹️ GasyBoy 🕹️
+**Gameboy Emulator in C++/SDL2**
 
-<h2>Want to test it? Go here: <a href="https://tsilaallaoui.github.io/GasyBoy/index.html">GasyBoy Live Demo</a></h2>
+GasyBoy is a high-performance Gameboy emulator built with modern C++ and SDL2. It delivers an authentic emulation experience while providing a comprehensive, user-friendly debugging suite.
 
-###### ⬜⬜⬜⬜⬜⬜⬜⬜
-###### ⬜🌫️🌫️🌫️🌫️🌫️🌫️⬜
-###### ⬜🌫️🟩🟩🟩🟩🌫️⬜
-###### ⬜🌫️🟩🟩🟩🟩🌫️⬜
-###### ⬜🌫️🟩🟩🟩🟩🌫️⬜
-###### ⬜🌫️🟩🟩🟩🟩🌫️⬜
-###### ⬜🌫️🌫️🌫️🌫️🌫️🌫️⬜
-###### ⬜⬜⬜⬜⬜⬜⬜⬜
-###### ⬜⬜⬛⬜⬜⬜🔴⬜
-###### ⬜⬛⬛⬛⬜🔴⬜⬜
-###### ⬜⬜⬛⬜⬜⬜⬜⬜
-###### ⬜⬜⬜⬜⬜⬜⬜⬜
-###### ⬜⬜⬜⬜⬜⬜⬜⬜
-###### ⬜⬜⬜⬜⬜⬜⬜⬜
+---
 
------
+## 🚀 Live Demo
+Experience GasyBoy directly in your web browser:  
+[Visit the GasyBoy Live Demo](https://tsilaallaoui.github.io/GasyBoy/index.html)
 
-## 🔥 **Features**
-- [x] Fully working **Zilog Z80 CPU** with all opcodes
-- [x] Working NoMBC and MBC1 roms (MBC1 may cause visual bugs)
-- [x] Working buttons
+---
 
-
-## ⛔ **About ROM and illegal stuff**
-
-**All stuff related to Nintendo belongs to Nintendo**. I don't support piracy so **FIND ROMS ON YOUR OWN**. Or for tesing purpose, use test roms available [here](https://github.com/retrio/gb-test-roms) (roms are in .gb extension).
-
-## 🛠️ **Building**
-
- - ### **Requirements**
-    - **Cmake** (any version from 3.10+)
-
- - ### **Build**
-    - mkdir build (in the project root)
-    - cd build
-    - cmake ..
-    - cmake --build . or open the solution file (VS17+)
-
-## 📸 **Screenshots** 📸
-
-1) **<u>Nintendo Boot Logo</u>**
-![nintendo_boot_logo](./screenshots/nintendo_screen.png)
-
-2) **<u>Super Mario Land</u>**
+### Gameplay Highlights
 
 <table>
-    <tr>
-        <td>
-            <img src="./screenshots/mario_land_1.png" />
-        </td>
-        <td>
-            <img src="./screenshots/mario_land_2.png" />
-        </td>
-    </tr>
+  <tr>
+    <td align="center"><img src="./screenshots/dr_mario.gif" alt="Dr. Mario" width="300px" /></td>
+    <td align="center"><img src="./screenshots/mario_land_2.gif" alt="Mario Land 2" width="300px" /></td>
+    <td align="center"><img src="./screenshots/pokemon_red.gif" alt="Pokemon Red" width="300px" /></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="./screenshots/pokemon_silver.gif" alt="Pokemon Silver" width="300px" /></td>
+    <td align="center"><img src="./screenshots/tetris.gif" alt="Tetris" width="300px" /></td>
+    <td align="center"><img src="./screenshots/zelda.gif" alt="Zelda" width="300px" /></td>
+  </tr>
 </table>
+<div align="center"><img src="./screenshots/debugger.gif" alt="Pokemon Silver" width="100%"></div>
 
-3) **<u>Tetris</u>**
+[**Try the Live Demo!**](https://tsilaallaoui.github.io/GasyBoy/index.html)
 
-<table>
-    <tr>
-        <td>
-            <img src="./screenshots/tetris_1.png" />
-        </td>
-        <td>
-            <img src="./screenshots/tetris_2.png" />
-        </td>
-    </tr>
-</table>
+## 🎮 Features
 
-4) **<u>Super Mario Land</u>**
+- **Zilog Z80 CPU:** Fully implemented with all opcodes.
+- **ROM Support:** Compatible with ROM Only, MBC1, MBC2, MBC3, and MBC5 titles.
+- **Comprehensive Debugger:** Easy to use for inspecting and managing emulator state.
+- **Smooth Performance:** Consistent 60 FPS performance, even in debug mode.
 
-<table>
-    <tr>
-        <td>
-            <img src="./screenshots/dr_mario_1.png" />
-        </td>
-        <td>
-            <img src="./screenshots/dr_mario_2.png" />
-        </td>
-    </tr>
-</table>
+---
 
-## 📝 **TODO:**
-- [ ] Fix PPU sprites transparency bug
-- [ ] Add supprt for more MBCs memory support
-- [ ] Add savestates
-- [ ] Make better UI and window
+## ⚠️ Legal Notice
+
+All properties and trademarks related to Nintendo belong to Nintendo. **GasyBoy is for educational and testing purposes only.** Please use ROMs legally obtained or use test ROMs available [here](https://github.com/retrio/gb-test-roms) (files in .gb format).
+
+---
+
+## 🛠️ Building GasyBoy
+
+### Requirements
+
+- **CMake:** Version 3.10 or higher.
+- **Compiler:**  
+  - **Windows:** MSVC Toolchains (supporting C++20)  
+  - **Linux:** GCC/G++ (supporting C++20)  
+  - **Web:** Emscripten (for building and running WASM in a browser)
+
+### Build Instructions
+
+1. Run the appropriate script in the `./tools` directory based on your OS.
+2. For building the WASM version, run the corresponding script in `./tools/*your_os*/build_wasm.(sh|bat)`.
+
+---
+
+## 📝 TODO
+
+- [ ] **Savestates:** Add save and load functionality.
+- [ ] **RTC Support:** Implement real-time clock features.
+- [ ] **Link Cable / Online Play:** Enable multiplayer connectivity.
+- [ ] **Enhanced Debugger UI:** Improve the user interface of the debugger.
+- [ ] **Platform Porting:** Expand compatibility with additional devices.
+
+---
+
+Enjoy exploring and enhancing GasyBoy! Contributions and feedback are always welcome.

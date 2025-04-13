@@ -68,6 +68,8 @@ namespace gasyboy
 
         void reset();
 
+        void setWindowAlwaysOnTop();
+
         enum class ColorMode : uint8_t
         {
             NORMAL,

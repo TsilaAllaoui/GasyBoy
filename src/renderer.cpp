@@ -4,6 +4,7 @@
 #include "mmuProvider.h"
 #include "ppuProvider.h"
 #include "renderer.h"
+#include <SDL_syswm.h>
 
 namespace gasyboy
 {
@@ -40,6 +41,26 @@ namespace gasyboy
         }
     }
 
+    void Renderer::setWindowAlwaysOnTop()
+    {
+        SDL_SysWMinfo wmInfo;
+        SDL_VERSION(&wmInfo.version);
+
+        if (SDL_GetWindowWMInfo(_window, &wmInfo))
+        {
+#ifdef _WIN32
+            HWND hwnd = wmInfo.info.win.window;
+
+            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOSIZE);
+#endif
+        }
+        else
+        {
+            SDL_Log("Could not get window information: %s", SDL_GetError());
+        }
+    }
+
     void Renderer::init()
     {
         // Fill pixels to white
@@ -54,6 +75,9 @@ namespace gasyboy
                                              SDL_TEXTUREACCESS_STREAMING,
                                              _viewportWidth,
                                              _viewportHeight);
+
+        // Set window always on top
+        setWindowAlwaysOnTop();
     }
 
     void Renderer::initWindow(int windowWidth, int windowHeight)
