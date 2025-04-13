@@ -20,22 +20,22 @@
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 
-void main_loop()
-{
-    gasyboy::provider::GameBoyProvider::getInstance()->loop();
-}
-
 extern "C"
 {
-    EMSCRIPTEN_KEEPALIVE int load_file(const char *filePath)
+    void main_loop()
     {
-        emscripten_cancel_main_loop();
+        auto gb = gasyboy::provider::GameBoyProvider::getInstance();
+        gb->loop();
+    }
 
-        gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
-        gasyboy::provider::GameBoyProvider::getInstance()->reset();
-
-        emscripten_set_main_loop(main_loop, 0, true);
-        return 1;
+    extern "C"
+    {
+        EMSCRIPTEN_KEEPALIVE int load_file(const char *filePath)
+        {
+            gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = filePath;
+            gasyboy::provider::GameBoyProvider::getInstance()->reset();
+            return 1;
+        }
     }
 
     EMSCRIPTEN_KEEPALIVE int toggle_bios(const bool value)
@@ -56,10 +56,6 @@ int main()
 
 int main(int argc, char **argv)
 {
-    gasyboy::provider::UtilitiesProvider::getInstance()->executeBios = false;
-    gasyboy::provider::UtilitiesProvider::getInstance()->debugMode = true;
-    gasyboy::provider::UtilitiesProvider::getInstance()->romFilePath = "C:/Users/trasoloallaoui/C++/roms/dmg-acid2/dmg-acid2.gb";
-
     // Boot default rom
     if (argc == 1)
     {
