@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include <mutex>
 
+// Number of opcode x2 to show on the disassembler
+const int threshold = 50;
+
 namespace gasyboy
 {
     // structure for an opcode
@@ -43,7 +46,7 @@ namespace gasyboy
         std::mutex mutex;
 
         // Disassemble current cartridge rom
-        void disassemble();
+        void disassemble(const uint16_t& pc);
     };
 }
 

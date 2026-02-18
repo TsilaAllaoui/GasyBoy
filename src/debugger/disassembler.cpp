@@ -535,10 +535,12 @@ namespace gasyboy
         _rom = cartridge.getRom();
     }
 
-    void Disassembler::disassemble()
+    void Disassembler::disassemble(const uint16_t& index)
     {
-        uint16_t pc = 0;
-        while (pc < _rom.size())
+        disassembledRom.clear();
+        int start = index - threshold <= 0 ? 0 : index - threshold;
+        int end = index + threshold > _rom.size() ? _rom.size() : index + threshold;
+        for (int pc=start; pc<end; pc++)
         {
             uint8_t byte = _rom[pc];
             if (byte == 0xCB)

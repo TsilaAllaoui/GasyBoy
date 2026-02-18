@@ -239,7 +239,7 @@ namespace gasyboy
         renderPpuViewerDebugScreen();
 
         // Rendering Disassembler
-        // renderDisassemblerScreen();
+        renderDisassemblerScreen();
 
         ImGui::Render();
         SDL_RenderClear(_renderer);
@@ -668,6 +668,9 @@ namespace gasyboy
             _breakPoints.emplace_back(_currentBreakPoint);
             _currentBreakPoint = -1;
         }
+
+        // Disassmble region
+        _disassembler.disassemble(_registers->PC);
 
         // Find the index of the target address
         for (int i = 0; i < _disassembler.disassembledRom.size(); i++)
